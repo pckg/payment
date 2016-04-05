@@ -1,0 +1,23 @@
+{
+  "name": "pckg/payment",
+  "description": "Basic implementation of payment libraries",
+  "keywords": ["php", "payment", "paypal", "paymill", "sepa", "proforma"],
+  "homepage": "https://github.com/pckg/payment",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Bojan Rajh",
+      "email": "schtr4jh@schtr4jh.net"
+    }
+  ],
+  "minimum-stability": "dev",
+  "autoload": {
+    "psr-0": {
+      "Pckg": "src\\"
+    }
+  },
+  "require": {
+    "paymill/paymill": "^4.1",
+    "paypal/rest-api-sdk-php": "^1.6"
+  }
+}
