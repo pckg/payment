@@ -19,11 +19,11 @@ class Paypal extends Paymill
     {
         $checksum = new Checksum();
         $checksum->setChecksumType(Checksum::TYPE_PAYPAL)
-            ->setAmount($this->getTotalToPay())
-            ->setCurrency('EUR')
-            ->setDescription('Description')
-            ->setReturnUrl($this->getReturnUrl())
-            ->setCancelUrl($this->getCancelUrl());
+                 ->setAmount($this->getTotalToPay())
+                 ->setCurrency('EUR')
+                 ->setDescription('Description')
+                 ->setReturnUrl($this->getReturnUrl())
+                 ->setCancelUrl($this->getCancelUrl());
 
         $response = $this->paymill->create($checksum);
 
@@ -32,18 +32,24 @@ class Paypal extends Paymill
 
     private function getReturnUrl()
     {
-        return $this->environment->fullUrl($this->environment->config('paymill-paypal.url_return'), [
-            'handler' => 'paymill-paypal',
-            'listing' => $this->order->getOrder(),
-        ]);
+        return $this->environment->fullUrl(
+            $this->environment->config('paymill-paypal.url_return'),
+            [
+                'handler' => 'paymill-paypal',
+                'listing' => $this->order->getOrder(),
+            ]
+        );
     }
 
     private function getCancelUrl()
     {
-        return $this->environment->fullUrl($this->environment->config('paymill-paypal.url_cancel'), [
-            'handler' => 'paymill-paypal',
-            'listing' => $this->order->getOrder(),
-        ]);
+        return $this->environment->fullUrl(
+            $this->environment->config('paymill-paypal.url_cancel'),
+            [
+                'handler' => 'paymill-paypal',
+                'listing' => $this->order->getOrder(),
+            ]
+        );
     }
 
     public function success()

@@ -6,7 +6,9 @@ class Paypal extends AbstractHandler implements Handler
 {
 
     const ACK_SUCCESS = 'Success';
+
     const CHECKOUTSTATUS_PAYMENT_ACTION_NOT_INITIATED = 'PaymentActionNotInitiated';
+
     const PAYMENTACTION = 'Sale';
 
     public function initHandler()
@@ -28,10 +30,14 @@ class Paypal extends AbstractHandler implements Handler
     {
         $fields = [
             'METHOD'       => 'SetExpressCheckout',
-            'RETURNURL'    => $this->environment->url($this->config['url_return'],
-                ['paypal', $this->order->getOrder()]),
-            'CANCELURL'    => $this->environment->url($this->config['url_cancel'],
-                ['paypal', $this->order->getOrder()]),
+            'RETURNURL'    => $this->environment->url(
+                $this->config['url_return'],
+                ['paypal', $this->order->getOrder()]
+            ),
+            'CANCELURL'    => $this->environment->url(
+                $this->config['url_cancel'],
+                ['paypal', $this->order->getOrder()]
+            ),
             'NOSHIPPING'   => '1',
             'ALLOWNOTE'    => '0',
             'ADDROVERRIDE' => '0',
@@ -47,65 +53,6 @@ class Paypal extends AbstractHandler implements Handler
         }
 
         return $response;
-    }
-
-    public function makeRequest($fields)
-    {
-        $fields = array_merge($fields, $this->getApiCredentials());
-        $postFields = $this->stringifyFields($fields);
-
-        $options = array(
-            CURLOPT_URL            => $this->config['url'],
-            CURLOPT_HEADER         => false,
-            CURLOPT_VERBOSE        => false,
-            CURLOPT_SSL_VERIFYPEER => false,
-            CURLOPT_SSL_VERIFYHOST => false,
-            CURLOPT_FAILONERROR    => false,
-            CURLOPT_FOLLOWLOCATION => false,
-            CURLOPT_RETURNTRANSFER => true,
-            CURLOPT_POST           => true,
-            CURLOPT_POSTFIELDS     => $postFields,
-            CURLOPT_TIMEOUT        => 30,
-            CURLOPT_CONNECTTIMEOUT => 30,
-        );
-
-        $ch = curl_init();
-        curl_setopt_array($ch, $options);
-        $response = curl_exec($ch);
-        $error = curl_error($ch);
-        curl_close($ch);
-
-        if (!$response) {
-            throw new Exception("Request has failed! ($error)");
-        }
-
-        $responseArray = explode('&', $response);
-        $response = array();
-        foreach ($responseArray as $val) {
-            list($key, $val) = explode('=', $val, 2);
-            $response[$key] = urldecode($val);
-        }
-
-        return $response;
-    }
-
-    public function stringifyFields($fields)
-    {
-        $postFields = [];
-        foreach ($fields as $key => $val) {
-            $postFields[] = $key . '=' . urlencode($val);
-        }
-        return implode('&', $postFields);
-    }
-
-    public function getApiCredentials()
-    {
-        return [
-            'VERSION'   => '64.0',
-            'USER'      => $this->config['username'],
-            'PWD'       => $this->config['password'],
-            'SIGNATURE' => $this->config['signature'],
-        ];
     }
 
     public function fetchOrderData()
@@ -156,6 +103,66 @@ class Paypal extends AbstractHandler implements Handler
         return $fields;
     }
 
+    public function makeRequest($fields)
+    {
+        $fields = array_merge($fields, $this->getApiCredentials());
+        $postFields = $this->stringifyFields($fields);
+
+        $options = [
+            CURLOPT_URL            => $this->config['url'],
+            CURLOPT_HEADER         => false,
+            CURLOPT_VERBOSE        => false,
+            CURLOPT_SSL_VERIFYPEER => false,
+            CURLOPT_SSL_VERIFYHOST => false,
+            CURLOPT_FAILONERROR    => false,
+            CURLOPT_FOLLOWLOCATION => false,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST           => true,
+            CURLOPT_POSTFIELDS     => $postFields,
+            CURLOPT_TIMEOUT        => 30,
+            CURLOPT_CONNECTTIMEOUT => 30,
+        ];
+
+        $ch = curl_init();
+        curl_setopt_array($ch, $options);
+        $response = curl_exec($ch);
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        if (!$response) {
+            throw new Exception("Request has failed! ($error)");
+        }
+
+        $responseArray = explode('&', $response);
+        $response = [];
+        foreach ($responseArray as $val) {
+            list($key, $val) = explode('=', $val, 2);
+            $response[$key] = urldecode($val);
+        }
+
+        return $response;
+    }
+
+    public function getApiCredentials()
+    {
+        return [
+            'VERSION'   => '64.0',
+            'USER'      => $this->config['username'],
+            'PWD'       => $this->config['password'],
+            'SIGNATURE' => $this->config['signature'],
+        ];
+    }
+
+    public function stringifyFields($fields)
+    {
+        $postFields = [];
+        foreach ($fields as $key => $val) {
+            $postFields[] = $key . '=' . urlencode($val);
+        }
+
+        return implode('&', $postFields);
+    }
+
     public function success()
     {
         $token = $this->environment->request('token');
@@ -167,14 +174,14 @@ class Paypal extends AbstractHandler implements Handler
         $response = $this->makeRequest($fields);
 
         if ($response['CHECKOUTSTATUS'] == static::CHECKOUTSTATUS_PAYMENT_ACTION_NOT_INITIATED && isset($response['PAYERID'])) {
-            $fields = array(
+            $fields = [
                 'METHOD'        => 'DoExpressCheckoutPayment',
                 'TOKEN'         => $token,
                 'PAYMENTACTION' => static::PAYMENTACTION,
                 'PAYERID'       => $response['PAYERID'],
                 'AMT'           => $response['AMT'],
                 'CURRENCYCODE'  => $response['CURRENCYCODE'],
-            );
+            ];
 
             $response = $this->makeRequest($fields);
 

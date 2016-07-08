@@ -84,9 +84,9 @@ class Paymill extends AbstractHandler implements Handler
     {
         $transaction = new Transaction();
         $transaction->setAmount($this->getTotalToPay())
-            ->setCurrency($this->order->getCurrency())
-            ->setPayment($paymentId)
-            ->setDescription($this->order->getDescription());
+                    ->setCurrency($this->order->getCurrency())
+                    ->setPayment($paymentId)
+                    ->setDescription($this->order->getDescription());
 
         $response = null;
         try {
@@ -100,6 +100,7 @@ class Paymill extends AbstractHandler implements Handler
         } finally {
             if ($response->getStatus() == 'closed') {
                 $this->order->setPaid();
+
                 return true;
             }
 
