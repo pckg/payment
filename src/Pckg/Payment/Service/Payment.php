@@ -1,5 +1,6 @@
 <?php namespace Pckg\Payment\Service;
 
+use Pckg\Database\Helper\Convention;
 use Pckg\Payment\Adapter\Environment;
 use Pckg\Payment\Adapter\Log;
 use Pckg\Payment\Adapter\Order;
@@ -66,7 +67,7 @@ class Payment
     public function prepare(Order $order, $handler, Log $logger)
     {
         $this->setOrder($order);
-        $this->{'use' . ucfirst(camel_case($handler)) . 'Handler'}();
+        $this->{'use' . Convention::toPascal($handler) . 'Handler'}();
         $this->getHandler()->setLogger($logger)->setEnvironment($this->environment);
     }
 
