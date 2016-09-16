@@ -24,12 +24,18 @@ class Sepa extends Paymill
 
     public function getValidateUrl()
     {
-        return $this->environment->url('payment.validate', ['paymill-sepa', $this->order->getOrder()]);
+        return $this->environment->url(
+            'payment.validate',
+            ['handler' => 'paymill-sepa', 'order' => $this->order->getOrder()]
+        );
     }
 
     public function getStartUrl()
     {
-        return $this->environment->url('payment.start', ['paymill-sepa', $this->order->getOrder()]);
+        return $this->environment->url(
+            'payment.start',
+            ['handler' => 'paymill-sepa', 'order' => $this->order->getOrder()]
+        );
     }
 
 }

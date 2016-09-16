@@ -12,7 +12,7 @@ class Proforma extends AbstractHandler implements Handler
 
     public function start()
     {
-        $url = $this->environment->url($this->config['url_waiting'], ['proforma', $this->order->getOrder()]);
+        $url = $this->environment->url($this->config['url_waiting'], ['handler' => 'proforma', 'order' => $this->order->getOrder()]);
         $this->environment->redirect($url);
     }
 

@@ -32,11 +32,11 @@ class Paypal extends AbstractHandler implements Handler
             'METHOD'       => 'SetExpressCheckout',
             'RETURNURL'    => $this->environment->url(
                 $this->config['url_return'],
-                ['paypal', $this->order->getOrder()]
+                ['handler' => 'paypal', 'order' => $this->order->getOrder()]
             ),
             'CANCELURL'    => $this->environment->url(
                 $this->config['url_cancel'],
-                ['paypal', $this->order->getOrder()]
+                ['handler' => 'paypal', 'order' => $this->order->getOrder()]
             ),
             'NOSHIPPING'   => '1',
             'ALLOWNOTE'    => '0',

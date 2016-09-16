@@ -1,6 +1,7 @@
 <?php namespace Pckg\Payment\Service;
 
 use Pckg\Payment\Handler\Handler;
+use Pckg\Payment\Handler\Moneta;
 use Pckg\Payment\Handler\Paymill;
 use Pckg\Payment\Handler\Paypal;
 use Pckg\Payment\Handler\PaypalRest;
@@ -60,6 +61,11 @@ trait Handlers
     public function useProformaHandler()
     {
         return $this->fullInitHandler(new Proforma($this->order));
+    }
+
+    public function useMonetaHandler()
+    {
+        return $this->fullInitHandler(new Moneta($this->order));
     }
 
 }
