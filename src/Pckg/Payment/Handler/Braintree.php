@@ -1,11 +1,15 @@
 <?php namespace Pckg\Payment\Handler;
 
+use Braintree_ClientToken;
+use Braintree_Configuration;
 use Exception;
 use Paymill\Models\Request\Transaction;
 use Pckg\Payment\Record\Payment as PaymentRecord;
 
 class Braintree extends AbstractHandler implements Handler
 {
+
+    protected $braintreeClientToken;
 
     public function validate($request)
     {
@@ -30,9 +34,16 @@ class Braintree extends AbstractHandler implements Handler
     public function initHandler()
     {
         $this->config = [
-            'private_key' => $this->environment->config('paymill.private_key'),
-            'public_key'  => $this->environment->config('paymill.public_key'),
+            'environment' => $this->environment->config('braintree.environment'),
+            'merchant'    => $this->environment->config('braintree.merchant'),
+            'public'      => $this->environment->config('braintree.public'),
+            'private'     => $this->environment->config('braintree.private'),
         ];
+        
+        Braintree_Configuration::environment($this->environment->config('braintree.environment'));
+        Braintree_Configuration::merchantId($this->environment->config('braintree.merchant'));
+        Braintree_Configuration::publicKey($this->environment->config('braintree.public'));
+        Braintree_Configuration::privateKey($this->environment->config('braintree.private'));
 
         return $this;
     }
@@ -52,47 +63,56 @@ class Braintree extends AbstractHandler implements Handler
         return $this->config['public_key'];
     }
 
+    public function getBraintreeClientToken()
+    {
+        return $this->braintreeClientToken;
+    }
+
     public function start()
     {
         $btPaymentHash = sha1(microtime() . $this->order->getIdString());
-        $braintreeClientToken = Braintree_ClientToken::generate();
+        $this->braintreeClientToken = Braintree_ClientToken::generate();
 
         $billIds = [];
         foreach (explode(',', $_GET['ids']) as $billId) {
             $billIds[] = (int)trim($billId);
         }
 
-        PaymentRecord::create(
-            [
-                'order_id'               => $this->order->getId(),
-                'user_id'                => auth()->getUser()->id ?? null,
-                'order_hash'             => $this->order->getIdString(),
-                'braintree_hash'         => $btPaymentHash,
-                'braintree_client_token' => $braintreeClientToken,
-                'state'                  => 'started',
-                'data'                   => json_encode(
-                    [
-                        'billIds' => $billIds,
-                    ]
-                ),
-            ]
-        );
+        if (false) {
+            PaymentRecord::create(
+                [
+                    'order_id'               => $this->order->getId(),
+                    'user_id'                => auth()->getUser()->id ?? null,
+                    'order_hash'             => $this->order->getIdString(),
+                    'braintree_hash'         => $btPaymentHash,
+                    'braintree_client_token' => $this->braintreeClientToken,
+                    'state'                  => 'started',
+                    'data'                   => json_encode(
+                        [
+                            'billIds' => $billIds,
+                        ]
+                    ),
+                ]
+            );
+        }
 
         $confirmPaymentUrl = url(
             'derive.payment.confirm',
             ['handler' => 'braintree', 'order' => $this->order->getOrder()]
         );
-        
-        return view();
+
+        return;
 
         return new TwigTpl(
             "modules/braintree/templates/startpayment.twig", [
-            "price"                => $makePrice,
-            "confirmPaymentUrl"    => $confirmPaymentUrl,
-            "braintreeClientToken" => $braintreeClientToken,
-            "paymenttable"         => $this->OffersPaymentMethods->getPaymentTable($rOffer['id']),
-            "steps"                => $this->settings['skip'],
-        ]
+                                                               "price"                => $makePrice,
+                                                               "confirmPaymentUrl"    => $confirmPaymentUrl,
+                                                               "braintreeClientToken" => $braintreeClientToken,
+                                                               "paymenttable"         => $this->OffersPaymentMethods->getPaymentTable(
+                                                                   $rOffer['id']
+                                                               ),
+                                                               "steps"                => $this->settings['skip'],
+                                                           ]
         );
         dd('initialize start ...');
     }
