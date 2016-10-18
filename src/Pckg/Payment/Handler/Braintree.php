@@ -1,9 +1,8 @@
 <?php namespace Pckg\Payment\Handler;
 
 use Exception;
-use Paymill\Models\Request\Payment;
 use Paymill\Models\Request\Transaction;
-use Paymill\Request;
+use Pckg\Payment\Record\Payment as PaymentRecord;
 
 class Braintree extends AbstractHandler implements Handler
 {
@@ -55,7 +54,7 @@ class Braintree extends AbstractHandler implements Handler
 
     public function start()
     {
-        $btPaymentHash = sha1(microtime() . $this->order->getId());
+        $btPaymentHash = sha1(microtime() . $this->order->getIdString());
         $braintreeClientToken = Braintree_ClientToken::generate();
 
         $billIds = [];
@@ -63,50 +62,39 @@ class Braintree extends AbstractHandler implements Handler
             $billIds[] = (int)trim($billId);
         }
 
-        $this->Braintree->insert([
-                                     "order_id"               => $rOrder['id'],
-                                     "user_id"                => Auth::getUserID(),
-                                     "order_hash"             => $rOrder['hash'],
-                                     "braintree_hash"         => $btPaymentHash,
-                                     "braintree_client_token" => $braintreeClientToken,
-                                     "state"                  => "started",
-                                     "data"                   => json_encode([
-                                                                                 'billIds' => $billIds,
-                                                                             ]),
-                                 ]);
+        PaymentRecord::create(
+            [
+                'order_id'               => $this->order->getId(),
+                'user_id'                => auth()->getUser()->id ?? null,
+                'order_hash'             => $this->order->getIdString(),
+                'braintree_hash'         => $btPaymentHash,
+                'braintree_client_token' => $braintreeClientToken,
+                'state'                  => 'started',
+                'data'                   => json_encode(
+                    [
+                        'billIds' => $billIds,
+                    ]
+                ),
+            ]
+        );
 
-        $confirmPaymentUrl = Router::make("braintree", ["view" => "confirmpayment", "hash" => $btPaymentHash]);
+        $confirmPaymentUrl = url(
+            'derive.payment.confirm',
+            ['handler' => 'braintree', 'order' => $this->order->getOrder()]
+        );
+        
+        return view();
 
-        Core::setParseVar("css page", "payment confirmform");
-
-        return new TwigTpl("modules/braintree/templates/startpayment.twig", [
+        return new TwigTpl(
+            "modules/braintree/templates/startpayment.twig", [
             "price"                => $makePrice,
             "confirmPaymentUrl"    => $confirmPaymentUrl,
             "braintreeClientToken" => $braintreeClientToken,
             "paymenttable"         => $this->OffersPaymentMethods->getPaymentTable($rOffer['id']),
             "steps"                => $this->settings['skip'],
-        ]);
+        ]
+        );
         dd('initialize start ...');
-        
-        $payment = new Payment();
-        $payment->setToken($this->environment->request('token'));
-        $payment->setClient($this->order->getCustomer());
-
-        $response = null;
-        try {
-            $this->log($payment);
-            $response = $this->paymill->create($payment);
-            $this->log($response);
-
-        } catch (Exception $e) {
-            $this->log($e);
-            throw $e;
-
-        } finally {
-            if ($paymentId = $response->getId()) {
-                return $this->makeTransaction($paymentId);
-            }
-        }
     }
 
     protected function makeTransaction($paymentId)
@@ -153,7 +141,10 @@ class Braintree extends AbstractHandler implements Handler
 
     public function getStartUrl()
     {
-        return $this->environment->url('payment.start', ['handler' => 'braintree', 'order' => $this->order->getOrder()]);
+        return $this->environment->url(
+            'payment.start',
+            ['handler' => 'braintree', 'order' => $this->order->getOrder()]
+        );
     }
 
 }
