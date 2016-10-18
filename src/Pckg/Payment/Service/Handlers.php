@@ -1,5 +1,6 @@
 <?php namespace Pckg\Payment\Service;
 
+use Pckg\Payment\Handler\Braintree;
 use Pckg\Payment\Handler\Handler;
 use Pckg\Payment\Handler\Moneta;
 use Pckg\Payment\Handler\Paymill;
@@ -31,6 +32,11 @@ trait Handlers
         $this->handler->initHandler();
 
         return $this;
+    }
+
+    public function useBraintreeHandler()
+    {
+        return $this->fullInitHandler(new Braintree($this->order));
     }
 
     public function usePaymillHandler()
