@@ -5,6 +5,8 @@ interface Order
 
     public function getId();
 
+    public function getIdString();
+
     public function getTotal();
 
     public function getTotalToPay();

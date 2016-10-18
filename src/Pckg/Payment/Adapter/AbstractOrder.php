@@ -20,4 +20,9 @@ abstract class AbstractOrder implements Order
         return 'EUR';
     }
 
+    public function getIdString()
+    {
+        return sha1($this->getId());
+    }
+
 }

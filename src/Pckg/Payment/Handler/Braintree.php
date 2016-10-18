@@ -55,7 +55,7 @@ class Braintree extends AbstractHandler implements Handler
 
     public function start()
     {
-        $btPaymentHash = sha1(microtime() . Router::get("hash"));
+        $btPaymentHash = sha1(microtime() . $this->order->getId());
         $braintreeClientToken = Braintree_ClientToken::generate();
 
         $billIds = [];
