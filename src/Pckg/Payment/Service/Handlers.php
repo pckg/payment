@@ -5,6 +5,7 @@ use Pckg\Payment\Handler\Handler;
 use Pckg\Payment\Handler\Moneta;
 use Pckg\Payment\Handler\Paymill;
 use Pckg\Payment\Handler\Paypal;
+use Pckg\Payment\Handler\PaypalGnp;
 use Pckg\Payment\Handler\PaypalRest;
 use Pckg\Payment\Handler\Proforma;
 
@@ -56,7 +57,7 @@ trait Handlers
 
     public function usePaypalHandler()
     {
-        return $this->fullInitHandler(new Paypal($this->order));
+        return $this->fullInitHandler(new PaypalGnp($this->order));
     }
 
     public function usePaypalRestHandler()

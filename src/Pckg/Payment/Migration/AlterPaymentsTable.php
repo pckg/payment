@@ -13,6 +13,10 @@ class AlterPaymentsTable extends Migration
         $braintree = $this->table('braintree');
         $braintree->datetime('dt_started')->nullable();
 
+        $paypal = $this->table('paypal');
+        $paypal->datetime('dt_started')->nullable();
+        $paypal->datetime('dt_confirmed')->nullable();
+
         $this->save();
     }
 
