@@ -17,7 +17,7 @@ class Moneta extends AbstractHandler
             'tarifficationid' => $this->environment->config('moneta.tarifficationId'),
             'url'             => $this->environment->config('moneta.url'),
         ];
-        
+
         include path('src') . "moneta" . path('ds') . "moneta.php";
         include path('src') . "moneta" . path('ds') . "functions.php";
         include path('src') . "moneta" . path('ds') . "xmlfunctions.php";
@@ -175,8 +175,7 @@ class Moneta extends AbstractHandler
 
         error_log("=== Moneta: " . nl2br($sOutput));
 
-        // izpišemo <error> ali <status>
-        return $sOutput;
+        die($sOutput);
     }
 
     public function waiting()
