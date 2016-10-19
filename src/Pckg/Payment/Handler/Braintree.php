@@ -180,13 +180,14 @@ class Braintree extends AbstractHandler implements Handler
                     );
                 }
             );
-
+            
             $this->environment->redirect(
                 $this->environment->url(
                     'derive.payment.success',
                     ['handler' => 'braintree', 'order' => $this->order->getOrder()]
                 )
             );
+
         } else if ($transaction->status == Braintree_Transaction::PROCESSOR_DECLINED) {
             $payment->set(
                 [
@@ -234,6 +235,7 @@ class Braintree extends AbstractHandler implements Handler
                     ['handler' => 'braintree', 'order' => $this->order->getOrder()]
                 )
             );
+
         } else {
             /**
              * @T00D00 - redirect to error page with error 'Unknown payment error'
@@ -245,6 +247,21 @@ class Braintree extends AbstractHandler implements Handler
                 )
             );
         }
+    }
+
+    public function success()
+    {
+
+    }
+
+    public function error()
+    {
+
+    }
+
+    public function waiting()
+    {
+
     }
 
     public function getValidateUrl()
