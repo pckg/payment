@@ -195,7 +195,7 @@ class PaypalGnp extends AbstractHandler implements Handler
                     $this->order->getBills()->each(
                         function(OrdersBill $ordersBill) use ($paypal, $result) {
                             $ordersBill->confirm(
-                                "Paypal " . $paypal["paypal_id"] . ' ' . $result,
+                                "Paypal " . $paypal->paypal_id . ' ' . $result,
                                 'paypal'
                             );
                         }
@@ -204,7 +204,7 @@ class PaypalGnp extends AbstractHandler implements Handler
 
                 if ($json->state == "pending") {
                     response()->redirect(
-                        url('derive.payment.waiting', ['provider' => 'paypal', 'order' => $this->order->getOrder()])
+                        url('derive.payment.waiting', ['handler' => 'paypal', 'order' => $this->order->getOrder()])
                     );
                     /**
                      * Debug::addWarning(
@@ -212,11 +212,11 @@ class PaypalGnp extends AbstractHandler implements Handler
                      * );*/
                 } else if ($json->state == "approved") {
                     response()->redirect(
-                        url('derive.payment.success', ['provider' => 'paypal', 'order' => $this->order->getOrder()])
+                        url('derive.payment.success', ['handler' => 'paypal', 'order' => $this->order->getOrder()])
                     );
                 } else {
                     response()->redirect(
-                        url('derive.payment.error', ['provider' => 'paypal', 'order' => $this->order->getOrder()])
+                        url('derive.payment.error', ['handler' => 'paypal', 'order' => $this->order->getOrder()])
                     );
                     /**
                      * Debug::addError(__('error_title_unknown_payment_status'));
@@ -231,11 +231,16 @@ class PaypalGnp extends AbstractHandler implements Handler
                 echo $result;
                 die("failed");*/
                 response()->redirect(
-                    url('derive.payment.error', ['provider' => 'paypal', 'order' => $this->order->getOrder()])
+                    url('derive.payment.error', ['handler' => 'paypal', 'order' => $this->order->getOrder()])
                 );
                 /*Debug::addError(__('error_title_order_confirmation_failed'));*/
             }
         }
+    }
+
+    public function success()
+    {
+        
     }
 
 }
