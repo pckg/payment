@@ -69,6 +69,11 @@ trait Handlers
         return $this->fullInitHandler(new Proforma($this->order));
     }
 
+    public function useUpnHandler()
+    {
+        return $this->fullInitHandler(new Proforma($this->order));
+    }
+
     public function useMonetaHandler()
     {
         return $this->fullInitHandler(new Moneta($this->order));
