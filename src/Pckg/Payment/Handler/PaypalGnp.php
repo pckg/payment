@@ -119,7 +119,7 @@ class PaypalGnp extends AbstractHandler implements Handler
                 PaypalRecord::create(
                     [
                         "order_id"    => $this->order->getId(),
-                        "user_id"     => auth()->getUser()->id,
+                        "user_id"     => auth('frontend')->getUser()->id,
                         "order_hash"  => $this->order->getOrder()->hash,
                         "paypal_hash" => $ppPaymentHash,
                         "paypal_id"   => $json->id,

@@ -65,7 +65,7 @@ class Braintree extends AbstractHandler implements Handler
         return BraintreeRecord::create(
             [
                 'order_id'                       => $this->order->getId(),
-                'user_id'                        => auth()->getUser()->id ?? null,
+                'user_id'                        => auth('frontend')->getUser()->id ?? null,
                 'order_hash'                     => $this->order->getIdString(),
                 'braintree_hash'                 => sha1(microtime() . $this->order->getIdString()),
                 'braintree_client_token'         => $this->braintreeClientToken,
