@@ -240,6 +240,11 @@ class PaypalGnp extends AbstractHandler implements Handler
 
     public function success()
     {
+
+    }
+
+    public function error()
+    {
         
     }
 
