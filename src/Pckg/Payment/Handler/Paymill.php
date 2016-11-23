@@ -1,9 +1,9 @@
 <?php namespace Pckg\Payment\Handler;
 
-use Exception;
 use Paymill\Models\Request\Payment;
 use Paymill\Models\Request\Transaction;
 use Paymill\Request;
+use Throwable;
 
 class Paymill extends AbstractHandler implements Handler
 {
@@ -69,7 +69,7 @@ class Paymill extends AbstractHandler implements Handler
             $response = $this->paymill->create($payment);
             $this->log($response);
 
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             $this->log($e);
             throw $e;
 
@@ -93,7 +93,7 @@ class Paymill extends AbstractHandler implements Handler
             $this->log($transaction);
             $response = $this->paymill->create($transaction);
             $this->log($response);
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             $this->log($e);
             throw $e;
 
