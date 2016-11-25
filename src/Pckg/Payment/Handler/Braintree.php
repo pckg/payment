@@ -1,8 +1,8 @@
 <?php namespace Pckg\Payment\Handler;
 
-use Braintree_ClientToken;
-use Braintree_Configuration;
-use Braintree_Transaction;
+use Braintree\ClientToken;
+use Braintree\Configuration;
+use Braintree\Transaction;
 use Carbon\Carbon;
 use Derive\Orders\Record\OrdersBill;
 use Derive\Orders\Record\OrdersUser;
@@ -37,10 +37,10 @@ class Braintree extends AbstractHandler implements Handler
 
     public function initHandler()
     {
-        Braintree_Configuration::environment($this->environment->config('braintree.environment'));
-        Braintree_Configuration::merchantId($this->environment->config('braintree.merchant'));
-        Braintree_Configuration::publicKey($this->environment->config('braintree.public'));
-        Braintree_Configuration::privateKey($this->environment->config('braintree.private'));
+        Configuration::environment($this->environment->config('braintree.environment'));
+        Configuration::merchantId($this->environment->config('braintree.merchant'));
+        Configuration::publicKey($this->environment->config('braintree.public'));
+        Configuration::privateKey($this->environment->config('braintree.private'));
 
         return $this;
     }
@@ -63,7 +63,7 @@ class Braintree extends AbstractHandler implements Handler
     public function startPartial()
     {
         try {
-            $this->braintreeClientToken = Braintree_ClientToken::generate();
+            $this->braintreeClientToken = ClientToken::generate();
 
         } catch (Throwable $e) {
             response()->unavailable('Braintree payments are not available at the moment');
@@ -126,7 +126,7 @@ class Braintree extends AbstractHandler implements Handler
 
         if ($braintreeNonce == $payment->braintree_payment_method_nonce) {
             //User pressed F5. Load existing transaction.
-            $result = Braintree_Transaction::find($payment->braintree_transaction_id);
+            $result = Transaction::find($payment->braintree_transaction_id);
 
         } else {
             //Create a new transaction
@@ -143,7 +143,7 @@ class Braintree extends AbstractHandler implements Handler
              * $transactionSettings['merchantAccountId'] = BRAINTREE_MERCHANT_ACCOUNT_ID;
              * }*/
 
-            $result = Braintree_Transaction::sale($transactionSettings);
+            $result = Transaction::sale($transactionSettings);
         }
 
         //Check for errors
@@ -181,7 +181,7 @@ class Braintree extends AbstractHandler implements Handler
         $payment->save();
 
         //SUBMITTED_FOR_SETTLEMENT means it's practically paid
-        if ($transaction->status == Braintree_Transaction::SUBMITTED_FOR_SETTLEMENT) {
+        if ($transaction->status == Transaction::SUBMITTED_FOR_SETTLEMENT) {
             $this->order->getBills()->each(
                 function(OrdersBill $ordersBill) use ($transaction) {
                     $ordersBill->confirm(
@@ -198,7 +198,7 @@ class Braintree extends AbstractHandler implements Handler
                 )
             );
 
-        } else if ($transaction->status == Braintree_Transaction::PROCESSOR_DECLINED) {
+        } else if ($transaction->status == Transaction::PROCESSOR_DECLINED) {
             $payment->set(
                 [
                     "state" => 'BT:' . $transaction->status,
@@ -224,7 +224,7 @@ class Braintree extends AbstractHandler implements Handler
                 )
             );
 
-        } else if ($transaction->status == Braintree_Transaction::GATEWAY_REJECTED) {
+        } else if ($transaction->status == Transaction::GATEWAY_REJECTED) {
             $payment->set(
                 [
                     "state" => 'BT:' . $transaction->status,
