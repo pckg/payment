@@ -3,6 +3,7 @@
 use Braintree_ClientToken;
 use Braintree_Configuration;
 use Braintree_Transaction;
+use Carbon\Carbon;
 use Derive\Orders\Record\OrdersBill;
 use Derive\Orders\Record\OrdersUser;
 use Pckg\Payment\Entity\Braintree as BraintreeEntity;
@@ -86,7 +87,7 @@ class Braintree extends AbstractHandler implements Handler
                 'braintree_transaction_id'       => null,
                 'price'                          => null,
                 'error'                          => null,
-                'dt_started'                     => null,
+                'dt_started'                     => Carbon::now(),
                 'dt_confirmed'                   => null,
             ]
         );
