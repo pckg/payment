@@ -7,6 +7,7 @@ use Derive\Orders\Record\OrdersBill;
 use Derive\Orders\Record\OrdersUser;
 use Pckg\Payment\Entity\Braintree as BraintreeEntity;
 use Pckg\Payment\Record\Braintree as BraintreeRecord;
+use Throwable;
 
 class Braintree extends AbstractHandler implements Handler
 {
@@ -60,9 +61,15 @@ class Braintree extends AbstractHandler implements Handler
 
     public function startPartial()
     {
-        $this->braintreeClientToken = Braintree_ClientToken::generate();
+        try {
+            $this->braintreeClientToken = Braintree_ClientToken::generate();
 
-        return BraintreeRecord::create(
+        } catch (Throwable $e) {
+            response()->unavailable('Braintree payments are not available at the moment');
+
+        }
+
+        $record = BraintreeRecord::create(
             [
                 'order_id'                       => $this->order->getId(),
                 'user_id'                        => auth('frontend')->user('id') ?? null,
@@ -83,6 +90,8 @@ class Braintree extends AbstractHandler implements Handler
                 'dt_confirmed'                   => null,
             ]
         );
+
+        return $record;
     }
 
     public function postStartPartial()
@@ -180,7 +189,7 @@ class Braintree extends AbstractHandler implements Handler
                     );
                 }
             );
-            
+
             $this->environment->redirect(
                 $this->environment->url(
                     'derive.payment.success',
