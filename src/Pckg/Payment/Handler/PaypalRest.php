@@ -11,6 +11,7 @@ use PayPal\Api\RedirectUrls;
 use PayPal\Api\Transaction;
 use PayPal\Auth\OAuthTokenCredential;
 use PayPal\Rest\ApiContext;
+use Throwable;
 
 class PaypalRest extends AbstractHandler implements Handler
 {
@@ -117,7 +118,7 @@ class PaypalRest extends AbstractHandler implements Handler
             $this->log($payment);
             $payment->create($this->paypal);
             $this->log($payment);
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
             $this->log($e);
             throw $e;
         } finally {
@@ -164,7 +165,7 @@ class PaypalRest extends AbstractHandler implements Handler
 
         try {
             $payment->execute($execution, $this->paypal);
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
             $this->log($e);
             throw $e;
         } finally {
