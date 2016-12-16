@@ -71,4 +71,19 @@ class Payment
         $this->getHandler()->setLogger($logger)->setEnvironment($this->environment);
     }
 
+    public function getPaymentMethods()
+    {
+        $methods = [];
+
+        foreach (config('pckg.payment') as $method => $config) {
+            if (config('pckg.payment.' . $method . '.enabled')) {
+                $methods[$method] = [
+                    'url' => url('derive.payment.startPartial', ['handler' => $method]),
+                ];
+            }
+        }
+
+        return $methods;
+    }
+
 }
