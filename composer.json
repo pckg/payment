@@ -17,8 +17,8 @@
     }
   },
   "require": {
-    "paymill/paymill": "^4.1",
-    "paypal/rest-api-sdk-php": "^1.6",
-    "braintree/braintree_php" : "3.18.0"
+    "paymill/paymill": "4.*",
+    "paypal/rest-api-sdk-php": "1.*",
+    "braintree/braintree_php" : "3.*"
   }
 }
