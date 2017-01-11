@@ -17,4 +17,6 @@ interface Environment
 
     public function redirect($url);
 
+    public function flash($key, $val);
+
 }

@@ -46,4 +46,9 @@ class Pckg implements Environment
         return response()->redirect($url);
     }
 
+    public function flash($key, $val)
+    {
+        return flash($key, $val);
+    }
+
 }

@@ -217,10 +217,17 @@ class Braintree extends AbstractHandler implements Handler
             /**
              * @T00D00 - redirect to error page with error $transaction->processorResponseText
              */
+            $this->environment->flash(
+                'pckg.payment.order.' . $this->order->getOrder() . '.error',
+                $transaction->processorResponseText
+            );
             $this->environment->redirect(
                 $this->environment->url(
                     'derive.payment.error',
-                    ['handler' => 'braintree', 'order' => $this->order->getOrder()]
+                    [
+                        'handler' => 'braintree',
+                        'order'   => $this->order->getId(),
+                    ]
                 )
             );
 
@@ -239,6 +246,10 @@ class Braintree extends AbstractHandler implements Handler
             /**
              * @T00D00 - redirect to error page with error $transaction->gatewayRejectionReason
              */
+            $this->environment->flash(
+                'pckg.payment.order.' . $this->order->getId() . '.error',
+                $transaction->gatewayRejectionReason
+            );
             $this->environment->redirect(
                 $this->environment->url(
                     'derive.payment.error',
@@ -250,6 +261,10 @@ class Braintree extends AbstractHandler implements Handler
             /**
              * @T00D00 - redirect to error page with error 'Unknown payment error'
              */
+            $this->environment->flash(
+                'pckg.payment.order.' . $this->order->getId() . '.error',
+                'Unknown payment'
+            );
             $this->environment->redirect(
                 $this->environment->url(
                     'derive.payment.error',
