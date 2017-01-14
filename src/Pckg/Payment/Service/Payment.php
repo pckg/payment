@@ -74,10 +74,10 @@ class Payment
     public function getPaymentMethods()
     {
         $methods = [];
-        $offersPaymentMethods = $this->order->getOrder()->offer->paymentMethods->keyBy('slug');
+        // $offersPaymentMethods = $this->order->getOrder()->offer->paymentMethods->keyBy('slug');
 
         foreach (config('pckg.payment') as $method => $config) {
-            if (config('pckg.payment.' . $method . '.enabled') && $offersPaymentMethods->hasKey($method)) {
+            if (config('pckg.payment.' . $method . '.enabled')/* && $offersPaymentMethods->hasKey($method)*/) {
                 $methods[$method] = [
                     'url' => url('derive.payment.startPartial', ['handler' => $method]),
                 ];
