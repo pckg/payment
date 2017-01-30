@@ -1,4 +1,7 @@
 # About project
+
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/8b5c27a4a33c4fada3115a9ec7b17872)](https://www.codacy.com/app/schtr4jh/payment?utm_source=github.com&utm_medium=referral&utm_content=pckg/payment&utm_campaign=badger)
+
 Project provides abstract implementation for payment providers:
  - paypal (classic API, REST API)
  - paymill (credit cards, sepa, paypal)
