@@ -41,7 +41,7 @@ class Braintree extends AbstractHandler implements Handler
         Configuration::merchantId($this->environment->config('braintree.merchant'));
         Configuration::publicKey($this->environment->config('braintree.public'));
         Configuration::privateKey($this->environment->config('braintree.private'));
-
+        
         return $this;
     }
 
@@ -66,7 +66,7 @@ class Braintree extends AbstractHandler implements Handler
             $this->braintreeClientToken = ClientToken::generate();
 
         } catch (Throwable $e) {
-            response()->unavailable('Braintree payments are not available at the moment');
+            response()->unavailable('Braintree payments are not available at the moment: ' . $e->getMessage());
 
         }
 
@@ -159,6 +159,10 @@ class Braintree extends AbstractHandler implements Handler
             /**
              * @T00D00 - redirect to error page with error $result->message
              */
+            $this->environment->flash(
+                'pckg.payment.order.' . $this->order->getId() . '.error',
+                $result->message
+            );
             $this->environment->redirect(
                 $this->environment->url(
                     'derive.payment.error',
@@ -218,7 +222,7 @@ class Braintree extends AbstractHandler implements Handler
              * @T00D00 - redirect to error page with error $transaction->processorResponseText
              */
             $this->environment->flash(
-                'pckg.payment.order.' . $this->order->getOrder() . '.error',
+                'pckg.payment.order.' . $this->order->getId() . '.error',
                 $transaction->processorResponseText
             );
             $this->environment->redirect(
