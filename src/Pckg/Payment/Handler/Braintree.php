@@ -63,9 +63,9 @@ class Braintree extends AbstractHandler implements Handler
     public function startPartial()
     {
         $order = $this->order->getOrder();
-        
+
         if (!$order->getIsConfirmedAttribute()) {
-            $order->ordersUser->each(
+            $order->ordersUsers->each(
                 function(OrdersUser $ordersUser) {
                     if (!$ordersUser->packet->stock || $ordersUser->packet->stock <= 0) {
                         response()->bad('Sold out!');
@@ -118,7 +118,7 @@ class Braintree extends AbstractHandler implements Handler
          * @T00D00
          */
         if (!$order->getIsConfirmedAttribute()) {
-            $order->ordersUser->each(
+            $order->ordersUsers->each(
                 function(OrdersUser $ordersUser) {
                     if (!$ordersUser->packet->stock || $ordersUser->packet->stock <= 0) {
                         response()->bad('Sold out!');
