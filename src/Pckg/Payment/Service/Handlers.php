@@ -2,9 +2,9 @@
 
 use Pckg\Payment\Handler\Braintree;
 use Pckg\Payment\Handler\Handler;
+use Pckg\Payment\Handler\Icepay;
 use Pckg\Payment\Handler\Moneta;
 use Pckg\Payment\Handler\Paymill;
-use Pckg\Payment\Handler\Paypal;
 use Pckg\Payment\Handler\PaypalGnp;
 use Pckg\Payment\Handler\PaypalRest;
 use Pckg\Payment\Handler\Proforma;
@@ -78,6 +78,11 @@ trait Handlers
     public function useMonetaHandler()
     {
         return $this->fullInitHandler(new Moneta($this->order));
+    }
+
+    public function useIcePayHandler()
+    {
+        return $this->fullInitHandler(new Icepay($this->order));
     }
 
 }
