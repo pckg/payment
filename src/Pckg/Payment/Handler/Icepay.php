@@ -58,6 +58,33 @@ class Icepay extends AbstractHandler implements Handler
         return round($this->order->getTotalToPay() * 100);
     }
 
+    protected function validatePostbackChecksum()
+    {
+        $calculatedChecksum = sha1(
+            sprintf(
+                "%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s",
+                $this->icepay->api_secret,
+                $this->icepay->api_key,
+                $this->environment->post('Status'),
+                $this->environment->post('StatusCode'),
+                $this->environment->post('OrderID'),
+                $this->environment->post('PaymentID'),
+                $this->environment->post('Reference'),
+                $this->environment->post('TransactionID'),
+                $this->environment->post('Amount'),
+                $this->environment->post('Currency'),
+                $this->environment->post('Duration'),
+                $this->environment->post('ConsumerIPAddress')
+            )
+        );
+
+        $checksum = $this->environment->post('Checksum');
+
+        if ($checksum !== $calculatedChecksum) {
+            throw new Exception('Checksum missmatch!');
+        }
+    }
+
     public function startPartial()
     {
         $order = $this->order->getOrder();
@@ -148,16 +175,12 @@ class Icepay extends AbstractHandler implements Handler
 
     public function postNotification()
     {
-        $status = $this->environment->post('Status');
-        $statusCode = $this->environment->post('StatusCode');
-        $reference = $this->environment->post('Reference');
-        $transaction = $this->environment->post('TransactionID');
-        $amount = round($this->environment->post('Amount') / 100, 2);
+        $this->validatePostbackChecksum();
 
-        /**
-         * @T00D00 - checksum!
-         */
-        $cheksum = $this->environment->post('Checksum');
+        $status = $this->environment->post('Status');
+        $reference = $this->environment->post('Reference');
+
+        $bodyData = (array)$this->environment->post(null);
 
         $payment = Payment::getOrFail(
             [
@@ -165,7 +188,7 @@ class Icepay extends AbstractHandler implements Handler
             ]
         );
 
-        $payment->addLog($status == 'OK' ? 'payed' : $status, (array)$this->environment->post(null));
+        $payment->addLog($status == 'OK' ? 'payed' : $status, (array)$bodyData);
 
         if ($status == 'OK') {
             $this->order->getBills()->each(
