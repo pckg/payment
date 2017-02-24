@@ -31,6 +31,16 @@ class Pckg implements Environment
         return request()->get($key);
     }
 
+    public function post($key)
+    {
+        return request()->post($key);
+    }
+
+    public function get($key)
+    {
+        return request()->get($key);
+    }
+
     public function url($slug, $params = [])
     {
         return url($slug, $params);

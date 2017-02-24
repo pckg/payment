@@ -1,13 +1,12 @@
 <?php namespace Pckg\Payment\Handler;
 
-use Braintree\ClientToken;
 use Braintree\Transaction;
-use Carbon\Carbon;
 use Derive\Orders\Record\OrdersBill;
 use Derive\Orders\Record\OrdersUser;
+use Exception;
 use Icepay\API\Client;
-use Pckg\Payment\Entity\Braintree as BraintreeEntity;
-use Pckg\Payment\Record\Braintree as BraintreeRecord;
+use Pckg\Payment\Record\Icepay as IcepayRecord;
+use Pckg\Payment\Record\Payment;
 use Throwable;
 
 class Icepay extends AbstractHandler implements Handler
@@ -45,46 +44,27 @@ class Icepay extends AbstractHandler implements Handler
         $this->icepay = new Client();
         $this->icepay->setApiKey($this->environment->config('icepay.merchant'));
         $this->icepay->setApiSecret($this->environment->config('icepay.secret'));
-        $this->icepay->setCompletedURL('http://example.com/payment.php');
-        $this->icepay->setErrorURL('http://example.com/payment.php');
-
-        $payment = $this->icepay->payment->checkOut(
-            [
-                'Amount'        => 1000,
-                'Currency'      => 'EUR',
-                'Paymentmethod' => 'IDEAL',
-                'Issuer'        => 'ABNAMRO',
-                'Country'       => 'NL',
-                'Language'      => 'NL',
-                'Description'   => 'This is a example description',
-                'OrderID'       => '1',
-                'Reference'     => '1',
-            ]
-        );
-
-        // dd($payment);
 
         return $this;
     }
 
     public function getTotal()
     {
-        return number_format($this->order->getTotal(), 2, '.', '');
+        return round($this->order->getTotal() * 100);
     }
 
     public function getTotalToPay()
     {
-        return number_format($this->order->getTotalToPay(), 2, '.', '');
-    }
-
-    public function getBraintreeClientToken()
-    {
-        return $this->braintreeClientToken;
+        return round($this->order->getTotalToPay() * 100);
     }
 
     public function startPartial()
     {
         $order = $this->order->getOrder();
+        $price = $this->getTotal();
+
+        $billIds = $this->order->getBills()->map('id');
+        $record = null;
 
         if (!$order->getIsConfirmedAttribute()) {
             $order->ordersUsers->each(
@@ -95,221 +75,60 @@ class Icepay extends AbstractHandler implements Handler
                 }
             );
         }
+
+        $paymentRecord = Payment::createForOrderAndMethod(
+            $this->order,
+            'icepay',
+            'ideal',
+            [
+                'billIds' => $billIds,
+            ]
+        );
 
         try {
-            $this->braintreeClientToken = ClientToken::generate();
+            $this->icepay->setCompletedURL(
+                url('derive.payment.success', ['handler' => 'icepay', 'order' => $order], true)
+            );
+            $this->icepay->setErrorURL(
+                url('derive.payment.error', ['handler' => 'icepay', 'order' => $order], true)
+            );
+
+            $payment = $this->icepay->payment->checkOut(
+                [
+                    'Amount'        => $price,
+                    'Currency'      => 'EUR',
+                    'Paymentmethod' => 'IDEAL',
+                    'Issuer'        => 'ABNAMRO',
+                    'Country'       => 'NL',
+                    'Language'      => 'EN',
+                    'Description'   => 'This is a example description',
+                    'OrderID'       => $order->id . '-' . $paymentRecord->id,
+                    'Reference'     => $paymentRecord->id,
+                    'EndUserIP'     => server('REMOTE_ADDR'),
+                ]
+            );
+
+            $paymentRecord->addLog('started', $payment);
+
+            if (!isset($payment->ProviderTransactionID) || !isset($payment->PaymentID)) {
+                throw new Exception("Icepay error - " . ($payment->Message ?? 'unknown error'));
+            }
+
+            $paymentRecord->setAndSave(
+                [
+                    'transaction_id' => $payment->ProviderTransactionID,
+                    'payment_id'     => $payment->PaymentID,
+                ]
+            );
+
+            $this->environment->redirect($payment->PaymentScreenURL);
 
         } catch (Throwable $e) {
-            response()->unavailable('Braintree payments are not available at the moment: ' . $e->getMessage());
+            response()->unavailable('Icepay payments are not available at the moment: ' . $e->getMessage());
 
         }
-
-        $record = BraintreeRecord::create(
-            [
-                'order_id'                       => $this->order->getId(),
-                'user_id'                        => auth('frontend')->user('id') ?? null,
-                'order_hash'                     => $this->order->getIdString(),
-                'braintree_hash'                 => sha1(microtime() . $this->order->getIdString()),
-                'braintree_client_token'         => $this->braintreeClientToken,
-                'state'                          => 'started',
-                'data'                           => json_encode(
-                    [
-                        'billIds' => $this->order->getBills()->map('id'),
-                    ]
-                ),
-                'braintree_payment_method_nonce' => null,
-                'braintree_transaction_id'       => null,
-                'price'                          => null,
-                'error'                          => null,
-                'dt_started'                     => Carbon::now(),
-                'dt_confirmed'                   => null,
-            ]
-        );
 
         return $record;
-    }
-
-    public function postStartPartial()
-    {
-        $payment = (new BraintreeEntity())->where('braintree_hash', router()->get('payment'))->oneOrFail();
-
-        $price = $this->order->getTotal();
-        $order = $this->order->getOrder();
-
-        /**
-         * @T00D00
-         */
-        if (!$order->getIsConfirmedAttribute()) {
-            $order->ordersUsers->each(
-                function(OrdersUser $ordersUser) {
-                    if (!$ordersUser->packet->stock || $ordersUser->packet->stock <= 0) {
-                        response()->bad('Sold out!');
-                    }
-                }
-            );
-        }
-
-        $payment->price = $price;
-        $payment->save();
-
-        $braintreeNonce = request()->post('payment_method_nonce');
-
-        if (!$braintreeNonce) {
-            response()->bad('Missing payment method nonce.');
-        }
-
-        if ($braintreeNonce == $payment->braintree_payment_method_nonce) {
-            //User pressed F5. Load existing transaction.
-            $result = Transaction::find($payment->braintree_transaction_id);
-
-        } else {
-            //Create a new transaction
-            $transactionSettings = [
-                'amount'             => $this->getTotal(),
-                'paymentMethodNonce' => $braintreeNonce,
-                'options'            => [
-                    'submitForSettlement' => true,
-                ],
-            ];
-
-            /**this was never set in old code
-             * if (defined('BRAINTREE_MERCHANT_ACCOUNT_ID') && BRAINTREE_MERCHANT_ACCOUNT_ID) {
-             * $transactionSettings['merchantAccountId'] = BRAINTREE_MERCHANT_ACCOUNT_ID;
-             * }*/
-
-            $result = Transaction::sale($transactionSettings);
-        }
-
-        //Check for errors
-        if (!$result->success) {
-            $payment->set(
-                [
-                    "state"                          => 'error',
-                    "braintree_payment_method_nonce" => $braintreeNonce,
-                    "error"                          => json_encode($result),
-                ]
-            )->save();
-
-            /**
-             * @T00D00 - redirect to error page with error $result->message
-             */
-            $this->environment->flash(
-                'pckg.payment.order.' . $this->order->getId() . '.error',
-                $result->message
-            );
-            $this->environment->redirect(
-                $this->environment->url(
-                    'derive.payment.error',
-                    ['handler' => 'braintree', 'order' => $this->order->getOrder()]
-                )
-            );
-        }
-
-        //If everything went fine, we got a transaction object
-        $transaction = $result->transaction;
-
-        //Write what we got to the database
-        $payment->set(
-            [
-                "braintree_transaction_id"       => $transaction->id,
-                "braintree_payment_method_nonce" => $braintreeNonce,
-                "state"                          => 'BT:' . $transaction->status,
-            ]
-        );
-        $payment->save();
-
-        //SUBMITTED_FOR_SETTLEMENT means it's practically paid
-        if ($transaction->status == Transaction::SUBMITTED_FOR_SETTLEMENT) {
-            $this->order->getBills()->each(
-                function(OrdersBill $ordersBill) use ($transaction) {
-                    $ordersBill->confirm(
-                        "Braintree #" . $transaction->id,
-                        'braintree'
-                    );
-                }
-            );
-
-            $this->environment->redirect(
-                $this->environment->url(
-                    'derive.payment.success',
-                    ['handler' => 'braintree', 'order' => $this->order->getOrder()]
-                )
-            );
-
-        } else if ($transaction->status == Transaction::PROCESSOR_DECLINED) {
-            $payment->set(
-                [
-                    "state" => 'BT:' . $transaction->status,
-                    "error" => print_r(
-                        [
-                            "processorResponseCode"       => $transaction->processorResponseCode,
-                            "processorResponseText"       => $transaction->processorResponseText,
-                            "additionalProcessorResponse" => $transaction->additionalProcessorResponse,
-                        ],
-                        true
-                    ),
-                ]
-            );
-            $payment->save();
-
-            /**
-             * @T00D00 - redirect to error page with error $transaction->processorResponseText
-             */
-            $this->environment->flash(
-                'pckg.payment.order.' . $this->order->getId() . '.error',
-                $transaction->processorResponseText
-            );
-            $this->environment->redirect(
-                $this->environment->url(
-                    'derive.payment.error',
-                    [
-                        'handler' => 'braintree',
-                        'order'   => $this->order->getId(),
-                    ]
-                )
-            );
-
-        } else if ($transaction->status == Transaction::GATEWAY_REJECTED) {
-            $payment->set(
-                [
-                    "state" => 'BT:' . $transaction->status,
-                    "error" => print_r(
-                        ["gatewayRejectionReason" => $transaction->gatewayRejectionReason],
-                        true
-                    ),
-                ]
-            );
-            $payment->save();
-
-            /**
-             * @T00D00 - redirect to error page with error $transaction->gatewayRejectionReason
-             */
-            $this->environment->flash(
-                'pckg.payment.order.' . $this->order->getId() . '.error',
-                $transaction->gatewayRejectionReason
-            );
-            $this->environment->redirect(
-                $this->environment->url(
-                    'derive.payment.error',
-                    ['handler' => 'braintree', 'order' => $this->order->getOrder()]
-                )
-            );
-
-        } else {
-            /**
-             * @T00D00 - redirect to error page with error 'Unknown payment error'
-             */
-            $this->environment->flash(
-                'pckg.payment.order.' . $this->order->getId() . '.error',
-                'Unknown payment'
-            );
-            $this->environment->redirect(
-                $this->environment->url(
-                    'derive.payment.error',
-                    ['handler' => 'braintree', 'order' => $this->order->getOrder()]
-                )
-            );
-        }
     }
 
     public function success()
@@ -327,11 +146,44 @@ class Icepay extends AbstractHandler implements Handler
 
     }
 
+    public function postNotification()
+    {
+        $status = $this->environment->post('Status');
+        $statusCode = $this->environment->post('StatusCode');
+        $reference = $this->environment->post('Reference');
+        $transaction = $this->environment->post('TransactionID');
+        $amount = round($this->environment->post('Amount') / 100, 2);
+
+        /**
+         * @T00D00 - checksum!
+         */
+        $cheksum = $this->environment->post('Checksum');
+
+        $payment = Payment::getOrFail(
+            [
+                'id' => $reference,
+            ]
+        );
+
+        $payment->addLog($status == 'OK' ? 'payed' : $status, (array)$this->environment->post(null));
+
+        if ($status == 'OK') {
+            $this->order->getBills()->each(
+                function(OrdersBill $ordersBill) use ($reference) {
+                    $ordersBill->confirm(
+                        "Ideal #" . $reference,
+                        'ideal'
+                    );
+                }
+            );
+        }
+    }
+
     public function getValidateUrl()
     {
         return $this->environment->url(
             'payment.validate',
-            ['handler' => 'paymill', 'order' => $this->order->getOrder()]
+            ['handler' => 'icepay', 'order' => $this->order->getOrder()]
         );
     }
 
@@ -339,7 +191,7 @@ class Icepay extends AbstractHandler implements Handler
     {
         return $this->environment->url(
             'payment.start',
-            ['handler' => 'braintree', 'order' => $this->order->getOrder()]
+            ['handler' => 'icepay', 'order' => $this->order->getOrder()]
         );
     }
 
