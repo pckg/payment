@@ -5,6 +5,7 @@ use Derive\Orders\Record\OrdersBill;
 use Derive\Orders\Record\OrdersUser;
 use Exception;
 use Icepay\API\Client;
+use Pckg\Collection;
 use Pckg\Payment\Record\Icepay as IcepayRecord;
 use Pckg\Payment\Record\Payment;
 use Throwable;
@@ -44,6 +45,13 @@ class Icepay extends AbstractHandler implements Handler
         $this->icepay = new Client();
         $this->icepay->setApiKey($this->environment->config('icepay.merchant'));
         $this->icepay->setApiSecret($this->environment->config('icepay.secret'));
+
+        $this->icepay->setCompletedURL(
+            url('derive.payment.success', ['handler' => 'icepay', 'order' => null], true)
+        );
+        $this->icepay->setErrorURL(
+            url('derive.payment.error', ['handler' => 'icepay', 'order' => null], true)
+        );
 
         return $this;
     }
@@ -86,6 +94,24 @@ class Icepay extends AbstractHandler implements Handler
     }
 
     public function startPartial()
+    {
+    }
+
+    public function getPaymentMethods()
+    {
+        return $this->icepay->payment->getMyPaymentMethods();
+    }
+
+    public function getPaymentMethod($method)
+    {
+        return (new Collection($this->getPaymentMethods()->PaymentMethods))->first(
+            function($paymentMethod) use ($method) {
+                return $paymentMethod->PaymentMethodCode == $method;
+            }
+        );
+    }
+
+    public function postStartPartial()
     {
         $order = $this->order->getOrder();
         $price = $this->getTotal();
