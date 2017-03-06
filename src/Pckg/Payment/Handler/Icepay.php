@@ -6,6 +6,7 @@ use Derive\Orders\Record\OrdersUser;
 use Exception;
 use Icepay\API\Client;
 use Pckg\Collection;
+use Pckg\Payment\Entity\Payments;
 use Pckg\Payment\Record\Icepay as IcepayRecord;
 use Pckg\Payment\Record\Payment;
 use Throwable;
@@ -95,6 +96,30 @@ class Icepay extends AbstractHandler implements Handler
 
     public function startPartial()
     {
+        $order = $this->order->getOrder();
+        $price = $this->getTotal();
+
+        $billIds = $this->order->getBills()->map('id');
+        $record = null;
+
+        if (!$order->getIsConfirmedAttribute()) {
+            $order->ordersUsers->each(
+                function(OrdersUser $ordersUser) {
+                    if (!$ordersUser->packet->stock || $ordersUser->packet->stock <= 0) {
+                        response()->bad('Sold out!');
+                    }
+                }
+            );
+        }
+
+        return Payment::createForOrderAndMethod(
+            $this->order,
+            'icepay',
+            'ideal',
+            [
+                'billIds' => $billIds,
+            ]
+        );
     }
 
     public function getPaymentMethods()
@@ -116,7 +141,6 @@ class Icepay extends AbstractHandler implements Handler
         $order = $this->order->getOrder();
         $price = $this->getTotal();
 
-        $billIds = $this->order->getBills()->map('id');
         $record = null;
 
         if (!$order->getIsConfirmedAttribute()) {
@@ -129,14 +153,7 @@ class Icepay extends AbstractHandler implements Handler
             );
         }
 
-        $paymentRecord = Payment::createForOrderAndMethod(
-            $this->order,
-            'icepay',
-            'ideal',
-            [
-                'billIds' => $billIds,
-            ]
-        );
+        $paymentRecord = (new Payments())->where('hash', router()->get('payment'))->oneOrFail();
 
         try {
             $this->icepay->setCompletedURL(
@@ -175,10 +192,8 @@ class Icepay extends AbstractHandler implements Handler
             );
 
             $this->environment->redirect($payment->PaymentScreenURL);
-
         } catch (Throwable $e) {
             response()->unavailable('Icepay payments are not available at the moment: ' . $e->getMessage());
-
         }
 
         return $record;
@@ -186,17 +201,14 @@ class Icepay extends AbstractHandler implements Handler
 
     public function success()
     {
-
     }
 
     public function error()
     {
-
     }
 
     public function waiting()
     {
-
     }
 
     public function postNotification()

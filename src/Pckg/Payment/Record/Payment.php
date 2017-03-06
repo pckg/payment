@@ -12,17 +12,19 @@ class Payment extends Record
 
     public static function createForOrderAndMethod(Order $order, $handler, $method, $data)
     {
-        return static::create(
-            [
-                'order_id'   => $order->getId(),
-                'created_at' => Carbon::now(),
-                'data'       => json_encode($data),
-                'price'      => $order->getTotal(),
-                'handler'    => $handler,
-                'method'     => $method,
-                'status'     => 'created',
-            ]
-        );
+        $data = [
+            'order_id'   => $order->getId(),
+            'created_at' => Carbon::now(),
+            'data'       => json_encode($data),
+            'price'      => $order->getTotal(),
+            'handler'    => $handler,
+            'method'     => $method,
+            'status'     => 'created',
+        ];
+
+        $data['hash'] = sha1(json_encode($data) . config('hash'));
+
+        return static::create($data);
     }
 
     public function addLog($status, $log)
@@ -35,6 +37,11 @@ class Payment extends Record
                 'data'       => json_encode($log),
             ]
         );
+    }
+
+    public function getUniqueId()
+    {
+        return $this->hash;
     }
 
 }
