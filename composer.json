@@ -1,6 +1,6 @@
 {
   "name": "pckg/payment",
-  "description": "Basic implementation of payment libraries",
+  "description": "Full implementation of payment libraries like braintree, paypal, ideal and others",
   "keywords": ["php", "payment", "paypal", "paymill", "sepa", "proforma"],
   "homepage": "https://github.com/pckg/payment",
   "license": "MIT",
