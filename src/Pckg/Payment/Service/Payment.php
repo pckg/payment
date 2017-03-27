@@ -4,7 +4,6 @@ use Pckg\Database\Helper\Convention;
 use Pckg\Payment\Adapter\Environment;
 use Pckg\Payment\Adapter\Log;
 use Pckg\Payment\Adapter\Order;
-use Pckg\Payment\Handler\Paymill;
 
 class Payment
 {
@@ -79,7 +78,8 @@ class Payment
         foreach (config('pckg.payment') as $method => $config) {
             if (config('pckg.payment.' . $method . '.enabled')/* && $offersPaymentMethods->hasKey($method)*/) {
                 $methods[$method] = [
-                    'url' => url('derive.payment.startPartial', ['handler' => $method]),
+                    'url'     => url('derive.payment.startPartial', ['handler' => $method]),
+                    'methods' => config('pckg.payment.' . $method . '.methods', []),
                 ];
             }
         }
