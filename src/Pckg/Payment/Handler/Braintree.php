@@ -64,15 +64,8 @@ class Braintree extends AbstractHandler implements Handler
     {
         $order = $this->order->getOrder();
 
-        if (!$order->getIsConfirmedAttribute()) {
-            $order->ordersUsers->each(
-                function(OrdersUser $ordersUser) {
-                    if (!$ordersUser->packet->stock || $ordersUser->packet->stock <= 0) {
-                        response()->bad('Sold out!');
-                    }
-                }
-            );
-        }
+        $order->redirectToSummaryIfNotPayable();
+        $order->redirectToSummaryIfOverbooked();
 
         try {
             $this->braintreeClientToken = ClientToken::generate();
@@ -114,18 +107,8 @@ class Braintree extends AbstractHandler implements Handler
         $price = $this->order->getTotal();
         $order = $this->order->getOrder();
 
-        /**
-         * @T00D00
-         */
-        if (!$order->getIsConfirmedAttribute()) {
-            $order->ordersUsers->each(
-                function(OrdersUser $ordersUser) {
-                    if (!$ordersUser->packet->stock || $ordersUser->packet->stock <= 0) {
-                        response()->bad('Sold out!');
-                    }
-                }
-            );
-        }
+        $order->redirectToSummaryIfNotPayable();
+        $order->redirectToSummaryIfOverbooked();
 
         $payment->price = $price;
         $payment->save();
