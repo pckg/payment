@@ -1,6 +1,7 @@
 <?php namespace Pckg\Payment\Record;
 
 use Carbon\Carbon;
+use Derive\Orders\Entity\OrdersBills;
 use Pckg\Database\Record;
 use Pckg\Payment\Adapter\Order;
 use Pckg\Payment\Entity\Payments;
@@ -10,7 +11,7 @@ class Payment extends Record
 
     protected $entity = Payments::class;
 
-    public static function createForOrderAndMethod(Order $order, $handler, $method, $data)
+    public static function createForOrderAndHandler(Order $order, $handler, $data)
     {
         $data = [
             'order_id'   => $order->getId(),
@@ -18,13 +19,17 @@ class Payment extends Record
             'data'       => json_encode($data),
             'price'      => $order->getTotal(),
             'handler'    => $handler,
-            'method'     => $method,
             'status'     => 'created',
         ];
 
         $data['hash'] = sha1(json_encode($data) . config('hash'));
 
         return static::create($data);
+    }
+
+    public function getBills()
+    {
+        return (new OrdersBills())->where('id', json_decode($this->data('data'))->billIds)->all();
     }
 
     public function addLog($status, $log)

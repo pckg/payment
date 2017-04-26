@@ -1,6 +1,5 @@
 <?php namespace Pckg\Payment\Service;
 
-use Pckg\Database\Helper\Convention;
 use Pckg\Payment\Adapter\Environment;
 use Pckg\Payment\Adapter\Log;
 use Pckg\Payment\Adapter\Order;
@@ -66,8 +65,10 @@ class Payment
     public function prepare(Order $order, $handler, Log $logger)
     {
         $this->setOrder($order);
-        $this->{'use' . Convention::toPascal($handler) . 'Handler'}();
+        $this->useHandler($handler);
         $this->getHandler()->setLogger($logger)->setEnvironment($this->environment);
+
+        return $this;
     }
 
     public function getPaymentMethods()
@@ -76,10 +77,19 @@ class Payment
         // $offersPaymentMethods = $this->order->getOrder()->offer->paymentMethods->keyBy('slug');
 
         foreach (config('pckg.payment') as $method => $config) {
-            if (config('pckg.payment.' . $method . '.enabled')/* && $offersPaymentMethods->hasKey($method)*/) {
+            if ($method == 'icepay' ||
+                config('pckg.payment.' . $method . '.enabled')/* && $offersPaymentMethods->hasKey($method)*/
+            ) {
+                $submethods = [];
+                foreach (config('pckg.payment.' . $method . '.methods', []) as $submethod) {
+                    $submethods[$method . '-' . $submethod] = [
+                        'url' => url('derive.payment.startPartial', ['handler' => $method . '-' . $submethod]),
+                    ];
+                }
+
                 $methods[$method] = [
                     'url'     => url('derive.payment.startPartial', ['handler' => $method]),
-                    'methods' => config('pckg.payment.' . $method . '.methods', []),
+                    'methods' => $submethods,
                 ];
             }
         }

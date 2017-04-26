@@ -1,12 +1,9 @@
 <?php namespace Pckg\Payment\Handler;
 
-use Braintree\Transaction;
 use Derive\Orders\Record\OrdersBill;
-use Derive\Orders\Record\OrdersUser;
 use Exception;
 use Icepay\API\Client;
 use Pckg\Collection;
-use Pckg\Payment\Entity\Payments;
 use Pckg\Payment\Record\Icepay as IcepayRecord;
 use Pckg\Payment\Record\Payment;
 use Throwable;
@@ -20,6 +17,10 @@ class Icepay extends AbstractHandler implements Handler
      * @var Client
      */
     protected $icepay;
+
+    protected $paymentMethod = null;
+
+    protected $issuer = null;
 
     public function validate($request)
     {
@@ -55,6 +56,37 @@ class Icepay extends AbstractHandler implements Handler
         );
 
         return $this;
+    }
+
+    protected function setUrls()
+    {
+        $order = $this->order->getOrder();
+
+        $this->icepay->setCompletedURL(
+            url('derive.payment.success', ['handler' => 'icepay', 'order' => $order], true)
+        );
+        $this->icepay->setErrorURL(
+            url('derive.payment.error', ['handler' => 'icepay', 'order' => $order], true)
+        );
+    }
+
+    private function getIcepayDefaultsData()
+    {
+        $order = $this->order->getOrder();
+        $price = $this->getTotal();
+
+        return [
+            'Amount'        => $price,
+            'Currency'      => 'EUR',
+            'Paymentmethod' => $this->paymentMethod,
+            'Issuer'        => $this->issuer,
+            'Language'      => 'EN',
+            'Country'       => '00',
+            'Description'   => $this->order->getDescription(),
+            'OrderID'       => $order->id . '-' . $this->paymentRecord->id,
+            'Reference'     => $this->paymentRecord->id,
+            'EndUserIP'     => server('REMOTE_ADDR'),
+        ];
     }
 
     public function getTotal()
@@ -94,34 +126,6 @@ class Icepay extends AbstractHandler implements Handler
         }
     }
 
-    public function startPartial()
-    {
-        $order = $this->order->getOrder();
-        $price = $this->getTotal();
-
-        $billIds = $this->order->getBills()->map('id');
-        $record = null;
-
-        if (!$order->getIsConfirmedAttribute()) {
-            $order->ordersUsers->each(
-                function(OrdersUser $ordersUser) {
-                    if (!$ordersUser->packet->stock || $ordersUser->packet->stock <= 0) {
-                        response()->bad('Sold out!');
-                    }
-                }
-            );
-        }
-
-        return Payment::createForOrderAndMethod(
-            $this->order,
-            'icepay',
-            'ideal',
-            [
-                'billIds' => $billIds,
-            ]
-        );
-    }
-
     public function getPaymentMethods()
     {
         return $this->icepay->payment->getMyPaymentMethods();
@@ -134,81 +138,6 @@ class Icepay extends AbstractHandler implements Handler
                 return $paymentMethod->PaymentMethodCode == $method;
             }
         );
-    }
-
-    public function postStartPartial()
-    {
-        $order = $this->order->getOrder();
-        $price = $this->getTotal();
-
-        $record = null;
-
-        if (!$order->getIsConfirmedAttribute()) {
-            $order->ordersUsers->each(
-                function(OrdersUser $ordersUser) {
-                    if (!$ordersUser->packet->stock || $ordersUser->packet->stock <= 0) {
-                        response()->bad('Sold out!');
-                    }
-                }
-            );
-        }
-
-        $paymentRecord = (new Payments())->where('hash', router()->get('payment'))->oneOrFail();
-
-        try {
-            $this->icepay->setCompletedURL(
-                url('derive.payment.success', ['handler' => 'icepay', 'order' => $order], true)
-            );
-            $this->icepay->setErrorURL(
-                url('derive.payment.error', ['handler' => 'icepay', 'order' => $order], true)
-            );
-
-            $payment = $this->icepay->payment->checkOut(
-                [
-                    'Amount'        => $price,
-                    'Currency'      => 'EUR',
-                    'Paymentmethod' => 'IDEAL',
-                    'Issuer'        => 'ABNAMRO',
-                    'Country'       => 'NL',
-                    'Language'      => 'EN',
-                    'Description'   => 'This is a example description',
-                    'OrderID'       => $order->id . '-' . $paymentRecord->id,
-                    'Reference'     => $paymentRecord->id,
-                    'EndUserIP'     => server('REMOTE_ADDR'),
-                ]
-            );
-
-            $paymentRecord->addLog('started', $payment);
-
-            if (!isset($payment->ProviderTransactionID) || !isset($payment->PaymentID)) {
-                throw new Exception("Icepay error - " . ($payment->Message ?? 'unknown error'));
-            }
-
-            $paymentRecord->setAndSave(
-                [
-                    'transaction_id' => $payment->ProviderTransactionID,
-                    'payment_id'     => $payment->PaymentID,
-                ]
-            );
-
-            $this->environment->redirect($payment->PaymentScreenURL);
-        } catch (Throwable $e) {
-            response()->unavailable('Icepay payments are not available at the moment: ' . $e->getMessage());
-        }
-
-        return $record;
-    }
-
-    public function success()
-    {
-    }
-
-    public function error()
-    {
-    }
-
-    public function waiting()
-    {
     }
 
     public function postNotification()
@@ -254,6 +183,57 @@ class Icepay extends AbstractHandler implements Handler
             'payment.start',
             ['handler' => 'icepay', 'order' => $this->order->getOrder()]
         );
+    }
+
+    public function postStartPartial()
+    {
+        try {
+            /**
+             * Set completed and error url.
+             */
+            $this->setUrls();
+
+            /**
+             * Create payment request.
+             */
+            $data = array_merge($this->getIcepayDefaultsData(), $this->getIcepayData());
+            $payment = $this->icepay->payment->checkOut($data);
+
+            /**
+             * Log payment started.
+             */
+            $this->paymentRecord->addLog('started', $payment);
+
+            /**
+             * Validate response.
+             */
+            if (!isset($payment->ProviderTransactionID) || !isset($payment->PaymentID)) {
+                throw new Exception("Icepay error - " . ($payment->Message ?? 'unknown error'));
+            }
+
+            /**
+             * Set ids.
+             */
+            $this->paymentRecord->setAndSave(
+                [
+                    'transaction_id' => $payment->ProviderTransactionID,
+                    'payment_id'     => $payment->PaymentID,
+                ]
+            );
+
+            /**
+             * Redirect to payment page.
+             */
+            dd($payment->PaymentScreenURL);
+            $this->environment->redirect($payment->PaymentScreenURL);
+        } catch (Throwable $e) {
+            response()->unavailable('Icepay payments are not available at the moment: ' . $e->getMessage());
+        }
+    }
+
+    public function getIcepayData()
+    {
+        return [];
     }
 
 }

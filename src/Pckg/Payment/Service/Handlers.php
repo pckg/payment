@@ -21,6 +21,9 @@ trait Handlers
         return $this;
     }
 
+    /**
+     * @return Handler
+     */
     public function getHandler()
     {
         return $this->handler;
@@ -33,6 +36,20 @@ trait Handlers
         $this->handler->initHandler();
 
         return $this;
+    }
+
+    public function useHandler($handler)
+    {
+        if (method_exists($this, 'use' . ucfirst($handler) . 'Handler')) {
+            $this->{'use' . ucfirst($handler) . 'Handler'}();
+
+            return;
+        }
+
+        list($handler, $subhandler) = explode('-', $handler);
+        $finalHandler = \Pckg\Payment\Handler::class . '\\' . ucfirst($handler) . '\\' . ucfirst($subhandler);
+
+        return $this->fullInitHandler(new $finalHandler($this->order));
     }
 
     public function useBraintreeHandler()

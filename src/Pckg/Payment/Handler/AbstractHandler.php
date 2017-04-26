@@ -3,6 +3,7 @@
 use Pckg\Payment\Adapter\Environment;
 use Pckg\Payment\Adapter\Log;
 use Pckg\Payment\Adapter\Order;
+use Pckg\Payment\Record\Payment;
 
 abstract class AbstractHandler implements Handler
 {
@@ -13,6 +14,8 @@ abstract class AbstractHandler implements Handler
 
     protected $log;
 
+    protected $paymentRecord;
+
     /**
      * @var Environment
      */
@@ -21,6 +24,29 @@ abstract class AbstractHandler implements Handler
     public function __construct(Order $order)
     {
         $this->order = $order;
+    }
+
+    /**
+     * @return $this
+     */
+    public function createPaymentRecord()
+    {
+        $this->paymentRecord = Payment::createForOrderAndHandler(
+            $this->order,
+            static::class,
+            [
+                'billIds' => $this->order->getBills()->map('id'),
+            ]
+        );
+
+        return $this;
+    }
+
+    public function setPaymentRecord($record)
+    {
+        $this->paymentRecord = $record;
+
+        return $this;
     }
 
     public function initHandler()
@@ -45,6 +71,44 @@ abstract class AbstractHandler implements Handler
     public function log($data)
     {
         $this->log->log($data);
+    }
+
+    public function start()
+    {
+    }
+
+    public function startPartial()
+    {
+    }
+
+    public function check()
+    {
+    }
+
+    public function postStart()
+    {
+    }
+
+    public function getPaymentRecord()
+    {
+        return $this->paymentRecord;
+    }
+
+    public function startPartialData()
+    {
+        return [];
+    }
+
+    public function success()
+    {
+    }
+
+    public function error()
+    {
+    }
+
+    public function waiting()
+    {
     }
 
 }

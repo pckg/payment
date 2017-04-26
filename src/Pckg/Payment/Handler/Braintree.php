@@ -62,11 +62,6 @@ class Braintree extends AbstractHandler implements Handler
 
     public function startPartial()
     {
-        $order = $this->order->getOrder();
-
-        $order->redirectToSummaryIfNotPayable();
-        $order->redirectToSummaryIfOverbooked();
-
         try {
             $this->braintreeClientToken = ClientToken::generate();
 
@@ -105,10 +100,6 @@ class Braintree extends AbstractHandler implements Handler
         $payment = (new BraintreeEntity())->where('braintree_hash', router()->get('payment'))->oneOrFail();
 
         $price = $this->order->getTotal();
-        $order = $this->order->getOrder();
-
-        $order->redirectToSummaryIfNotPayable();
-        $order->redirectToSummaryIfOverbooked();
 
         $payment->price = $price;
         $payment->save();

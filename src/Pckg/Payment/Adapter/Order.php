@@ -29,4 +29,6 @@ interface Order
 
     public function getOrder();
 
+    public function getBills();
+
 }

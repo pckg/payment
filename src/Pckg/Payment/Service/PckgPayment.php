@@ -10,6 +10,8 @@ trait PckgPayment
         $payment = new Payment();
         $payment->setEnvironment(new Pckg());
 
+        context()->bind(Payment::class, $payment);
+
         return $payment;
     }
 
