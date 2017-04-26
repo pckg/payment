@@ -5,4 +5,6 @@ class Americanexpress extends CreditCard
 
     protected $issuer = 'AMEX';
 
+    protected $handler = 'icepay-americanexpress';
+
 }

@@ -26,17 +26,24 @@ abstract class AbstractHandler implements Handler
         $this->order = $order;
     }
 
+    public function validate()
+    {
+        return [
+            'success' => true,
+        ];
+    }
+
     /**
      * @return $this
      */
-    public function createPaymentRecord()
+    public function createPaymentRecord($data = [])
     {
         $this->paymentRecord = Payment::createForOrderAndHandler(
             $this->order,
             static::class,
-            [
+            array_merge($data, [
                 'billIds' => $this->order->getBills()->map('id'),
-            ]
+            ])
         );
 
         return $this;
@@ -108,6 +115,10 @@ abstract class AbstractHandler implements Handler
     }
 
     public function waiting()
+    {
+    }
+
+    public function postNotification()
     {
     }
 

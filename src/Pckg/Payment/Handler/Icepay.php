@@ -11,8 +11,6 @@ use Throwable;
 class Icepay extends AbstractHandler implements Handler
 {
 
-    protected $braintreeClientToken;
-
     /**
      * @var Client
      */
@@ -22,25 +20,7 @@ class Icepay extends AbstractHandler implements Handler
 
     protected $issuer = null;
 
-    public function validate($request)
-    {
-        $rules = [
-            'holder'     => 'required',
-            'number'     => 'required',
-            'exp_month'  => 'required',
-            'exp_year'   => 'required',
-            'cvc'        => 'required',
-            'amount_int' => 'required',
-        ];
-
-        if (!$this->environment->validates($request, $rules)) {
-            return $this->environment->errorJsonResponse();
-        }
-
-        return [
-            'success' => true,
-        ];
-    }
+    protected $handler = 'icepay';
 
     public function initHandler()
     {
@@ -49,10 +29,10 @@ class Icepay extends AbstractHandler implements Handler
         $this->icepay->setApiSecret($this->environment->config('icepay.secret'));
 
         $this->icepay->setCompletedURL(
-            url('derive.payment.success', ['handler' => 'icepay', 'order' => null], true)
+            url('derive.payment.success', ['handler' => $this->handler, 'order' => null], true)
         );
         $this->icepay->setErrorURL(
-            url('derive.payment.error', ['handler' => 'icepay', 'order' => null], true)
+            url('derive.payment.error', ['handler' => $this->handler, 'order' => null], true)
         );
 
         return $this;
@@ -63,10 +43,10 @@ class Icepay extends AbstractHandler implements Handler
         $order = $this->order->getOrder();
 
         $this->icepay->setCompletedURL(
-            url('derive.payment.success', ['handler' => 'icepay', 'order' => $order], true)
+            url('derive.payment.success', ['handler' => $this->handler, 'order' => $order], true)
         );
         $this->icepay->setErrorURL(
-            url('derive.payment.error', ['handler' => 'icepay', 'order' => $order], true)
+            url('derive.payment.error', ['handler' => $this->handler, 'order' => $order], true)
         );
     }
 
@@ -194,15 +174,20 @@ class Icepay extends AbstractHandler implements Handler
             $this->setUrls();
 
             /**
+             * Log payment started.
+             */
+            $this->paymentRecord->addLog('started');
+
+            /**
              * Create payment request.
              */
             $data = array_merge($this->getIcepayDefaultsData(), $this->getIcepayData());
             $payment = $this->icepay->payment->checkOut($data);
 
             /**
-             * Log payment started.
+             * Log payment submitted.
              */
-            $this->paymentRecord->addLog('started', $payment);
+            $this->paymentRecord->addLog('submitted', $payment);
 
             /**
              * Validate response.
@@ -224,6 +209,7 @@ class Icepay extends AbstractHandler implements Handler
             /**
              * Redirect to payment page.
              */
+            $this->paymentRecord->addLog('redirected');
             dd($payment->PaymentScreenURL);
             $this->environment->redirect($payment->PaymentScreenURL);
         } catch (Throwable $e) {
@@ -234,6 +220,37 @@ class Icepay extends AbstractHandler implements Handler
     public function getIcepayData()
     {
         return [];
+    }
+
+    public function startIcepayPartialData($formClass, $handler, $fetch = [])
+    {
+        $form = resolve($formClass)->initFields();
+        $form->setAction(url('derive.payment.postStartPartial', [
+            'handler' => $handler,
+            'order'   => $this->order->getOrder(),
+            'payment' => $this->paymentRecord,
+        ]));
+
+        $config = $this->getPaymentMethod($this->paymentMethod);
+        if (in_array('country', $fetch)) {
+            foreach ($config->Issuers[0]->Countries as $country) {
+                $form->country->addOption($country->CountryCode, $country->CountryCode);
+            }
+        }
+
+        if (in_array('issuer', $fetch)) {
+            foreach ($config->Issuers as $issuer) {
+                $form->issuer->addOption($issuer->IssuerKeyword, $issuer->Description);
+            }
+        }
+
+        vueManager()->addView(
+            'Derive/Basket:payment/_start_' . $handler,
+            [
+                'config' => $config,
+                'form'   => $form,
+            ]
+        );
     }
 
 }

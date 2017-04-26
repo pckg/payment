@@ -5,4 +5,6 @@ class Mastercard extends CreditCard
 
     protected $issuer = 'MASTER';
 
+    protected $handler = 'icepay-mastercard';
+
 }

@@ -9,6 +9,8 @@ class Giropay extends Icepay
 
     protected $issuer = 'DEFAULT';
 
+    protected $handler = 'icepay-giropay';
+
     public function startPartial()
     {
         $this->postStartPartial();

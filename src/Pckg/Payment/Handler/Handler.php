@@ -12,7 +12,7 @@ interface Handler
     /**
      * @return $this
      */
-    public function createPaymentRecord();
+    public function createPaymentRecord($data = []);
 
     public function start();
 

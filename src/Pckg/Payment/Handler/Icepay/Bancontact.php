@@ -10,6 +10,8 @@ class Bancontact extends Icepay
 
     protected $issuer = 'MISTERCASH';
 
+    protected $handler = 'icepay-bancontact';
+
     public function getIcepayData()
     {
         return [
@@ -19,25 +21,7 @@ class Bancontact extends Icepay
 
     public function startPartialData()
     {
-        $bancontact = resolve(BancontactForm::class)->initFields();
-        $bancontact->setAction(url('derive.payment.postStartPartial', [
-            'handler' => 'icepay-bancontact',
-            'order'   => $this->order->getOrder(),
-            'payment' => $this->paymentRecord,
-        ]));
-        $bancontactConfig = $this->getPaymentMethod('MISTERCASH');
-
-        foreach ($bancontactConfig->Issuers[0]->Countries as $country) {
-            $bancontact->country->addOption($country->CountryCode, $country->CountryCode);
-        }
-
-        vueManager()->addView(
-            'Derive/Basket:payment/_start_icepay-bancontact',
-            [
-                'bancontact'     => $bancontactConfig,
-                'bancontactForm' => $bancontact,
-            ]
-        );
+        $this->startIcepayPartialData(BancontactForm::class, 'icepay-bancontact', ['country']);
 
         return [];
     }

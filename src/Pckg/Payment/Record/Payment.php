@@ -15,14 +15,15 @@ class Payment extends Record
     {
         $data = [
             'order_id'   => $order->getId(),
-            'created_at' => Carbon::now(),
+            'user_id'    => auth('frontend')->user('id'),
             'data'       => json_encode($data),
             'price'      => $order->getTotal(),
             'handler'    => $handler,
             'status'     => 'created',
+            'created_at' => date('Y-m-d H:i:s'),
         ];
 
-        $data['hash'] = sha1(json_encode($data) . config('hash'));
+        $data['hash'] = sha1(json_encode($data) . config('hash') . microtime());
 
         return static::create($data);
     }
@@ -32,7 +33,21 @@ class Payment extends Record
         return (new OrdersBills())->where('id', json_decode($this->data('data'))->billIds)->all();
     }
 
-    public function addLog($status, $log)
+    public function getJsonData($key)
+    {
+        return json_decode($this->data('data'))->{$key} ?? null;
+    }
+
+    public function setJsonData($key, $val)
+    {
+        $data = json_encode($this->data('data'), true);
+        $data[$key] = $val;
+        $this->set('data', json_decode($data));
+
+        return $this;
+    }
+
+    public function addLog($status, $log = null)
     {
         return PaymentLog::create(
             [

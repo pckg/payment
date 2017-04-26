@@ -3,11 +3,7 @@
 use Braintree\ClientToken;
 use Braintree\Configuration;
 use Braintree\Transaction;
-use Carbon\Carbon;
 use Derive\Orders\Record\OrdersBill;
-use Derive\Orders\Record\OrdersUser;
-use Pckg\Payment\Entity\Braintree as BraintreeEntity;
-use Pckg\Payment\Record\Braintree as BraintreeRecord;
 use Throwable;
 
 class Braintree extends AbstractHandler implements Handler
@@ -41,7 +37,7 @@ class Braintree extends AbstractHandler implements Handler
         Configuration::merchantId($this->environment->config('braintree.merchant'));
         Configuration::publicKey($this->environment->config('braintree.public'));
         Configuration::privateKey($this->environment->config('braintree.private'));
-        
+
         return $this;
     }
 
@@ -64,59 +60,26 @@ class Braintree extends AbstractHandler implements Handler
     {
         try {
             $this->braintreeClientToken = ClientToken::generate();
-
         } catch (Throwable $e) {
             response()->unavailable('Braintree payments are not available at the moment: ' . $e->getMessage());
-
         }
 
-        $record = BraintreeRecord::create(
-            [
-                'order_id'                       => $this->order->getId(),
-                'user_id'                        => auth('frontend')->user('id') ?? null,
-                'order_hash'                     => $this->order->getIdString(),
-                'braintree_hash'                 => sha1(microtime() . $this->order->getIdString()),
-                'braintree_client_token'         => $this->braintreeClientToken,
-                'state'                          => 'started',
-                'data'                           => json_encode(
-                    [
-                        'billIds' => $this->order->getBills()->map('id'),
-                    ]
-                ),
-                'braintree_payment_method_nonce' => null,
-                'braintree_transaction_id'       => null,
-                'price'                          => null,
-                'error'                          => null,
-                'dt_started'                     => Carbon::now(),
-                'dt_confirmed'                   => null,
-            ]
-        );
-
-        return $record;
+        $this->paymentRecord->setAndSave(['payment_id' => $this->braintreeClientToken]);
     }
 
     public function postStartPartial()
     {
-        $payment = (new BraintreeEntity())->where('braintree_hash', router()->get('payment'))->oneOrFail();
-
-        $price = $this->order->getTotal();
-
-        $payment->price = $price;
-        $payment->save();
-
         $braintreeNonce = request()->post('payment_method_nonce');
 
         if (!$braintreeNonce) {
             response()->bad('Missing payment method nonce.');
         }
 
-        if ($braintreeNonce == $payment->braintree_payment_method_nonce) {
-            //User pressed F5. Load existing transaction.
-            $result = Transaction::find($payment->braintree_transaction_id);
+        $this->getPaymentRecord()->addLog('submitted');
 
-        } else {
-            //Create a new transaction
-            $transactionSettings = [
+        $result = $braintreeNonce == $this->paymentRecord->getJsonData('braintree_payment_method_nonce')
+            ? Transaction::find($this->paymentRecord->transaction_id)
+            : [
                 'amount'             => $this->getTotal(),
                 'paymentMethodNonce' => $braintreeNonce,
                 'options'            => [
@@ -124,23 +87,14 @@ class Braintree extends AbstractHandler implements Handler
                 ],
             ];
 
-            /**this was never set in old code
-             * if (defined('BRAINTREE_MERCHANT_ACCOUNT_ID') && BRAINTREE_MERCHANT_ACCOUNT_ID) {
-             * $transactionSettings['merchantAccountId'] = BRAINTREE_MERCHANT_ACCOUNT_ID;
-             * }*/
-
-            $result = Transaction::sale($transactionSettings);
-        }
+        $this->paymentRecord->setJsonData('braintree_payment_method_nonce', $braintreeNonce)->save();
 
         //Check for errors
         if (!$result->success) {
-            $payment->set(
-                [
-                    "state"                          => 'error',
-                    "braintree_payment_method_nonce" => $braintreeNonce,
-                    "error"                          => json_encode($result),
-                ]
-            )->save();
+            $this->paymentRecord->setAndSave([
+                                                 'status' => 'error',
+                                             ]);
+            $this->paymentRecord->addLog('error', $result);
 
             /**
              * @T00D00 - redirect to error page with error $result->message
@@ -161,14 +115,10 @@ class Braintree extends AbstractHandler implements Handler
         $transaction = $result->transaction;
 
         //Write what we got to the database
-        $payment->set(
-            [
-                "braintree_transaction_id"       => $transaction->id,
-                "braintree_payment_method_nonce" => $braintreeNonce,
-                "state"                          => 'BT:' . $transaction->status,
-            ]
-        );
-        $payment->save();
+        $this->paymentRecord->setAndSave([
+                                             'transaction_id' => $transaction->id,
+                                             'status'         => $transaction->status,
+                                         ]);
 
         //SUBMITTED_FOR_SETTLEMENT means it's practically paid
         if ($transaction->status == Transaction::SUBMITTED_FOR_SETTLEMENT) {
@@ -188,29 +138,17 @@ class Braintree extends AbstractHandler implements Handler
                 )
             );
 
-        } else if ($transaction->status == Transaction::PROCESSOR_DECLINED) {
-            $payment->set(
-                [
-                    "state" => 'BT:' . $transaction->status,
-                    "error" => print_r(
-                        [
-                            "processorResponseCode"       => $transaction->processorResponseCode,
-                            "processorResponseText"       => $transaction->processorResponseText,
-                            "additionalProcessorResponse" => $transaction->additionalProcessorResponse,
-                        ],
-                        true
-                    ),
-                ]
-            );
-            $payment->save();
+            return;
+        }
 
-            /**
-             * @T00D00 - redirect to error page with error $transaction->processorResponseText
-             */
+        $this->paymentRecord->addLog($transaction->status, $transaction);
+
+        if ($transaction->status == Transaction::PROCESSOR_DECLINED) {
             $this->environment->flash(
                 'pckg.payment.order.' . $this->order->getId() . '.error',
                 $transaction->processorResponseText
             );
+
             $this->environment->redirect(
                 $this->environment->url(
                     'derive.payment.error',
@@ -220,41 +158,12 @@ class Braintree extends AbstractHandler implements Handler
                     ]
                 )
             );
-
         } else if ($transaction->status == Transaction::GATEWAY_REJECTED) {
-            $payment->set(
-                [
-                    "state" => 'BT:' . $transaction->status,
-                    "error" => print_r(
-                        ["gatewayRejectionReason" => $transaction->gatewayRejectionReason],
-                        true
-                    ),
-                ]
-            );
-            $payment->save();
-
-            /**
-             * @T00D00 - redirect to error page with error $transaction->gatewayRejectionReason
-             */
             $this->environment->flash(
                 'pckg.payment.order.' . $this->order->getId() . '.error',
                 $transaction->gatewayRejectionReason
             );
-            $this->environment->redirect(
-                $this->environment->url(
-                    'derive.payment.error',
-                    ['handler' => 'braintree', 'order' => $this->order->getOrder()]
-                )
-            );
 
-        } else {
-            /**
-             * @T00D00 - redirect to error page with error 'Unknown payment error'
-             */
-            $this->environment->flash(
-                'pckg.payment.order.' . $this->order->getId() . '.error',
-                'Unknown payment'
-            );
             $this->environment->redirect(
                 $this->environment->url(
                     'derive.payment.error',
@@ -262,21 +171,18 @@ class Braintree extends AbstractHandler implements Handler
                 )
             );
         }
-    }
 
-    public function success()
-    {
+        $this->environment->flash(
+            'pckg.payment.order.' . $this->order->getId() . '.error',
+            'Unknown payment'
+        );
 
-    }
-
-    public function error()
-    {
-
-    }
-
-    public function waiting()
-    {
-
+        $this->environment->redirect(
+            $this->environment->url(
+                'derive.payment.error',
+                ['handler' => 'braintree', 'order' => $this->order->getOrder()]
+            )
+        );
     }
 
     public function getValidateUrl()

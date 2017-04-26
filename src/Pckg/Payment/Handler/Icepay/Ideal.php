@@ -10,7 +10,9 @@ class Ideal extends Icepay
 
     protected $issuer = 'DEFAULT';
 
-    protected function getIcepayData()
+    protected $handler = 'icepay-ideal';
+
+    public function getIcepayData()
     {
         return [
             'Country' => 'NL',
@@ -20,25 +22,7 @@ class Ideal extends Icepay
 
     public function startPartialData()
     {
-        $ideal = resolve(IdealForm::class)->initFields();
-        $ideal->setAction(url('derive.payment.postStartPartial', [
-            'handler' => 'icepay-ideal',
-            'order'   => $this->order->getOrder(),
-            'payment' => $this->paymentRecord,
-        ]));
-        $idealConfig = $this->getPaymentMethod('IDEAL');
-
-        foreach ($idealConfig->Issuers as $issuer) {
-            $ideal->issuer->addOption($issuer->IssuerKeyword, $issuer->Description);
-        }
-
-        vueManager()->addView(
-            'Derive/Basket:payment/_start_icepay-ideal',
-            [
-                'ideal'     => $idealConfig,
-                'idealForm' => $ideal,
-            ]
-        );
+        $this->startIcepayPartialData(IdealForm::class, 'icepay-ideal', ['issuer']);
 
         return [];
     }
