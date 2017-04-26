@@ -209,8 +209,7 @@ class Icepay extends AbstractHandler implements Handler
             /**
              * Redirect to payment page.
              */
-            $this->paymentRecord->addLog('redirected');
-            dd($payment->PaymentScreenURL);
+            $this->paymentRecord->addLog('redirected', $payment->PaymentScreenURL);
             $this->environment->redirect($payment->PaymentScreenURL);
         } catch (Throwable $e) {
             response()->unavailable('Icepay payments are not available at the moment: ' . $e->getMessage());
