@@ -79,13 +79,13 @@ class Braintree extends AbstractHandler implements Handler
 
         $result = $braintreeNonce == $this->paymentRecord->getJsonData('braintree_payment_method_nonce')
             ? Transaction::find($this->paymentRecord->transaction_id)
-            : [
+            : Transaction::sale([
                 'amount'             => $this->getTotal(),
                 'paymentMethodNonce' => $braintreeNonce,
                 'options'            => [
                     'submitForSettlement' => true,
                 ],
-            ];
+            ]);
 
         $this->paymentRecord->setJsonData('braintree_payment_method_nonce', $braintreeNonce)->save();
 

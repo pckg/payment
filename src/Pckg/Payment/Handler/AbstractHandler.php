@@ -26,7 +26,7 @@ abstract class AbstractHandler implements Handler
         $this->order = $order;
     }
 
-    public function validate()
+    public function validate($request)
     {
         return [
             'success' => true,

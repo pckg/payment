@@ -41,6 +41,9 @@ class Payment extends Record
     public function setJsonData($key, $val)
     {
         $data = json_encode($this->data('data'), true);
+        if (!is_array($data)) {
+            $data = [];
+        }
         $data[$key] = $val;
         $this->set('data', json_decode($data));
 
