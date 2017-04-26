@@ -64,7 +64,7 @@ class Braintree extends AbstractHandler implements Handler
             response()->unavailable('Braintree payments are not available at the moment: ' . $e->getMessage());
         }
 
-        $this->paymentRecord->setAndSave(['payment_id' => $this->braintreeClientToken]);
+        $this->paymentRecord->addLog('created', $this->braintreeClientToken);
     }
 
     public function postStartPartial()
@@ -80,12 +80,12 @@ class Braintree extends AbstractHandler implements Handler
         $result = $braintreeNonce == $this->paymentRecord->getJsonData('braintree_payment_method_nonce')
             ? Transaction::find($this->paymentRecord->transaction_id)
             : Transaction::sale([
-                'amount'             => $this->getTotal(),
-                'paymentMethodNonce' => $braintreeNonce,
-                'options'            => [
-                    'submitForSettlement' => true,
-                ],
-            ]);
+                                    'amount'             => $this->getTotal(),
+                                    'paymentMethodNonce' => $braintreeNonce,
+                                    'options'            => [
+                                        'submitForSettlement' => true,
+                                    ],
+                                ]);
 
         $this->paymentRecord->setJsonData('braintree_payment_method_nonce', $braintreeNonce)->save();
 
