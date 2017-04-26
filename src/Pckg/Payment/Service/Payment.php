@@ -77,9 +77,7 @@ class Payment
         // $offersPaymentMethods = $this->order->getOrder()->offer->paymentMethods->keyBy('slug');
 
         foreach (config('pckg.payment') as $method => $config) {
-            if ($method == 'icepay' ||
-                config('pckg.payment.' . $method . '.enabled')/* && $offersPaymentMethods->hasKey($method)*/
-            ) {
+            if (config('pckg.payment.' . $method . '.enabled')/* && $offersPaymentMethods->hasKey($method)*/) {
                 $submethods = [];
                 foreach (config('pckg.payment.' . $method . '.methods', []) as $submethod) {
                     $submethods[$method . '-' . $submethod] = [
