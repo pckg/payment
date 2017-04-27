@@ -80,7 +80,7 @@ class Payment
             if (config('pckg.payment.' . $method . '.enabled')/* && $offersPaymentMethods->hasKey($method)*/) {
                 $submethods = [];
                 foreach (config('pckg.payment.' . $method . '.methods', []) as $submethod) {
-                    $submethods[$method . '-' . $submethod] = [
+                    $submethods[$submethod] = [
                         'url' => url('derive.payment.startPartial', ['handler' => $method . '-' . $submethod]),
                     ];
                 }
