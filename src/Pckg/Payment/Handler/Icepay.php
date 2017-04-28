@@ -122,24 +122,24 @@ class Icepay extends AbstractHandler implements Handler
 
     public function postNotification()
     {
-        error_log('Validating' . print_r($_POST, true));
+        file_put_contents('/tmp/icepay-1', print_r($_POST, true));
         $this->validatePostbackChecksum();
-        error_log('Validated');
+        file_put_contents('/tmp/icepay-2', "1");
 
         $status = $this->environment->post('Status');
         $reference = $this->environment->post('Reference');
-        error_log($status);
-        error_log($reference);
+        file_put_contents('/tmp/icepay-3', $status);
+        file_put_contents('/tmp/icepay-4', $reference);
 
         $bodyData = (array)$this->environment->post(null);
-        error_log('Getting');
+        file_put_contents('/tmp/icepay-5', "1");
 
         $payment = Payment::getOrFail(
             [
                 'id' => $reference,
             ]
         );
-        error_log('Got');
+        file_put_contents('/tmp/icepay-6', "1");
 
         $payment->addLog($status == 'OK' ? 'payed' : $status, (array)$bodyData);
 
