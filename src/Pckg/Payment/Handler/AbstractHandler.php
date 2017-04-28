@@ -96,6 +96,10 @@ abstract class AbstractHandler implements Handler
     {
     }
 
+    public function postStartPartial()
+    {
+    }
+
     public function getPaymentRecord()
     {
         return $this->paymentRecord;
