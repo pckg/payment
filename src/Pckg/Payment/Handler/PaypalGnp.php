@@ -74,6 +74,7 @@ class PaypalGnp extends AbstractHandler implements Handler
                     ['handler' => 'paypal', 'payment' => $ppPaymentHash, 'order' => $this->order->getOrder()],
                     true
                 ),
+                // 'notify_url' => [],
             ],
             "payer"         => [
                 "payment_method" => "paypal",

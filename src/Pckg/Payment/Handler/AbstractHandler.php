@@ -126,4 +126,8 @@ abstract class AbstractHandler implements Handler
     {
     }
 
+    public function cancel()
+    {
+    }
+
 }
