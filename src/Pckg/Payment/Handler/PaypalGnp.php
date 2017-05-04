@@ -2,8 +2,6 @@
 
 use Derive\Orders\Record\OrdersBill;
 use Exception;
-use Pckg\Payment\Entity\Paypal;
-use Pckg\Payment\Record\Paypal as PaypalRecord;
 
 class PaypalGnp extends AbstractHandler implements Handler
 {
@@ -53,8 +51,6 @@ class PaypalGnp extends AbstractHandler implements Handler
     public function startPartial()
     {
         $price = $this->order->getTotal();
-
-        $ppPaymentHash = sha1(microtime() . $this->order->getIdString());
         $accessToken = $this->getAccessToken();
 
         $arrData = [
@@ -64,14 +60,14 @@ class PaypalGnp extends AbstractHandler implements Handler
                     'derive.payment.check',
                     [
                         'handler' => 'paypal',
-                        'payment' => $ppPaymentHash,
+                        'payment' => $this->paymentRecord,
                         'order'   => $this->order->getOrder(),
                     ],
                     true
                 ),
                 "cancel_url" => url(
                     'derive.payment.cancel',
-                    ['handler' => 'paypal', 'payment' => $ppPaymentHash, 'order' => $this->order->getOrder()],
+                    ['handler' => 'paypal', 'payment' => $this->paymentRecord, 'order' => $this->order->getOrder()],
                     true
                 ),
                 // 'notify_url' => [],
@@ -111,46 +107,30 @@ class PaypalGnp extends AbstractHandler implements Handler
         $result = curl_exec($ch);
         curl_close($ch);
 
-        if (empty($result)) {
-            return "Empty result" . ($result);
+        if (!$result) {
+            throw new Exception('Paypal payments are not available at the moment.');
+        }
+
+        $json = json_decode($result);
+
+        if (isset($json->state) && $json->state == "created") {
+            $this->paymentRecord->setAndSave(['payment_id' => $json->id]);
+
+            response()->redirect($json->links[1]->href);
         } else {
-            $json = json_decode($result);
-
-            if (isset($json->state) && $json->state == "created") {
-                PaypalRecord::create(
-                    [
-                        "order_id"    => $this->order->getId(),
-                        "user_id"     => auth('frontend')->getUser()->id,
-                        "order_hash"  => $this->order->getOrder()->hash,
-                        "paypal_hash" => $ppPaymentHash,
-                        "paypal_id"   => $json->id,
-                        "status"      => "started",
-                        "price"       => $price,
-                        "data"        => json_encode(
-                            [
-                                'billIds' => $this->order->getBills()->map('id'),
-                            ]
-                        ),
-                    ]
-                );
-
-                response()->redirect($json->links[1]->href);
-            } else {
-                echo '<pre>';
-                print_r($json);
-                echo '</pre>';
-                die();
-            }
+            echo '<pre>';
+            print_r($json);
+            echo '</pre>';
+            die();
         }
     }
 
     function check()
     {
-        $paypal = (new Paypal())->where('paypal_hash', router()->get('payment'))->oneOrFail();
         $accessToken = $this->getAccessToken();
 
         $arrData = [
-            "payer_id" => $_GET['PayerID'],
+            "payer_id" => get('PayerID'),
         ];
 
         $ch = curl_init();
@@ -158,7 +138,8 @@ class PaypalGnp extends AbstractHandler implements Handler
         curl_setopt(
             $ch,
             CURLOPT_URL,
-            "https://" . $this->config['endpoint'] . "/v1/payments/payment/" . $paypal->paypal_id . "/execute/"
+            "https://" . $this->config['endpoint'] . "/v1/payments/payment/" . $this->paymentRecord->payment_id .
+            "/execute/"
         );
         curl_setopt(
             $ch,
@@ -176,77 +157,70 @@ class PaypalGnp extends AbstractHandler implements Handler
         $result = curl_exec($ch);
         curl_close($ch);
 
-        if (empty($result)) {
+        if (!$result) {
             throw new Exception(__('error_title_cannot_execute_order'));
-        } else {
-            $json = json_decode($result);
-
-            if (isset($json->state)) { // unknown error
-                $paypal->set(
-                    [
-                        "status"          => $json->state,
-                        "paypal_payer_id" => $_GET['PayerID'],
-                    ]
-                )->save();
-
-                /**
-                 * Handle successful payment.
-                 */
-                if ($json->state == "approved") {
-                    $this->order->getBills()->each(
-                        function(OrdersBill $ordersBill) use ($paypal, $result) {
-                            $ordersBill->confirm(
-                                "Paypal " . $paypal->paypal_id . ' ' . $result,
-                                'paypal'
-                            );
-                        }
-                    );
-                }
-
-                if ($json->state == "pending") {
-                    response()->redirect(
-                        url('derive.payment.waiting', ['handler' => 'paypal', 'order' => $this->order->getOrder()])
-                    );
-                    /**
-                     * Debug::addWarning(
-                     * "Status naročila je <i>$json->state</i>. Ko bo naročilo potrjeno, vas bomo obvestili preko email naslova."
-                     * );*/
-                } else if ($json->state == "approved") {
-                    response()->redirect(
-                        url('derive.payment.success', ['handler' => 'paypal', 'order' => $this->order->getOrder()])
-                    );
-                } else {
-                    response()->redirect(
-                        url('derive.payment.error', ['handler' => 'paypal', 'order' => $this->order->getOrder()])
-                    );
-                    /**
-                     * Debug::addError(__('error_title_unknown_payment_status'));
-                     *
-                     */
-                }
-            } else {
-                /*var_dump($json);
-                echo '<pre>';
-                print_r($json);
-                echo '</pre>';
-                echo $result;
-                die("failed");*/
-                response()->redirect(
-                    url('derive.payment.error', ['handler' => 'paypal', 'order' => $this->order->getOrder()])
-                );
-                /*Debug::addError(__('error_title_order_confirmation_failed'));*/
-            }
         }
+
+        $json = json_decode($result);
+
+        if (!isset($json->state)) { // unknown error
+            if ($json->name == 'PAYMENT_ALREADY_DONE') {
+            }
+
+            response()->redirect(
+                url('derive.payment.error', ['handler' => 'paypal', 'order' => $this->order->getOrder()])
+            );
+        }
+
+        $this->paymentRecord->setAndSave(
+            [
+                "status"         => $json->state,
+                "transaction_id" => $json->id,
+            ]
+        );
+
+        /**
+         * Handle successful payment.
+         */
+        if ($json->state == "approved") {
+            $paypal = $this->paymentRecord;
+            $this->order->getBills()->each(
+                function(OrdersBill $ordersBill) use ($paypal, $result) {
+                    $ordersBill->confirm(
+                        "Paypal " . $paypal->payment_id . ' ' . $result,
+                        'paypal'
+                    );
+                }
+            );
+        }
+
+        /**
+         * Handle other payments.
+         */
+        if ($json->state == "pending") {
+            response()->redirect(
+                url('derive.payment.waiting', ['handler' => 'paypal', 'order' => $this->order->getOrder()])
+            );
+        } else if ($json->state == "approved") {
+            response()->redirect(
+                url('derive.payment.success', ['handler' => 'paypal', 'order' => $this->order->getOrder()])
+            );
+        }
+
+        /**
+         * Redirect on error.
+         */
+        response()->redirect(
+            url('derive.payment.error', ['handler' => 'paypal', 'order' => $this->order->getOrder()])
+        );
     }
 
     public function success()
     {
-
     }
 
     public function error()
     {
-        
     }
 
 }
