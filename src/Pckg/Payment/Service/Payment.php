@@ -66,7 +66,8 @@ class Payment
     {
         $this->setOrder($order);
         $this->useHandler($handler);
-        $this->getHandler()->setLogger($logger)->setEnvironment($this->environment);
+        $handler = $this->getHandler();
+        $handler->setLogger($logger)->setEnvironment($this->environment);
 
         return $this;
     }
