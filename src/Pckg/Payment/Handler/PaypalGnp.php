@@ -187,7 +187,7 @@ class PaypalGnp extends AbstractHandler implements Handler
             $this->order->getBills()->each(
                 function(OrdersBill $ordersBill) use ($paypal, $result) {
                     $ordersBill->confirm(
-                        "Paypal " . $paypal->payment_id . ' ' . $result,
+                        "Paypal " . $paypal->payment_id,
                         'paypal'
                     );
                 }
