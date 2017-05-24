@@ -23,7 +23,7 @@ class Pckg implements Environment
 
     public function config($key)
     {
-        return config('pckg.payment.' . $key);
+        return config('pckg.payment.provider.' . $key);
     }
 
     public function request($key)

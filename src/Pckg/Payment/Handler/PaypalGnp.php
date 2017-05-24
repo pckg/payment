@@ -79,7 +79,7 @@ class PaypalGnp extends AbstractHandler implements Handler
                 [
                     "amount"      => [
                         "total"    => $price,
-                        "currency" => "EUR",
+                        "currency" => config('pckg.payment.currency'),
                     ],
                     "description" => __('order_payment') . " #" . $this->order->getId() .
                                      ' (' . $this->order->getNum() . ' - ' .

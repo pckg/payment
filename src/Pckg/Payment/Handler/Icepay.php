@@ -57,7 +57,7 @@ class Icepay extends AbstractHandler implements Handler
 
         return [
             'Amount'        => $price,
-            'Currency'      => 'EUR',
+            'Currency'      => config('pckg.payment.currency'),
             'Paymentmethod' => $this->paymentMethod,
             'Issuer'        => $this->issuer,
             'Language'      => 'EN',

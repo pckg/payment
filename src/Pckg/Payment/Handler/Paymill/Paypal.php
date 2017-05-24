@@ -20,7 +20,7 @@ class Paypal extends Paymill
         $checksum = new Checksum();
         $checksum->setChecksumType(Checksum::TYPE_PAYPAL)
                  ->setAmount($this->getTotalToPay())
-                 ->setCurrency('EUR')
+                 ->setCurrency(config('pckg.payment.currency'))
                  ->setDescription('Description')
                  ->setReturnUrl($this->getReturnUrl())
                  ->setCancelUrl($this->getCancelUrl());

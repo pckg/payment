@@ -17,7 +17,7 @@ abstract class AbstractOrder implements Order
 
     public function getCurrency()
     {
-        return 'EUR';
+        return config('pckg.payment.currency');
     }
 
     public function getIdString()
