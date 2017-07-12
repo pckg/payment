@@ -185,9 +185,11 @@ class PaypalGnp extends AbstractHandler implements Handler
         if ($json->state == "approved") {
             $paypal = $this->paymentRecord;
             $this->order->getBills()->each(
-                function(OrdersBill $ordersBill) use ($paypal, $result) {
+                function(OrdersBill $ordersBill) use ($paypal, $json) {
+                    $transaction = end($json->transactions);
+                    $resource = end($transaction->related_resources);
                     $ordersBill->confirm(
-                        "Paypal " . $paypal->payment_id,
+                        "Paypal " . $resource->sale->id,
                         'paypal'
                     );
                 }
