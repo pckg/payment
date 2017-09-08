@@ -18,7 +18,7 @@ class Pckg implements Environment
 
     public function errorJsonResponse()
     {
-        return response()->respond(['error' => true, 'errors' => ['@T00D00']]);
+        return response()->respond(['error' => true, 'errors' => ['@T00D001']]);
     }
 
     public function config($key)
