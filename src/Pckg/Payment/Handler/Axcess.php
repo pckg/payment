@@ -102,7 +102,7 @@ class Axcess extends AbstractHandler implements Handler
                     )
                 );
             }
-            
+
             $this->environment->redirect(
                 $this->environment->url(
                     'derive.payment.error',
