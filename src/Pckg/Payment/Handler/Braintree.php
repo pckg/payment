@@ -41,16 +41,6 @@ class Braintree extends AbstractHandler implements Handler
         return $this;
     }
 
-    public function getTotal()
-    {
-        return number_format($this->order->getTotal(), 2, '.', '');
-    }
-
-    public function getTotalToPay()
-    {
-        return number_format($this->order->getTotalToPay(), 2, '.', '');
-    }
-
     public function getBraintreeClientToken()
     {
         return $this->braintreeClientToken;

@@ -47,7 +47,8 @@ trait Handlers
         }
 
         list($handler, $subhandler) = explode('-', $handler);
-        $finalHandler = \Pckg\Payment\Handler::class . '\\' . ucfirst($handler) . '\\' . ucfirst($subhandler);
+        $finalHandler = \Pckg\Payment\Handler::class . '\\' . ucfirst($handler) .
+                        ($subhandler ? '\\' . ucfirst($subhandler) : '');
 
         return $this->fullInitHandler(new $finalHandler($this->order));
     }

@@ -130,4 +130,14 @@ abstract class AbstractHandler implements Handler
     {
     }
 
+    public function getTotal()
+    {
+        return number_format($this->order->getTotal(), 2, '.', '');
+    }
+
+    public function getTotalToPay()
+    {
+        return number_format($this->order->getTotalToPay(), 2, '.', '');
+    }
+
 }
