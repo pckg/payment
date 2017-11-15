@@ -224,7 +224,7 @@ class Icepay extends AbstractHandler implements Handler
 
     public function startIcepayPartialData($formClass, $handler, $fetch = [])
     {
-        $form = resolve($formClass)->initFields();
+        $form = resolve($formClass);
         $form->setAction(url('derive.payment.postStartPartial', [
             'handler' => $handler,
             'order'   => $this->order->getOrder(),
