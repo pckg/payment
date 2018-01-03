@@ -108,7 +108,9 @@ class Icepay extends AbstractHandler implements Handler
 
     public function getPaymentMethods()
     {
-        return $this->icepay->payment->getMyPaymentMethods();
+        $response = $this->icepay->payment->getMyPaymentMethods();
+
+        return $response;
     }
 
     public function getPaymentMethod($method)
@@ -232,15 +234,17 @@ class Icepay extends AbstractHandler implements Handler
         ]));
 
         $config = $this->getPaymentMethod($this->paymentMethod);
-        if (in_array('country', $fetch)) {
-            foreach ($config->Issuers[0]->Countries as $country) {
-                $form->country->addOption($country->CountryCode, $country->CountryCode);
+        if ($config) {
+            if (in_array('country', $fetch)) {
+                foreach ($config->Issuers[0]->Countries as $country) {
+                    $form->country->addOption($country->CountryCode, $country->CountryCode);
+                }
             }
-        }
 
-        if (in_array('issuer', $fetch)) {
-            foreach ($config->Issuers as $issuer) {
-                $form->issuer->addOption($issuer->IssuerKeyword, $issuer->Description);
+            if (in_array('issuer', $fetch)) {
+                foreach ($config->Issuers as $issuer) {
+                    $form->issuer->addOption($issuer->IssuerKeyword, $issuer->Description);
+                }
             }
         }
 
