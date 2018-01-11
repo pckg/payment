@@ -35,6 +35,8 @@ class Icepay extends AbstractHandler implements Handler
             url('derive.payment.error', ['handler' => $this->handler, 'order' => null], true)
         );
 
+        //dd($this->getPaymentMethods());
+
         return $this;
     }
 

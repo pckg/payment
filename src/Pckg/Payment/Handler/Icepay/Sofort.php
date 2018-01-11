@@ -6,23 +6,24 @@ use Pckg\Payment\Handler\Icepay;
 class Sofort extends Icepay
 {
 
-    protected $paymentMethod = 'SOFORT';
+    protected $paymentMethod = 'DIRECTEBANK';
 
-    protected $issuer = 'DEFAULT';
+    protected $issuer = 'DIGITAL';
 
     protected $handler = 'icepay-sofort';
-
-    public function startPartial()
-    {
-        $this->postStartPartial();
-    }
 
     public function getIcepayData()
     {
         return [
-            'Language' => 'DE',
-            'Country'  => 'DE',
+            'Country' => post('country', null),
         ];
+    }
+
+    public function startPartialData()
+    {
+        $this->startIcepayPartialData(SofortForm::class, 'icepay-sofort', ['country']);
+
+        return [];
     }
 
 }
