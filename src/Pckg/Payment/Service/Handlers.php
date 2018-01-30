@@ -1,5 +1,6 @@
 <?php namespace Pckg\Payment\Service;
 
+use Pckg\Payment\Handler\Axcess;
 use Pckg\Payment\Handler\Braintree;
 use Pckg\Payment\Handler\Handler;
 use Pckg\Payment\Handler\Icepay;
@@ -101,6 +102,11 @@ trait Handlers
     public function useIcePayHandler()
     {
         return $this->fullInitHandler(new Icepay($this->order));
+    }
+
+    public function useAxcessHandler()
+    {
+        return $this->fullInitHandler(new Axcess($this->order));
     }
 
 }

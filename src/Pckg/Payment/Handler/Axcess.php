@@ -1,6 +1,7 @@
 <?php namespace Pckg\Payment\Handler;
 
 use Derive\Orders\Record\OrdersBill;
+use Exception;
 use Throwable;
 
 class Axcess extends AbstractHandler implements Handler
@@ -71,11 +72,15 @@ class Axcess extends AbstractHandler implements Handler
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             $responseData = curl_exec($ch);
             if (curl_errno($ch)) {
-                return curl_error($ch);
+                throw new Exception("Curl error: " . curl_error($ch));
             }
             curl_close($ch);
 
             $data = json_decode($responseData, true);
+
+            if (trim($data['result']['code'] ?? null) !== '000.200.100') {
+                throw new Exception($data['result']['description'] ?? 'Unknown Axcess error');
+            }
 
             $this->axcessToken = $data['id'];
             $this->paymentRecord->setAndSave([
