@@ -20,28 +20,54 @@ class Axcess extends AbstractHandler implements Handler
         return $this;
     }
 
+    /**
+     * @return string
+     *
+     * Used on frontend form.
+     */
     public function getAxcessToken()
     {
         return $this->axcessToken;
     }
 
+    /**
+     * @return string
+     */
+    public function getEndpoint()
+    {
+        return config('pckg.payment.provider.axcess.endpoint', '');
+    }
+
+    /**
+     * @return string
+     */
+    public function getBrands()
+    {
+        return config('pckg.payment.provider.axcess.brands', '');
+    }
+
+    /**
+     * @return string
+     *
+     * Prepare Access processor for payment.
+     */
     public function startPartial()
     {
         $responseData = null;
         try {
-            $url = "https://test.oppwa.com/v1/checkouts";
-            $data = "authentication.userId=8a8294184e736012014e78c4c4e417e0" .
-                    "&authentication.password=4tJCmj2Bt3" .
-                    "&authentication.entityId=8a8294184e736012014e78c4c4cb17dc" .
-                    "&amount=92.00" .
-                    "&currency=EUR" .
+            $url = $this->getEndpoint() . "v1/checkouts";
+            $data = "authentication.userId=" . config('pckg.payment.provider.axcess.userId') .
+                    "&authentication.password=" . config('pckg.payment.provider.axcess.password') .
+                    "&authentication.entityId=" . config('pckg.payment.provider.axcess.entityId') .
+                    "&amount=" . $this->getTotalToPay() .
+                    "&currency=" . $this->order->getCurrency() .
                     "&paymentType=DB";
 
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_POST, 1);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);// this should be set to true in production
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, strpos($url, 'test.') === false);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             $responseData = curl_exec($ch);
             if (curl_errno($ch)) {
@@ -66,15 +92,16 @@ class Axcess extends AbstractHandler implements Handler
     {
         $responseData = null;
         try {
-            $url = "https://test.oppwa.com/v1/checkouts/" . $this->paymentRecord->transaction_id . "/payment";
-            $url .= "?authentication.userId=8a8294184e736012014e78c4c4e417e0";
-            $url .= "&authentication.password=4tJCmj2Bt3";
-            $url .= "&authentication.entityId=8a8294184e736012014e78c4c4cb17dc";
+            $url = config('pckg.payment.provider.axcess.endpoint') . "v1/checkouts/" .
+                   $this->paymentRecord->transaction_id . "/payment";
+            $url .= "?authentication.userId=" . config('pckg.payment.provider.axcess.userId');
+            $url .= "&authentication.password=" . config('pckg.payment.provider.axcess.password');
+            $url .= "&authentication.entityId=" . config('pckg.payment.provider.axcess.entityId');
 
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);// this should be set to true in production
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, strpos($url, 'test.') === false);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             $responseData = curl_exec($ch);
             if (curl_errno($ch)) {

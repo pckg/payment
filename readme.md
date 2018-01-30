@@ -5,14 +5,16 @@
 Project provides abstract implementation for payment providers:
  - paypal (classic API, REST API)
  - paymill (credit cards, sepa, paypal)
- - proforma
+ - icepay (credit cards, bancontact, eps, giropay, ideal, sofort)
+ - braintree
+ - axcess
+ - moneta
+ - proforma / upn
  
 Currently waiting for implementation:
- - braintree
  - paywiser
  - activa
  - megapos
- - moneta
  
 # Instalation
 You can install package via composer.
