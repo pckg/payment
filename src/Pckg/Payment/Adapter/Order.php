@@ -23,6 +23,9 @@ interface Order
 
     public function getProducts();
 
+    /**
+     * @return mixed|Customer
+     */
     public function getCustomer();
 
     public function setPaid();

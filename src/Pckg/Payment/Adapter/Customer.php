@@ -5,6 +5,8 @@ interface Customer
 
     public function getId();
 
+    public function getEmail();
+
     public function getFirstName();
 
     public function getLastName();

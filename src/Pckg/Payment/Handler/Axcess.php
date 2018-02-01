@@ -63,9 +63,9 @@ class Axcess extends AbstractHandler implements Handler
                     "&amount=" . number_format($this->getTotalToPay(), 2) .
                     "&currency=" . $this->order->getCurrency() .
                     "&merchantTransactionId=" . $this->paymentRecord->hash .
-                    "&customer.givenName=" . $this->order->getCustomer()->name .
-                    "&customer.surname=" . $this->order->getCustomer()->surname .
-                    "&customer.email=" . $this->order->getCustomer()->email .
+                    "&customer.givenName=" . $this->order->getCustomer()->getName() .
+                    "&customer.surname=" . $this->order->getCustomer()->getSurname() .
+                    "&customer.email=" . $this->order->getCustomer()->getEmail() .
                     "&customer.ip=" . server('REMOTE_ADDR') .
                     "&paymentType=DB";
 
