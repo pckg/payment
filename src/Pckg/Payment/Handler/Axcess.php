@@ -115,14 +115,11 @@ class Axcess extends AbstractHandler implements Handler
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             $responseData = curl_exec($ch);
             if (curl_errno($ch)) {
-                dd('error', curl_errno($ch), curl_error($ch));
-
                 return curl_error($ch);
             }
             curl_close($ch);
 
             $data = json_decode($responseData, true);
-            dd($data);
 
             if ($data['result']['code'] == '000.100.110') {
                 $transaction = $data['id'];
