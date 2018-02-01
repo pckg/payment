@@ -60,8 +60,13 @@ class Axcess extends AbstractHandler implements Handler
             $data = "authentication.userId=" . config('pckg.payment.provider.axcess.userId') .
                     "&authentication.password=" . config('pckg.payment.provider.axcess.password') .
                     "&authentication.entityId=" . config('pckg.payment.provider.axcess.entityId') .
-                    "&amount=" . $this->getTotalToPay() .
+                    "&amount=" . number_format($this->getTotalToPay(), 2) .
                     "&currency=" . $this->order->getCurrency() .
+                    "&merchantTransactionId=" . $this->paymentRecord->hash .
+                    "&customer.givenName=" . $this->order->getCustomer()->name .
+                    "&customer.surname=" . $this->order->getCustomer()->surname .
+                    "&customer.email=" . $this->order->getCustomer()->email .
+                    "&customer.ip=" . server('REMOTE_ADDR') .
                     "&paymentType=DB";
 
             $ch = curl_init();
@@ -84,7 +89,7 @@ class Axcess extends AbstractHandler implements Handler
 
             $this->axcessToken = $data['id'];
             $this->paymentRecord->setAndSave([
-                                                 'transaction_id' => $this->axcessToken,
+                                                 'transaction_id' => $data['id'],
                                              ]);
         } catch (Throwable $e) {
             response()->unavailable('Axcess payments are not available at the moment: ' . $e->getMessage());
@@ -97,7 +102,7 @@ class Axcess extends AbstractHandler implements Handler
     {
         $responseData = null;
         try {
-            $url = config('pckg.payment.provider.axcess.endpoint') . "v1/checkouts/" .
+            $url = $this->getEndpoint() . "v1/checkouts/" .
                    $this->paymentRecord->transaction_id . "/payment";
             $url .= "?authentication.userId=" . config('pckg.payment.provider.axcess.userId');
             $url .= "&authentication.password=" . config('pckg.payment.provider.axcess.password');
@@ -110,11 +115,14 @@ class Axcess extends AbstractHandler implements Handler
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             $responseData = curl_exec($ch);
             if (curl_errno($ch)) {
+                dd('error', curl_errno($ch), curl_error($ch));
+
                 return curl_error($ch);
             }
             curl_close($ch);
 
             $data = json_decode($responseData, true);
+            dd($data);
 
             if ($data['result']['code'] == '000.100.110') {
                 $transaction = $data['id'];
