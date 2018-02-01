@@ -121,12 +121,20 @@ class Axcess extends AbstractHandler implements Handler
 
             $data = json_decode($responseData, true);
 
-            if ($data['result']['code'] == '000.100.110') {
+            if (in_array($data['result']['code'] ?? null,
+                         ['000.100.110', '000.000.100', '000.000.000', '000.300.000', '000.600.000'])) {
                 $transaction = $data['id'];
+                $this->paymentRecord->addLog('approved', $responseData);
+                $this->paymentRecord->setAndSave(
+                    [
+                        "status" => 'approved',
+                    ]
+                );
+
                 $this->order->getBills()->each(
                     function(OrdersBill $ordersBill) use ($transaction) {
                         $ordersBill->confirm(
-                            "Axcess #" . $transaction->id,
+                            "Axcess #" . $transaction,
                             'axcess'
                         );
                     }
@@ -137,6 +145,13 @@ class Axcess extends AbstractHandler implements Handler
                         'derive.payment.success',
                         ['handler' => 'axcess', 'order' => $this->order->getOrder()]
                     )
+                );
+            } else {
+                $this->paymentRecord->addLog('error', $responseData);
+                $this->paymentRecord->setAndSave(
+                    [
+                        "status" => 'error',
+                    ]
                 );
             }
 
