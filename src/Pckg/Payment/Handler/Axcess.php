@@ -115,7 +115,19 @@ class Axcess extends AbstractHandler implements Handler
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             $responseData = curl_exec($ch);
             if (curl_errno($ch)) {
-                return curl_error($ch);
+                $this->paymentRecord->addLog('error', curl_error($ch) . ' ' . $responseData);
+                $this->paymentRecord->setAndSave(
+                    [
+                        "status" => 'error',
+                    ]
+                );
+
+                $this->environment->redirect(
+                    $this->environment->url(
+                        'derive.payment.error',
+                        ['handler' => 'axcess', 'order' => $this->order->getOrder()]
+                    )
+                );
             }
             curl_close($ch);
 
