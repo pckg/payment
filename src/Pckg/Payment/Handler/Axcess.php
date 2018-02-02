@@ -114,6 +114,7 @@ class Axcess extends AbstractHandler implements Handler
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, strpos($url, 'test.') === false);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             $responseData = curl_exec($ch);
+            curl_close($ch);
             if (curl_errno($ch)) {
                 $this->paymentRecord->addLog('error', curl_error($ch) . ' ' . $responseData);
                 $this->paymentRecord->setAndSave(
@@ -129,7 +130,6 @@ class Axcess extends AbstractHandler implements Handler
                     )
                 );
             }
-            curl_close($ch);
 
             $data = json_decode($responseData, true);
 
