@@ -60,7 +60,7 @@ class Axcess extends AbstractHandler implements Handler
             $data = "authentication.userId=" . config('pckg.payment.provider.axcess.userId') .
                     "&authentication.password=" . config('pckg.payment.provider.axcess.password') .
                     "&authentication.entityId=" . config('pckg.payment.provider.axcess.entityId') .
-                    "&amount=" . number_format($this->getTotalToPay(), 2) .
+                    "&amount=" . $this->getTotalToPay() .
                     "&currency=" . $this->order->getCurrency() .
                     "&merchantTransactionId=" . $this->paymentRecord->hash .
                     "&customer.givenName=" . $this->order->getCustomer()->getFirstName() .
