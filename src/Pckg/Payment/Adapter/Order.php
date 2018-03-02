@@ -34,4 +34,6 @@ interface Order
 
     public function getBills();
 
+    public function getPaymentStatus();
+
 }

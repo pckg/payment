@@ -1,5 +1,6 @@
 <?php namespace Pckg\Payment\Handler;
 
+use Derive\Orders\Entity\Orders;
 use Derive\Orders\Record\OrdersBill;
 use Exception;
 
@@ -184,7 +185,8 @@ class PaypalGnp extends AbstractHandler implements Handler
          */
         if ($json->state == "approved") {
             $paypal = $this->paymentRecord;
-            $this->order->getBills()->each(
+            $bills = $this->order->getBills();
+            $bills->each(
                 function(OrdersBill $ordersBill) use ($paypal, $json) {
                     $transaction = end($json->transactions);
                     $resource = end($transaction->related_resources);
