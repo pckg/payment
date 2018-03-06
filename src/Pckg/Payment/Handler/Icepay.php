@@ -65,8 +65,8 @@ class Icepay extends AbstractHandler implements Handler
             'Language'      => 'EN',
             'Country'       => '00',
             'Description'   => $this->order->getDescription(),
-            'OrderID'       => $order->id . '-' . $this->paymentRecord->id,
-            'Reference'     => $this->paymentRecord->id,
+            'OrderID'       => $this->paymentRecord->id,
+            'Reference'     => $order->id,
             'EndUserIP'     => server('REMOTE_ADDR'),
         ];
     }
@@ -217,6 +217,7 @@ class Icepay extends AbstractHandler implements Handler
             $this->paymentRecord->addLog('redirected', $payment->PaymentScreenURL);
             $this->environment->redirect($payment->PaymentScreenURL);
         } catch (Throwable $e) {
+            $this->paymentRecord->addLog('error');
             response()->unavailable('Icepay payments are not available at the moment: ' . $e->getMessage());
         }
     }
