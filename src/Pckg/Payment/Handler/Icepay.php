@@ -66,7 +66,7 @@ class Icepay extends AbstractHandler implements Handler
             'Country'       => '00',
             'Description'   => $this->order->getDescription(),
             'OrderID'       => $this->paymentRecord->id,
-            'Reference'     => $order->id,
+            'Reference'     => $this->paymentRecord->id,
             'EndUserIP'     => server('REMOTE_ADDR'),
         ];
     }
