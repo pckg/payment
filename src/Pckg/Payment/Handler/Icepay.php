@@ -118,7 +118,7 @@ class Icepay extends AbstractHandler implements Handler
     public function getPaymentMethod($method)
     {
         return (new Collection($this->getPaymentMethods()->PaymentMethods))->first(
-            function($paymentMethod) use ($method) {
+            function ($paymentMethod) use ($method) {
                 return $paymentMethod->PaymentMethodCode == $method;
             }
         );
@@ -143,14 +143,17 @@ class Icepay extends AbstractHandler implements Handler
 
         if ($status == 'OK') {
             $this->order->getBills()->each(
-                function(OrdersBill $ordersBill) use ($reference) {
+                function (OrdersBill $ordersBill) use ($reference) {
                     $ordersBill->confirm(
                         "Ideal #" . $reference,
                         'ideal'
                     );
                 }
             );
-            $payment->setAndSave(['status' => 'approved', 'transaction_id' => $reference]);
+            $payment->setAndSave([
+                'status'         => 'approved',
+                'transaction_id' => $this->environment->post('TransactionID'),
+            ]);
         }
     }
 
