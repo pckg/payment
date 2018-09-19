@@ -35,7 +35,7 @@ class Mollie extends AbstractHandler implements Handler
         $mollieData = [
             'amount'      => [
                 'currency' => config('pckg.payment.currency'),
-                'value'    => $price,
+                'value'    => (string)round($price, 2),
             ],
             'description' => __('order_payment') . " #" . $this->order->getId() . ' (' . $this->order->getNum() . ' - ' . $this->order->getBills()
                                                                                                                                       ->map('id')
