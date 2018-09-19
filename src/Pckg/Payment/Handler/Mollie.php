@@ -21,7 +21,7 @@ class Mollie extends AbstractHandler implements Handler
          * Create Mollie
          */
         $this->mollie = new \Mollie\Api\MollieApiClient();
-        $this->mollie->setApiKey(config('pckg.payment.mollie.apiKey'));
+        $this->mollie->setApiKey(config('pckg.payment.provider.mollie.apiKey'));
 
         return $this;
     }
