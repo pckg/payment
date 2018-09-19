@@ -109,15 +109,6 @@ class Mollie extends AbstractHandler implements Handler
     {
         try {
             /**
-             * Payment ID should already be set by payment record.
-             * Do not proceed if ids do not match.
-             */
-            $postId = post('id', null);
-            if ($this->paymentRecord->payment_id != post('id')) {
-                throw new Exception("Internal payment ID and Mollie payment ID do not match (" . $this->paymentRecord->payment_id . " and " . $postId . ").");
-            }
-
-            /**
              * Get payment record from Mollie payments.
              */
             $payment = $mollie->payments->get($this->paymentRecord->payment_id);
