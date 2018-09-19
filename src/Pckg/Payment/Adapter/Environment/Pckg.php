@@ -41,9 +41,9 @@ class Pckg implements Environment
         return request()->get($key);
     }
 
-    public function url($slug, $params = [])
+    public function url($slug, $params = [], $absolute = true)
     {
-        return url($slug, $params);
+        return url($slug, $params, $absolute);
     }
 
     public function fullUrl($slug, $params = [])
