@@ -4,6 +4,7 @@ use Mollie\Api\Exceptions\ApiException;
 use Mollie\Api\MollieApiClient;
 use Pckg\Collection;
 use Throwable;
+use Exception;
 
 class Mollie extends AbstractHandler implements Handler
 {
