@@ -36,7 +36,7 @@ class Mollie extends AbstractHandler implements Handler
             'description' => $this->getDescription(),
             'redirectUrl' => $this->getSuccessUrl(),
             'webhookUrl'  => $this->getNotificationUrl(),
-            'method'      => 'creditcard',
+            'method'      => substr($this->handler, strpos($this->handler, '-') + 1),
         ];
     }
 
