@@ -179,7 +179,7 @@ class Braintree extends AbstractHandler implements Handler
     {
         return $this->environment->url(
             'payment.validate',
-            ['handler' => 'paymill', 'order' => $this->order->getOrder()]
+            ['handler' => 'braintree', 'order' => $this->order->getOrder()]
         );
     }
 
