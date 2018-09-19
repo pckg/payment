@@ -64,6 +64,7 @@ class Mollie extends AbstractHandler implements Handler
             response()->redirect($url);
         } catch (Throwable $e) {
             $this->paymentRecord->addLog('error', $e->getMessage());
+            response()->fatal($e->getMessage());
         }
     }
 
