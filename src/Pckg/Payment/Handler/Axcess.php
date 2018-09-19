@@ -163,11 +163,13 @@ class Axcess extends AbstractHandler implements Handler
                 );
             } else {
                 $this->paymentRecord->addLog('error', $responseData);
-                $this->paymentRecord->setAndSave(
-                    [
-                        "status" => 'error',
-                    ]
-                );
+                if ($this->paymentRecord->status != 'approved') {
+                    $this->paymentRecord->setAndSave(
+                        [
+                            "status" => 'error',
+                        ]
+                    );
+                }
             }
 
             $this->environment->redirect(
