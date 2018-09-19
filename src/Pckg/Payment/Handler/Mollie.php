@@ -111,7 +111,7 @@ class Mollie extends AbstractHandler implements Handler
             /**
              * Get payment record from Mollie payments.
              */
-            $payment = $mollie->payments->get($this->paymentRecord->payment_id);
+            $payment = $this->mollie->payments->get($this->paymentRecord->payment_id);
 
             /**
              * Start processing info.
