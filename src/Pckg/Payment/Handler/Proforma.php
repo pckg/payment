@@ -10,11 +10,6 @@ class Proforma extends AbstractHandler implements Handler
         ];
     }
 
-    public function startPartial()
-    {
-        
-    }
-
     public function start()
     {
         $url = $this->environment->url(
@@ -22,11 +17,6 @@ class Proforma extends AbstractHandler implements Handler
             ['handler' => 'proforma', 'order' => $this->order->getOrder()]
         );
         $this->environment->redirect($url);
-    }
-
-    public function waiting()
-    {
-
     }
 
 }

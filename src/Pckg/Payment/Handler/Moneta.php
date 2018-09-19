@@ -151,16 +151,10 @@ class Moneta extends AbstractHandler
                             );
                             $sOutput = "<error>0</error>";
 
-                            $this->order->getBills()->each(
-                                function(OrdersBill $ordersBill) use ($sConfirmationID) {
-                                    $ordersBill->confirm(
-                                        "Moneta " . $sConfirmationID,
-                                        'moneta'
-                                    );
-                                }
-                            );
+                            $this->approvePayment('Moneta #' . $sConfirmationID, null, $sConfirmationID);
 
                         } else {
+                            $this->errorPayment();
                             $myMoneta->ConfirmPurchase(
                                 "zavrnjeno",
                                 $sConfirmationID,

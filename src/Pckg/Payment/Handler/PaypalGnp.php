@@ -13,6 +13,8 @@ class PaypalGnp extends AbstractHandler implements Handler
 
     const PAYMENTACTION = 'Sale';
 
+    protected $handler = 'paypal';
+
     public function initHandler()
     {
         $this->config = [
@@ -173,6 +175,17 @@ class PaypalGnp extends AbstractHandler implements Handler
             );
         }
 
+        /**
+         * Handle successful payment.
+         */
+        if ($json->state == "approved") {
+            $transaction = end($json->transactions);
+            $resource = end($transaction->related_resources);
+            $this->approvePayment("Paypal " . $resource->sale->id, $json, $json->id, $json->state);
+            $this->environment->redirect($this->getSuccessUrl());
+            return;
+        }
+        
         $this->paymentRecord->setAndSave(
             [
                 "status"         => $json->state,
@@ -180,43 +193,15 @@ class PaypalGnp extends AbstractHandler implements Handler
             ]
         );
 
-        /**
-         * Handle successful payment.
-         */
-        if ($json->state == "approved") {
-            $paypal = $this->paymentRecord;
-            $bills = $this->order->getBills();
-            $bills->each(
-                function(OrdersBill $ordersBill) use ($paypal, $json) {
-                    $transaction = end($json->transactions);
-                    $resource = end($transaction->related_resources);
-                    $ordersBill->confirm(
-                        "Paypal " . $resource->sale->id,
-                        'paypal'
-                    );
-                }
-            );
-        }
-
-        /**
-         * Handle other payments.
-         */
         if ($json->state == "pending") {
-            response()->redirect(
-                url('derive.payment.waiting', ['handler' => 'paypal', 'order' => $this->order->getOrder()])
-            );
-        } else if ($json->state == "approved") {
-            response()->redirect(
-                url('derive.payment.success', ['handler' => 'paypal', 'order' => $this->order->getOrder()])
-            );
+            $this->environment->redirect($this->getWaitingUrl());
+            return;
         }
 
         /**
          * Redirect on error.
          */
-        response()->redirect(
-            url('derive.payment.error', ['handler' => 'paypal', 'order' => $this->order->getOrder()])
-        );
+        return $this->environment->redirect($this->getErrorUrl());
     }
 
     public function success()

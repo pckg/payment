@@ -3,13 +3,14 @@
 use Braintree\ClientToken;
 use Braintree\Configuration;
 use Braintree\Transaction;
-use Derive\Orders\Record\OrdersBill;
 use Throwable;
 
 class Braintree extends AbstractHandler implements Handler
 {
 
     protected $braintreeClientToken;
+
+    protected $handler = 'braintree';
 
     public function validate($request)
     {
@@ -67,128 +68,50 @@ class Braintree extends AbstractHandler implements Handler
 
         $this->getPaymentRecord()->addLog('submitted');
 
-        $result = $braintreeNonce == $this->paymentRecord->getJsonData('braintree_payment_method_nonce')
-            ? Transaction::find($this->paymentRecord->transaction_id)
-            : Transaction::sale([
-                                    'amount'             => $this->getTotal(),
-                                    'paymentMethodNonce' => $braintreeNonce,
-                                    'options'            => [
-                                        'submitForSettlement' => true,
-                                    ],
-                                ]);
+        $result = $braintreeNonce == $this->paymentRecord->getJsonData('braintree_payment_method_nonce') ? Transaction::find($this->paymentRecord->transaction_id) : Transaction::sale([
+                                                                                                                                                                                           'amount'             => $this->getTotal(),
+                                                                                                                                                                                           'paymentMethodNonce' => $braintreeNonce,
+                                                                                                                                                                                           'options'            => [
+                                                                                                                                                                                               'submitForSettlement' => true,
+                                                                                                                                                                                           ],
+                                                                                                                                                                                       ]);
 
         $this->paymentRecord->setJsonData('braintree_payment_method_nonce', $braintreeNonce)->save();
 
-        //Check for errors
+        /**
+         * @T00D00 - redirect to error page with error $result->message
+         */
         if (!$result->success) {
-            $this->paymentRecord->setAndSave([
-                                                 'status' => 'error',
-                                             ]);
-            $this->paymentRecord->addLog('error', $result);
+            $this->errorPayment($result);
 
-            /**
-             * @T00D00 - redirect to error page with error $result->message
-             */
-            $this->environment->flash(
-                'pckg.payment.order.' . $this->order->getId() . '.error',
-                $result->message
-            );
-            $this->environment->redirect(
-                $this->environment->url(
-                    'derive.payment.error',
-                    ['handler' => 'braintree', 'order' => $this->order->getOrder()]
-                )
-            );
+            $this->environment->flash('pckg.payment.order.' . $this->order->getId() . '.error', $result->message);
+            $this->environment->redirect($this->getErrorUrl());
         }
 
-        //If everything went fine, we got a transaction object
+        /**
+         * If everything went fine, we got a transaction object.
+         * Confirm payment when its submitted for settlement.
+         */
         $transaction = $result->transaction;
-
-        //Write what we got to the database
-        $this->paymentRecord->setAndSave([
-                                             'transaction_id' => $transaction->id,
-                                             'status'         => $transaction->status,
-                                         ]);
-
-        //SUBMITTED_FOR_SETTLEMENT means it's practically paid
         if ($transaction->status == Transaction::SUBMITTED_FOR_SETTLEMENT) {
-            $this->order->getBills()->each(
-                function(OrdersBill $ordersBill) use ($transaction) {
-                    $ordersBill->confirm(
-                        "Braintree #" . $transaction->id,
-                        'braintree'
-                    );
-                }
-            );
-
-            $this->environment->redirect(
-                $this->environment->url(
-                    'derive.payment.success',
-                    ['handler' => 'braintree', 'order' => $this->order->getOrder()]
-                )
-            );
+            $this->approvePayment("Braintree #" . $transaction->id, $result, $transaction->id, $transaction->status);
+            $this->environment->redirect($this->getSuccessUrl());
 
             return;
         }
 
-        $this->paymentRecord->addLog($transaction->status, $transaction);
+        $this->errorPayment($transaction, $transaction->status);
 
+        $flash = 'Unknown payment error';
         if ($transaction->status == Transaction::PROCESSOR_DECLINED) {
-            $this->environment->flash(
-                'pckg.payment.order.' . $this->order->getId() . '.error',
-                $transaction->processorResponseText
-            );
-
-            $this->environment->redirect(
-                $this->environment->url(
-                    'derive.payment.error',
-                    [
-                        'handler' => 'braintree',
-                        'order'   => $this->order->getId(),
-                    ]
-                )
-            );
-        } else if ($transaction->status == Transaction::GATEWAY_REJECTED) {
-            $this->environment->flash(
-                'pckg.payment.order.' . $this->order->getId() . '.error',
-                $transaction->gatewayRejectionReason
-            );
-
-            $this->environment->redirect(
-                $this->environment->url(
-                    'derive.payment.error',
-                    ['handler' => 'braintree', 'order' => $this->order->getOrder()]
-                )
-            );
+            $flash = $transaction->processorResponseText;
+        } elseif ($transaction->status == Transaction::GATEWAY_REJECTED) {
+            $flash = $transaction->gatewayRejectionReason;
         }
 
-        $this->environment->flash(
-            'pckg.payment.order.' . $this->order->getId() . '.error',
-            'Unknown payment'
-        );
+        $this->environment->flash('pckg.payment.order.' . $this->order->getId() . '.error', $flash);
 
-        $this->environment->redirect(
-            $this->environment->url(
-                'derive.payment.error',
-                ['handler' => 'braintree', 'order' => $this->order->getOrder()]
-            )
-        );
-    }
-
-    public function getValidateUrl()
-    {
-        return $this->environment->url(
-            'payment.validate',
-            ['handler' => 'braintree', 'order' => $this->order->getOrder()]
-        );
-    }
-
-    public function getStartUrl()
-    {
-        return $this->environment->url(
-            'payment.start',
-            ['handler' => 'braintree', 'order' => $this->order->getOrder()]
-        );
+        $this->environment->redirect($this->getErrorUrl());
     }
 
 }
