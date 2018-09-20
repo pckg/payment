@@ -68,11 +68,7 @@ class PaypalGnp extends AbstractHandler implements Handler
                     ],
                     true
                 ),
-                "cancel_url" => url(
-                    'derive.payment.cancel',
-                    ['handler' => 'paypal', 'payment' => $this->paymentRecord, 'order' => $this->order->getOrder()],
-                    true
-                ),
+                "cancel_url" => $this->getCancelUrl(),
                 // 'notify_url' => [],
             ],
             "payer"         => [
@@ -84,9 +80,7 @@ class PaypalGnp extends AbstractHandler implements Handler
                         "total"    => $price,
                         "currency" => config('pckg.payment.currency'),
                     ],
-                    "description" => __('order_payment') . " #" . $this->order->getId() .
-                                     ' (' . $this->order->getNum() . ' - ' .
-                                     $this->order->getBills()->map('id')->implode(',') . ')',
+                    "description" => $this->getDescription(),
                 ],
             ],
         ];

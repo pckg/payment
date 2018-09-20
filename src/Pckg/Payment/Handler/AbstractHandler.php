@@ -231,4 +231,14 @@ abstract class AbstractHandler implements Handler
                                        ]);
     }
 
+    public function getCancelUrl()
+    {
+        return $this->environment->url('derive.payment.cancel',
+                                       [
+                                           'handler' => $this->handler,
+                                           'order'   => $this->order->getOrder(),
+                                           'payment' => $this->paymentRecord,
+                                       ]);
+    }
+
 }
