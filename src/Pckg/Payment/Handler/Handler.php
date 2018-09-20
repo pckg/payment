@@ -46,6 +46,11 @@ interface Handler
      */
     public function getPaymentRecord();
 
+    /**
+     * @param $record
+     *
+     * @return $this
+     */
     public function setPaymentRecord($record);
 
 }

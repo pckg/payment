@@ -1,6 +1,5 @@
 <?php namespace Pckg\Payment\Handler;
 
-use Derive\Orders\Record\OrdersBill;
 use Exception;
 use Throwable;
 
@@ -8,6 +7,8 @@ class Axcess extends AbstractHandler implements Handler
 {
 
     protected $axcessToken;
+
+    protected $handler = 'axcess';
 
     public function validate($request)
     {
@@ -23,7 +24,6 @@ class Axcess extends AbstractHandler implements Handler
 
     /**
      * @return string
-     *
      * Used on frontend form.
      */
     public function getAxcessToken()
@@ -49,7 +49,6 @@ class Axcess extends AbstractHandler implements Handler
 
     /**
      * @return string
-     *
      * Prepare Access processor for payment.
      */
     public function startPartial()
@@ -57,20 +56,12 @@ class Axcess extends AbstractHandler implements Handler
         $responseData = null;
         try {
             $url = $this->getEndpoint() . "v1/checkouts";
-            $data = "authentication.userId=" . config('pckg.payment.provider.axcess.userId') .
-                    "&authentication.password=" . config('pckg.payment.provider.axcess.password') .
-                    "&authentication.entityId=" . config('pckg.payment.provider.axcess.entityId') .
-                    "&amount=" . $this->getTotalToPay() .
-                    "&currency=" . $this->order->getCurrency() .
-                    "&merchantTransactionId=" . $this->paymentRecord->hash .
-                    "&descriptor=" . urlencode(__('order_payment') . " #" . $this->order->getId() .
-                                      ' (' . $this->order->getNum() . ' - ' .
-                                      $this->order->getBills()->map('id')->implode(',') . ')') .
-                    "&customer.givenName=" . $this->order->getCustomer()->getFirstName() .
-                    "&customer.surname=" . $this->order->getCustomer()->getLastName() .
-                    "&customer.email=" . $this->order->getCustomer()->getEmail() .
-                    "&customer.ip=" . server('REMOTE_ADDR') .
-                    "&paymentType=DB";
+            $data = "authentication.userId=" . config('pckg.payment.provider.axcess.userId') . "&authentication.password=" . config('pckg.payment.provider.axcess.password') . "&authentication.entityId=" . config('pckg.payment.provider.axcess.entityId') . "&amount=" . $this->getTotalToPay() . "&currency=" . $this->order->getCurrency() . "&merchantTransactionId=" . $this->paymentRecord->hash . "&descriptor=" . urlencode(__('order_payment') . " #" . $this->order->getId() . ' (' . $this->order->getNum() . ' - ' . $this->order->getBills()
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ->map('id')
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ->implode(',') . ')') . "&customer.givenName=" . $this->order->getCustomer()
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            ->getFirstName() . "&customer.surname=" . $this->order->getCustomer()
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  ->getLastName() . "&customer.email=" . $this->order->getCustomer()
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ->getEmail() . "&customer.ip=" . server('REMOTE_ADDR') . "&paymentType=DB";
 
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
@@ -103,10 +94,8 @@ class Axcess extends AbstractHandler implements Handler
 
     public function check()
     {
-        $responseData = null;
         try {
-            $url = $this->getEndpoint() . "v1/checkouts/" .
-                   $this->paymentRecord->transaction_id . "/payment";
+            $url = $this->getEndpoint() . "v1/checkouts/" . $this->paymentRecord->transaction_id . "/payment";
             $url .= "?authentication.userId=" . config('pckg.payment.provider.axcess.userId');
             $url .= "&authentication.password=" . config('pckg.payment.provider.axcess.password');
             $url .= "&authentication.entityId=" . config('pckg.payment.provider.axcess.entityId');
@@ -119,65 +108,30 @@ class Axcess extends AbstractHandler implements Handler
             $responseData = curl_exec($ch);
             curl_close($ch);
             if (curl_errno($ch)) {
-                $this->paymentRecord->addLog('error', curl_error($ch) . ' ' . $responseData);
-                $this->paymentRecord->setAndSave(
-                    [
-                        "status" => 'error',
-                    ]
-                );
-
-                $this->environment->redirect(
-                    $this->environment->url(
-                        'derive.payment.error',
-                        ['handler' => 'axcess', 'order' => $this->order->getOrder()]
-                    )
-                );
+                $this->errorPayment(curl_error($ch) . ' ' . $responseData);
+                $this->environment->redirect($this->getErrorUrl());
             }
 
             $data = json_decode($responseData, true);
 
-            if (in_array($data['result']['code'] ?? null,
-                         ['000.100.110', '000.000.100', '000.000.000', '000.300.000', '000.600.000'])) {
-                $transaction = $data['id'];
-                $this->paymentRecord->addLog('approved', $responseData);
-                $this->paymentRecord->setAndSave(
-                    [
-                        "status" => 'approved',
-                    ]
-                );
+            /**
+             * Check for correct Axcess response.
+             */
+            $resultCode = $data['result']['code'] ?? null;
+            $okCodes = ['000.100.110', '000.000.100', '000.000.000', '000.300.000', '000.600.000'];
+            if (in_array($resultCode, $okCodes)) {
+                $this->approvePayment("Axcess #" . $data['id'], $responseData, $data['id']);
 
-                $this->order->getBills()->each(
-                    function(OrdersBill $ordersBill) use ($transaction) {
-                        $ordersBill->confirm(
-                            "Axcess #" . $transaction,
-                            'axcess'
-                        );
-                    }
-                );
+                $this->environment->redirect($this->getSuccessUrl());
 
-                $this->environment->redirect(
-                    $this->environment->url(
-                        'derive.payment.success',
-                        ['handler' => 'axcess', 'order' => $this->order->getOrder()]
-                    )
-                );
-            } else {
-                $this->paymentRecord->addLog('error', $responseData);
-                if ($this->paymentRecord->status != 'approved') {
-                    $this->paymentRecord->setAndSave(
-                        [
-                            "status" => 'error',
-                        ]
-                    );
-                }
+                return;
             }
 
-            $this->environment->redirect(
-                $this->environment->url(
-                    'derive.payment.error',
-                    ['handler' => 'axcess', 'order' => $this->order->getOrder()]
-                )
-            );
+            /**
+             * Notify system about payment error.
+             */
+            $this->errorPayment($responseData);
+            $this->environment->redirect($this->getErrorUrl());
 
             return $responseData;
         } catch (Throwable $e) {

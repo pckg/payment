@@ -42,14 +42,8 @@ class Icepay extends AbstractHandler implements Handler
 
     protected function setUrls()
     {
-        $order = $this->order->getOrder();
-
-        $this->icepay->setCompletedURL(
-            url('derive.payment.success', ['handler' => $this->handler, 'order' => $order], true)
-        );
-        $this->icepay->setErrorURL(
-            url('derive.payment.error', ['handler' => $this->handler, 'order' => $order], true)
-        );
+        $this->icepay->setCompletedURL($this->getSuccessUrl());
+        $this->icepay->setErrorURL($this->getErrorUrl());
     }
 
     private function getIcepayDefaultsData()
@@ -139,38 +133,14 @@ class Icepay extends AbstractHandler implements Handler
             ]
         );
 
-        $payment->addLog($status == 'OK' ? 'payed' : $status, (array)$bodyData);
+        $this->setPaymentRecord($payment);
 
         if ($status == 'OK') {
-            $this->order->getBills()->each(
-                function (OrdersBill $ordersBill) use ($reference) {
-                    $ordersBill->confirm(
-                        "Ideal #" . $reference,
-                        'ideal'
-                    );
-                }
-            );
-            $payment->setAndSave([
-                'status'         => 'approved',
-                'transaction_id' => $this->environment->post('TransactionID'),
-            ]);
+            $this->approvePayment('Icepay #' . $reference, $bodyData, $this->environment->post('TransactionID'));
+            return;
         }
-    }
 
-    public function getValidateUrl()
-    {
-        return $this->environment->url(
-            'payment.validate',
-            ['handler' => 'icepay', 'order' => $this->order->getOrder()]
-        );
-    }
-
-    public function getStartUrl()
-    {
-        return $this->environment->url(
-            'payment.start',
-            ['handler' => 'icepay', 'order' => $this->order->getOrder()]
-        );
+        $this->errorPayment($bodyData, $status);
     }
 
     public function postStartPartial()

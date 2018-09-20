@@ -15,7 +15,7 @@ interface Environment
 
     public function get($key);
 
-    public function url($slug, $params = []);
+    public function url($slug, $params = [], $absolute = true);
 
     public function fullUrl($slug, $params = []);
 
