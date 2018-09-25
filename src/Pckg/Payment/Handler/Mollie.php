@@ -32,7 +32,7 @@ class Mollie extends AbstractHandler implements Handler
         return [
             'amount'      => [
                 'currency' => $this->order->getCurrency(),
-                'value'    => (string)round($this->order->getTotal(), 2),
+                'value'    => (string)number_format($this->order->getTotal(), 2, '.', ''),
             ],
             'description' => $this->getDescription(),
             'redirectUrl' => $this->getSuccessUrl(),
