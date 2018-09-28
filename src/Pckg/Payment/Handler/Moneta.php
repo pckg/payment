@@ -108,10 +108,10 @@ class Moneta extends AbstractHandler
         // sestavimo url
         $url = $this->config['url'] . "?TARIFFICATIONID=" . $this->config['tarifficationid'] . "&ConfirmationID=" . $sConfirmationID;
 
-        response()->redirect($url);
-
-        return '<meta http-equiv="refresh" content="3; url=' . $url . '" /><h4>Poteka preusmeritev na Moneto ...</h4><a href="' . $url . '">Naročilo ' . $url . '</a>';
-
+        return [
+            'success' => true,
+            'redirect' => $url,
+        ];
     }
 
     public function check()

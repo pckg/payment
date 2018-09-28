@@ -41,17 +41,24 @@ trait Handlers
 
     public function useHandler($handler)
     {
+        if (class_exists($handler)) {
+            return $this->fullInitHandler(new $handler($this->order));
+        }
+
         if (method_exists($this, 'use' . ucfirst($handler) . 'Handler')) {
             $this->{'use' . ucfirst($handler) . 'Handler'}();
 
             return;
         }
 
-        list($handler, $subhandler) = explode('-', $handler);
-        $finalHandler = \Pckg\Payment\Handler::class . '\\' . ucfirst($handler) .
-                        ($subhandler ? '\\' . ucfirst($subhandler) : '');
+        if (strpos($handler, '-')) {
+            list($handler, $subhandler) = explode('-', $handler);
+            $handler = \Pckg\Payment\Handler::class . '\\' . ucfirst($handler) . '\\' . ucfirst($subhandler);
+        } else {
+            $handler = \Pckg\Payment\Handler::class . '\\' . ucfirst($handler);
+        }
 
-        return $this->fullInitHandler(new $finalHandler($this->order));
+        return $this->fullInitHandler(new $handler($this->order));
     }
 
     public function useBraintreeHandler()

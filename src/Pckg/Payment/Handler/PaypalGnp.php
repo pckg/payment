@@ -1,7 +1,5 @@
 <?php namespace Pckg\Payment\Handler;
 
-use Derive\Orders\Entity\Orders;
-use Derive\Orders\Record\OrdersBill;
 use Exception;
 
 class PaypalGnp extends AbstractHandler implements Handler
@@ -51,7 +49,7 @@ class PaypalGnp extends AbstractHandler implements Handler
         }
     }
 
-    public function startPartial()
+    public function postStartPartial()
     {
         $price = $this->order->getTotal();
         $accessToken = $this->getAccessToken();
@@ -59,17 +57,9 @@ class PaypalGnp extends AbstractHandler implements Handler
         $arrData = [
             "intent"        => "sale",
             "redirect_urls" => [
-                "return_url" => url(
-                    'derive.payment.check',
-                    [
-                        'handler' => 'paypal',
-                        'payment' => $this->paymentRecord,
-                        'order'   => $this->order->getOrder(),
-                    ],
-                    true
-                ),
+                "return_url" => $this->getCheckUrl(),
                 "cancel_url" => $this->getCancelUrl(),
-                // 'notify_url' => [],
+                //'notify_url' => $this->getNotificationUrl(),
             ],
             "payer"         => [
                 "payment_method" => "paypal",
@@ -88,14 +78,12 @@ class PaypalGnp extends AbstractHandler implements Handler
         $ch = curl_init();
 
         curl_setopt($ch, CURLOPT_URL, "https://" . $this->config['endpoint'] . "/v1/payments/payment");
-        curl_setopt(
-            $ch,
-            CURLOPT_HTTPHEADER,
-            [
-                "Authorization: Bearer " . $accessToken,
-                "Content-Type: application/json",
-            ]
-        );
+        curl_setopt($ch,
+                    CURLOPT_HTTPHEADER,
+                    [
+                        "Authorization: Bearer " . $accessToken,
+                        "Content-Type: application/json",
+                    ]);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($arrData));
@@ -105,7 +93,10 @@ class PaypalGnp extends AbstractHandler implements Handler
         curl_close($ch);
 
         if (!$result) {
-            throw new Exception('Paypal payments are not available at the moment.');
+            return [
+                'success' => false,
+                'message' => 'Paypal payments are not available at the moment.',
+            ];
         }
 
         $json = json_decode($result);
@@ -113,13 +104,17 @@ class PaypalGnp extends AbstractHandler implements Handler
         if (isset($json->state) && $json->state == "created") {
             $this->paymentRecord->setAndSave(['payment_id' => $json->id]);
 
-            response()->redirect($json->links[1]->href);
-        } else {
-            echo '<pre>';
-            print_r($json);
-            echo '</pre>';
-            die();
+            return [
+                'success'  => true,
+                'redirect' => $json->links[1]->href,
+            ];
         }
+
+        return [
+            'success' => false,
+            'message' => 'Unknown paypal error',
+            'info'    => $json,
+        ];
     }
 
     function check()
@@ -132,20 +127,15 @@ class PaypalGnp extends AbstractHandler implements Handler
 
         $ch = curl_init();
 
-        curl_setopt(
-            $ch,
-            CURLOPT_URL,
-            "https://" . $this->config['endpoint'] . "/v1/payments/payment/" . $this->paymentRecord->payment_id .
-            "/execute/"
-        );
-        curl_setopt(
-            $ch,
-            CURLOPT_HTTPHEADER,
-            [
-                "Authorization: Bearer " . $accessToken,
-                "Content-Type: application/json",
-            ]
-        );
+        curl_setopt($ch,
+                    CURLOPT_URL,
+                    "https://" . $this->config['endpoint'] . "/v1/payments/payment/" . $this->paymentRecord->payment_id . "/execute/");
+        curl_setopt($ch,
+                    CURLOPT_HTTPHEADER,
+                    [
+                        "Authorization: Bearer " . $accessToken,
+                        "Content-Type: application/json",
+                    ]);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($arrData));
@@ -164,9 +154,7 @@ class PaypalGnp extends AbstractHandler implements Handler
             if ($json->name == 'PAYMENT_ALREADY_DONE') {
             }
 
-            response()->redirect(
-                url('derive.payment.error', ['handler' => 'paypal', 'order' => $this->order->getOrder()])
-            );
+            return $this->environment->redirect($this->getErrorUrl());
         }
 
         /**
@@ -177,18 +165,18 @@ class PaypalGnp extends AbstractHandler implements Handler
             $resource = end($transaction->related_resources);
             $this->approvePayment("Paypal " . $resource->sale->id, $json, $json->id, $json->state);
             $this->environment->redirect($this->getSuccessUrl());
+
             return;
         }
-        
-        $this->paymentRecord->setAndSave(
-            [
-                "status"         => $json->state,
-                "transaction_id" => $json->id,
-            ]
-        );
+
+        $this->paymentRecord->setAndSave([
+                                             "status"         => $json->state,
+                                             "transaction_id" => $json->id,
+                                         ]);
 
         if ($json->state == "pending") {
             $this->environment->redirect($this->getWaitingUrl());
+
             return;
         }
 
