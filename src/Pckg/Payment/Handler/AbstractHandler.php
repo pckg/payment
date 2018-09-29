@@ -4,7 +4,6 @@ use Derive\Orders\Record\OrdersBill;
 use Pckg\Payment\Adapter\Environment;
 use Pckg\Payment\Adapter\Log;
 use Pckg\Payment\Adapter\Order;
-use Pckg\Payment\Record\Payment;
 
 abstract class AbstractHandler implements Handler
 {
@@ -27,23 +26,6 @@ abstract class AbstractHandler implements Handler
         $this->order = $order;
     }
 
-    public function validate($request)
-    {
-        return [
-            'success' => true,
-        ];
-    }
-
-    /**
-     * @return $this
-     */
-    public function createPaymentRecord($data = [])
-    {
-        $this->paymentRecord = Payment::createForInstalments($this->order->getBills(), static::class);
-
-        return $this;
-    }
-
     public function setPaymentRecord($record)
     {
         $this->paymentRecord = $record;
@@ -52,6 +34,11 @@ abstract class AbstractHandler implements Handler
     }
 
     public function initHandler()
+    {
+        return $this;
+    }
+
+    public function initPayment()
     {
         return $this;
     }
@@ -75,11 +62,7 @@ abstract class AbstractHandler implements Handler
         $this->log->log($data);
     }
 
-    public function start()
-    {
-    }
-
-    public function startPartial()
+    public function getStart()
     {
     }
 
@@ -91,18 +74,9 @@ abstract class AbstractHandler implements Handler
     {
     }
 
-    public function postStartPartial()
-    {
-    }
-
     public function getPaymentRecord()
     {
         return $this->paymentRecord;
-    }
-
-    public function startPartialData()
-    {
-        return [];
     }
 
     public function success()
@@ -167,13 +141,9 @@ abstract class AbstractHandler implements Handler
                                          ]);
     }
 
-    public function getValidateUrl()
+    public function getCurrency()
     {
-        return $this->environment->url('derive.payment.validate',
-                                       [
-                                           'handler' => $this->handler,
-                                           'payment' => $this->paymentRecord,
-                                       ]);
+        return config('pckg.payment.currency');
     }
 
     public function getStartUrl()

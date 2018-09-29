@@ -24,7 +24,7 @@ class PaypalGnp extends AbstractHandler implements Handler
         return $this;
     }
 
-    function getAccessToken()
+    protected function getAccessToken()
     {
         $ch = curl_init();
 
@@ -49,9 +49,9 @@ class PaypalGnp extends AbstractHandler implements Handler
         }
     }
 
-    public function postStartPartial()
+    public function initPayment()
     {
-        $price = $this->order->getTotal();
+        $price = $this->getTotal();
         $accessToken = $this->getAccessToken();
 
         $arrData = [
@@ -59,7 +59,6 @@ class PaypalGnp extends AbstractHandler implements Handler
             "redirect_urls" => [
                 "return_url" => $this->getCheckUrl(),
                 "cancel_url" => $this->getCancelUrl(),
-                //'notify_url' => $this->getNotificationUrl(),
             ],
             "payer"         => [
                 "payment_method" => "paypal",
@@ -68,7 +67,7 @@ class PaypalGnp extends AbstractHandler implements Handler
                 [
                     "amount"      => [
                         "total"    => $price,
-                        "currency" => config('pckg.payment.currency'),
+                        "currency" => $this->getCurrency(),
                     ],
                     "description" => $this->getDescription(),
                 ],
@@ -117,7 +116,7 @@ class PaypalGnp extends AbstractHandler implements Handler
         ];
     }
 
-    function check()
+    public function check()
     {
         $accessToken = $this->getAccessToken();
 
@@ -184,14 +183,6 @@ class PaypalGnp extends AbstractHandler implements Handler
          * Redirect on error.
          */
         return $this->environment->redirect($this->getErrorUrl());
-    }
-
-    public function success()
-    {
-    }
-
-    public function error()
-    {
     }
 
 }

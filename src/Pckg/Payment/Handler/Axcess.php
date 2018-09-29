@@ -10,18 +10,6 @@ class Axcess extends AbstractHandler implements Handler
 
     protected $handler = 'axcess';
 
-    public function validate($request)
-    {
-        return [
-            'success' => true,
-        ];
-    }
-
-    public function initHandler()
-    {
-        return $this;
-    }
-
     /**
      * @return string
      * Used on frontend form.

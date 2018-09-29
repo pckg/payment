@@ -5,33 +5,22 @@ use Braintree\Configuration;
 use Braintree\Transaction;
 use Throwable;
 
+/**
+ * Class Braintree
+ *
+ * @package Pckg\Payment\Handler
+ */
 class Braintree extends AbstractHandler implements Handler
 {
 
-    protected $braintreeClientToken;
-
+    /**
+     * @var string
+     */
     protected $handler = 'braintree';
 
-    public function validate($request)
-    {
-        $rules = [
-            'holder'     => 'required',
-            'number'     => 'required',
-            'exp_month'  => 'required',
-            'exp_year'   => 'required',
-            'cvc'        => 'required',
-            'amount_int' => 'required',
-        ];
-
-        if (!$this->environment->validates($request, $rules)) {
-            return $this->environment->errorJsonResponse();
-        }
-
-        return [
-            'success' => true,
-        ];
-    }
-
+    /**
+     * @return $this|AbstractHandler
+     */
     public function initHandler()
     {
         Configuration::environment($this->environment->config('braintree.environment'));
@@ -42,27 +31,29 @@ class Braintree extends AbstractHandler implements Handler
         return $this;
     }
 
-    public function getBraintreeClientToken()
+    /**
+     * @return array|AbstractHandler
+     */
+    public function initPayment()
     {
-        return $this->braintreeClientToken;
-    }
-
-    public function startPartialData()
-    {
+        $token = null;
         try {
-            $this->braintreeClientToken = ClientToken::generate();
+            $token = ClientToken::generate();
         } catch (Throwable $e) {
             response()->unavailable('Braintree payments are not available at the moment: ' . $e->getMessage());
         }
 
-        $this->paymentRecord->addLog('created', $this->braintreeClientToken);
+        $this->paymentRecord->addLog('created', $token);
 
         return [
-            'token' => $this->getBraintreeClientToken(),
+            'token' => $token,
         ];
     }
 
-    public function postStartPartial()
+    /**
+     * @return array|void
+     */
+    public function postStart()
     {
         $braintreeNonce = request()->post('payment_method_nonce');
 

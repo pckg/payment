@@ -4,7 +4,6 @@ use Mollie\Api\Exceptions\ApiException;
 use Mollie\Api\MollieApiClient;
 use Pckg\Collection;
 use Throwable;
-use Exception;
 
 class Mollie extends AbstractHandler implements Handler
 {
@@ -60,20 +59,32 @@ class Mollie extends AbstractHandler implements Handler
              */
             $url = $payment->getCheckoutUrl();
             $this->paymentRecord->addLog('redirected', $url);
-            $this->environment->redirect($url);
+
+            return [
+                'success'  => true,
+                'redirect' => $url,
+            ];
 
         } catch (ApiException $e) {
             /**
              * Catch Mollie payments exception.
              */
             $this->paymentRecord->addLog('error', $e->getMessage());
-            response()->fatal('Mollie payments not available: ' . $e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => 'Mollie payments not available: ' . $e->getMessage(),
+            ];
         } catch (Throwable $e) {
             /**
              * Catch all other exceptions.
              */
             $this->paymentRecord->addLog('error', $e->getMessage());
-            response()->fatal('System error:' . $e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => 'System error:' . $e->getMessage(),
+            ];
         }
     }
 

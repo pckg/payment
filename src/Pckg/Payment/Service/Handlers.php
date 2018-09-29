@@ -51,14 +51,22 @@ trait Handlers
             return;
         }
 
+        $classes = [];
         if (strpos($handler, '-')) {
-            list($handler, $subhandler) = explode('-', $handler);
-            $handler = \Pckg\Payment\Handler::class . '\\' . ucfirst($handler) . '\\' . ucfirst($subhandler);
+            list($mainHandler, $subhandler) = explode('-', $handler);
+            $classes[] = \Pckg\Payment\Handler::class . '\\' . ucfirst($mainHandler) . '\\' . ucfirst($subhandler);
+            $classes[] = \Pckg\Payment\Handler::class . '\\' . ucfirst($mainHandler);
         } else {
-            $handler = \Pckg\Payment\Handler::class . '\\' . ucfirst($handler);
+            $classes[] = \Pckg\Payment\Handler::class . '\\' . ucfirst($handler);
         }
 
-        return $this->fullInitHandler(new $handler($this->order));
+        foreach ($classes as $class) {
+            if (!class_exists($class)) {
+                continue;
+            }
+
+            return $this->fullInitHandler(new $class($this->order));
+        }
     }
 
     public function useBraintreeHandler()
