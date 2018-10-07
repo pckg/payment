@@ -10,7 +10,7 @@ class Proforma extends AbstractHandler implements Handler
         ];
     }
 
-    public function postStartPartial()
+    public function postStart()
     {
         return [
             'success'  => true,

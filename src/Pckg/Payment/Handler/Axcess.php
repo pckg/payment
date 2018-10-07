@@ -39,7 +39,7 @@ class Axcess extends AbstractHandler implements Handler
      * @return string
      * Prepare Access processor for payment.
      */
-    public function startPartial()
+    public function postStart()
     {
         $responseData = null;
         try {

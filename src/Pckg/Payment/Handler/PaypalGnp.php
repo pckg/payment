@@ -49,7 +49,7 @@ class PaypalGnp extends AbstractHandler implements Handler
         }
     }
 
-    public function initPayment()
+    public function postStart()
     {
         $price = $this->getTotal();
         $accessToken = $this->getAccessToken();
