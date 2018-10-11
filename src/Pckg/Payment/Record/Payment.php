@@ -30,7 +30,25 @@ class Payment extends Record
 
     public function getBills()
     {
-        return (new OrdersBills())->where('id', json_decode($this->data('data'))->billIds)->all();
+        $data = $this->data('data');
+
+        if (!$data) {
+            return collect([]);
+        }
+
+        $decoded = json_decode($data);
+
+        if (!$decoded) {
+            return collect([]);
+        }
+
+        $billIds = $decoded->billIds;
+
+        if (!$billIds) {
+            return collect([]);
+        }
+
+        return (new OrdersBills())->where('id', $billIds)->all();
     }
 
     public function getJsonData($key)
@@ -52,14 +70,12 @@ class Payment extends Record
 
     public function addLog($status, $log = null)
     {
-        return PaymentLog::create(
-            [
-                'payment_id' => $this->id,
-                'created_at' => Carbon::now(),
-                'status'     => $status,
-                'data'       => json_encode($log),
-            ]
-        );
+        return PaymentLog::create([
+                                      'payment_id' => $this->id,
+                                      'created_at' => Carbon::now(),
+                                      'status'     => $status,
+                                      'data'       => json_encode($log),
+                                  ]);
     }
 
     public function getUniqueId()
