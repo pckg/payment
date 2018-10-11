@@ -94,6 +94,7 @@ class Payment
                 'methods'      => $submethods,
                 'img'          => '/img/payment/' . $method . '.png',
                 'vueComponent' => 'derive-payment-handler-' . $method,
+                'group' => $config['group'] ?? false,
             ];
         }
 
