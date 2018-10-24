@@ -40,7 +40,7 @@ class Mollie extends AbstractHandler implements Handler
         ];
     }
 
-    public function startPartial()
+    public function postStart()
     {
         try {
             /**

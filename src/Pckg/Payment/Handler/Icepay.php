@@ -31,8 +31,6 @@ class Icepay extends AbstractHandler implements Handler
                                            true));
         $this->icepay->setErrorURL(url('derive.payment.error', ['handler' => $this->handler, 'order' => null], true));
 
-        //dd($this->getPaymentMethods());
-
         return $this;
     }
 
@@ -47,7 +45,7 @@ class Icepay extends AbstractHandler implements Handler
         $order = $this->order->getOrder();
         $price = $this->getTotal();
 
-        return [
+        $data = [
             'Amount'        => $price,
             'Currency'      => config('pckg.payment.currency'),
             'Paymentmethod' => $this->paymentMethod,
@@ -59,6 +57,8 @@ class Icepay extends AbstractHandler implements Handler
             'Reference'     => $this->paymentRecord->id,
             'EndUserIP'     => server('REMOTE_ADDR'),
         ];
+
+        return $data;
     }
 
     public function getTotal()
@@ -150,7 +150,7 @@ class Icepay extends AbstractHandler implements Handler
         ];
     }
 
-    public function postStartPartial()
+    public function postStart()
     {
         try {
             /**
@@ -178,7 +178,10 @@ class Icepay extends AbstractHandler implements Handler
              * Validate response.
              */
             if (!isset($payment->ProviderTransactionID) || !isset($payment->PaymentID)) {
-                throw new Exception("Icepay error - " . ($payment->Message ?? 'unknown error'));
+                return [
+                    'success' => false,
+                    'message' => 'Icepay payment provider error - ' . ($payment->Message ?? 'unknown error'),
+                ];
             }
 
             /**
@@ -193,10 +196,18 @@ class Icepay extends AbstractHandler implements Handler
              * Redirect to payment page.
              */
             $this->paymentRecord->addLog('redirected', $payment->PaymentScreenURL);
-            $this->environment->redirect($payment->PaymentScreenURL);
+
+            return [
+                'success'  => true,
+                'redirect' => $payment->PaymentScreenURL,
+            ];
         } catch (Throwable $e) {
             $this->paymentRecord->addLog('error');
-            response()->unavailable('Icepay payments are not available at the moment: ' . $e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => 'Icepay payments are not available at the moment: ' . $e->getMessage(),
+            ];
         }
     }
 
