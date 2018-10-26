@@ -10,6 +10,14 @@ class Proforma extends AbstractHandler implements Handler
         ];
     }
 
+    public function getStart()
+    {
+        return view('Derive/Basket:payment/start_upn',
+                    [
+                        'bills' => $this->order->getBills(),
+                    ]);
+    }
+
     public function postStart()
     {
         return [
