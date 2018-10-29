@@ -1,6 +1,5 @@
 <?php namespace Pckg\Payment\Handler;
 
-use Exception;
 use Throwable;
 
 class Axcess extends AbstractHandler implements Handler
@@ -9,18 +8,6 @@ class Axcess extends AbstractHandler implements Handler
     protected $axcessToken;
 
     protected $handler = 'axcess';
-
-    public function validate($request)
-    {
-        return [
-            'success' => true,
-        ];
-    }
-
-    public function initHandler()
-    {
-        return $this;
-    }
 
     /**
      * @return string
@@ -51,17 +38,23 @@ class Axcess extends AbstractHandler implements Handler
      * @return string
      * Prepare Access processor for payment.
      */
-    public function startPartial()
+    public function initPayment()
     {
         $responseData = null;
         try {
             $url = $this->getEndpoint() . "v1/checkouts";
-            $data = "authentication.userId=" . config('pckg.payment.provider.axcess.userId') . "&authentication.password=" . config('pckg.payment.provider.axcess.password') . "&authentication.entityId=" . config('pckg.payment.provider.axcess.entityId') . "&amount=" . $this->getTotalToPay() . "&currency=" . $this->order->getCurrency() . "&merchantTransactionId=" . $this->paymentRecord->hash . "&descriptor=" . urlencode(__('order_payment') . " #" . $this->order->getId() . ' (' . $this->order->getNum() . ' - ' . $this->order->getBills()
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ->map('id')
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               ->implode(',') . ')') . "&customer.givenName=" . $this->order->getCustomer()
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            ->getFirstName() . "&customer.surname=" . $this->order->getCustomer()
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  ->getLastName() . "&customer.email=" . $this->order->getCustomer()
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ->getEmail() . "&customer.ip=" . server('REMOTE_ADDR') . "&paymentType=DB";
+            $data = "authentication.userId=" . config('pckg.payment.provider.axcess.userId')
+                . "&authentication.password=" . config('pckg.payment.provider.axcess.password')
+                . "&authentication.entityId=" . config('pckg.payment.provider.axcess.entityId')
+                . "&amount=" . $this->getTotalToPay()
+                . "&currency=" . $this->order->getCurrency()
+                . "&merchantTransactionId=" . $this->paymentRecord->hash
+                . "&descriptor=" . urlencode($this->order->getDescription())
+                . "&customer.givenName=" . $this->order->getCustomer()->getFirstName()
+                . "&customer.surname=" . $this->order->getCustomer()->getLastName()
+                . "&customer.email=" . $this->order->getCustomer()->getEmail()
+                . "&customer.ip=" . server('REMOTE_ADDR')
+                . "&paymentType=DB";
 
             $ch = curl_init();
             curl_setopt($ch, CURLOPT_URL, $url);
@@ -70,15 +63,22 @@ class Axcess extends AbstractHandler implements Handler
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, strpos($url, 'test.') === false);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             $responseData = curl_exec($ch);
-            if (curl_errno($ch)) {
-                throw new Exception("Curl error: " . curl_error($ch));
-            }
+            $errno = curl_errno($ch);
             curl_close($ch);
+            if ($errno) {
+                return [
+                    'success' => false,
+                    'message' => 'CURL error - ' . curl_error($ch),
+                ];
+            }
 
             $data = json_decode($responseData, true);
 
             if (trim($data['result']['code'] ?? null) !== '000.200.100') {
-                throw new Exception($data['result']['description'] ?? 'Unknown Axcess error');
+                return [
+                    'success' => false,
+                    'message' => $data['result']['description'] ?? 'Unknown Axcess error',
+                ];
             }
 
             $this->axcessToken = $data['id'];
@@ -86,10 +86,19 @@ class Axcess extends AbstractHandler implements Handler
                                                  'transaction_id' => $data['id'],
                                              ]);
         } catch (Throwable $e) {
-            response()->unavailable('Axcess payments are not available at the moment: ' . $e->getMessage());
+            return [
+                'success' => false,
+                'message' => 'Axcess payments are not available at the moment: ' . $e->getMessage(),
+            ];
         }
 
         $this->paymentRecord->addLog('created', $responseData);
+
+        return [
+            'axcessToken' => $this->getAxcessToken(),
+            'brands'      => $this->getBrands(),
+            'endpoint'    => $this->getEndpoint(),
+        ];
     }
 
     public function check()
@@ -107,9 +116,16 @@ class Axcess extends AbstractHandler implements Handler
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
             $responseData = curl_exec($ch);
             curl_close($ch);
+
             if (curl_errno($ch)) {
-                $this->errorPayment(curl_error($ch) . ' ' . $responseData);
-                $this->environment->redirect($this->getErrorUrl());
+                $this->errorPayment('CURL error - ' . curl_error($ch) . ' ' . $responseData);
+
+                /*return [
+                    'success' => false,
+                    'message' => 'CURL error - ' . curl_error($ch),
+                    'modal'   => 'error',
+                ];*/
+                return $this->environment->redirect($this->getErrorUrl());
             }
 
             $data = json_decode($responseData, true);
@@ -122,20 +138,32 @@ class Axcess extends AbstractHandler implements Handler
             if (in_array($resultCode, $okCodes)) {
                 $this->approvePayment("Axcess #" . $data['id'], $responseData, $data['id']);
 
-                $this->environment->redirect($this->getSuccessUrl());
+                /*return [
+                    'success' => true,
+                    'modal'   => 'success',
+                ];*/
 
-                return;
+                return $this->environment->redirect($this->getSuccessUrl());
             }
 
             /**
              * Notify system about payment error.
              */
             $this->errorPayment($responseData);
-            $this->environment->redirect($this->getErrorUrl());
 
-            return $responseData;
+            /*return [
+                'success' => false,
+                'message' => 'Unknown error',
+                'modal'   => 'error',
+            ];*/
+            return $this->environment->redirect($this->getErrorUrl());
         } catch (Throwable $e) {
-            response()->unavailable('Axcess payments are not available at the moment: ' . $e->getMessage());
+            /*return [
+                'success' => false,
+                'message' => 'Axcess payments are not available at the moment: ' . $e->getMessage(),
+                'modal'   => 'error',
+            ];*/
+            return $this->environment->redirect($this->getErrorUrl());
         }
     }
 

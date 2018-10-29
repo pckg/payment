@@ -4,7 +4,6 @@ use Derive\Orders\Record\OrdersBill;
 use Pckg\Payment\Adapter\Environment;
 use Pckg\Payment\Adapter\Log;
 use Pckg\Payment\Adapter\Order;
-use Pckg\Payment\Record\Payment;
 
 abstract class AbstractHandler implements Handler
 {
@@ -27,29 +26,6 @@ abstract class AbstractHandler implements Handler
         $this->order = $order;
     }
 
-    public function validate($request)
-    {
-        return [
-            'success' => true,
-        ];
-    }
-
-    /**
-     * @return $this
-     */
-    public function createPaymentRecord($data = [])
-    {
-        $this->paymentRecord = Payment::createForOrderAndHandler($this->order,
-                                                                 static::class,
-                                                                 array_merge($data,
-                                                                             [
-                                                                                 'billIds' => $this->order->getBills()
-                                                                                                          ->map('id'),
-                                                                             ]));
-
-        return $this;
-    }
-
     public function setPaymentRecord($record)
     {
         $this->paymentRecord = $record;
@@ -58,6 +34,11 @@ abstract class AbstractHandler implements Handler
     }
 
     public function initHandler()
+    {
+        return $this;
+    }
+
+    public function initPayment()
     {
         return $this;
     }
@@ -81,11 +62,7 @@ abstract class AbstractHandler implements Handler
         $this->log->log($data);
     }
 
-    public function start()
-    {
-    }
-
-    public function startPartial()
+    public function getStart()
     {
     }
 
@@ -97,18 +74,9 @@ abstract class AbstractHandler implements Handler
     {
     }
 
-    public function postStartPartial()
-    {
-    }
-
     public function getPaymentRecord()
     {
         return $this->paymentRecord;
-    }
-
-    public function startPartialData()
-    {
-        return [];
     }
 
     public function success()
@@ -143,9 +111,7 @@ abstract class AbstractHandler implements Handler
 
     public function getDescription()
     {
-        return __('order_payment') . " #" . $this->order->getId() . ' (' . $this->order->getNum() . ' - ' . $this->order->getBills()
-                                                                                                                        ->map('id')
-                                                                                                                        ->implode(',') . ')';
+        return $this->paymentRecord->getDescription();
     }
 
     public function setPaymentId($paymentId)
@@ -165,6 +131,7 @@ abstract class AbstractHandler implements Handler
                                              'status'         => $status,
                                              'transaction_id' => $transactionId,
                                          ]);
+        // $this->paymentRecord->distributeOrders();
     }
 
     public function errorPayment($data = null, $logStatus = 'error')
@@ -175,13 +142,9 @@ abstract class AbstractHandler implements Handler
                                          ]);
     }
 
-    public function getValidateUrl()
+    public function getCurrency()
     {
-        return $this->environment->url('derive.payment.validate',
-                                       [
-                                           'handler' => $this->handler,
-                                           'order'   => $this->order->getOrder(),
-                                       ]);
+        return config('pckg.payment.currency');
     }
 
     public function getStartUrl()
@@ -189,7 +152,7 @@ abstract class AbstractHandler implements Handler
         return $this->environment->url('derive.payment.start',
                                        [
                                            'handler' => $this->handler,
-                                           'order'   => $this->order->getOrder(),
+                                           'payment' => $this->paymentRecord,
                                        ]);
     }
 
@@ -197,8 +160,7 @@ abstract class AbstractHandler implements Handler
     {
         return $this->environment->url('derive.payment.error',
                                        [
-                                           'handler' => $this->handler,
-                                           'order'   => $this->order->getOrder(),
+                                           'payment' => $this->paymentRecord,
                                        ]);
     }
 
@@ -206,8 +168,7 @@ abstract class AbstractHandler implements Handler
     {
         return $this->environment->url('derive.payment.waiting',
                                        [
-                                           'handler' => $this->handler,
-                                           'order'   => $this->order->getOrder(),
+                                           'payment' => $this->paymentRecord,
                                        ]);
     }
 
@@ -216,8 +177,7 @@ abstract class AbstractHandler implements Handler
 
         return $this->environment->url('derive.payment.success',
                                        [
-                                           'handler' => $this->handler,
-                                           'order'   => $this->order->getOrder(),
+                                           'payment' => $this->paymentRecord,
                                        ]);
     }
 
@@ -225,18 +185,23 @@ abstract class AbstractHandler implements Handler
     {
         return $this->environment->url('derive.payment.notification',
                                        [
-                                           'handler' => $this->handler,
-                                           'order'   => $this->order->getOrder(),
                                            'payment' => $this->paymentRecord,
                                        ]);
+    }
+
+    public function getCheckUrl()
+    {
+        return $this->environment->url('derive.payment.check',
+                                       [
+                                           'payment' => $this->paymentRecord,
+                                       ],
+                                       true);
     }
 
     public function getCancelUrl()
     {
         return $this->environment->url('derive.payment.cancel',
                                        [
-                                           'handler' => $this->handler,
-                                           'order'   => $this->order->getOrder(),
                                            'payment' => $this->paymentRecord,
                                        ]);
     }

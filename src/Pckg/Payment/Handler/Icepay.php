@@ -1,10 +1,8 @@
 <?php namespace Pckg\Payment\Handler;
 
-use Derive\Orders\Record\OrdersBill;
 use Exception;
 use Icepay\API\Client;
 use Pckg\Collection;
-use Pckg\Payment\Record\Icepay as IcepayRecord;
 use Pckg\Payment\Record\Payment;
 use Throwable;
 
@@ -28,14 +26,10 @@ class Icepay extends AbstractHandler implements Handler
         $this->icepay->setApiKey($this->environment->config('icepay.merchant'));
         $this->icepay->setApiSecret($this->environment->config('icepay.secret'));
 
-        $this->icepay->setCompletedURL(
-            url('derive.payment.success', ['handler' => $this->handler, 'order' => null], true)
-        );
-        $this->icepay->setErrorURL(
-            url('derive.payment.error', ['handler' => $this->handler, 'order' => null], true)
-        );
-
-        //dd($this->getPaymentMethods());
+        $this->icepay->setCompletedURL(url('derive.payment.success',
+                                           ['handler' => $this->handler, 'order' => null],
+                                           true));
+        $this->icepay->setErrorURL(url('derive.payment.error', ['handler' => $this->handler, 'order' => null], true));
 
         return $this;
     }
@@ -51,7 +45,7 @@ class Icepay extends AbstractHandler implements Handler
         $order = $this->order->getOrder();
         $price = $this->getTotal();
 
-        return [
+        $data = [
             'Amount'        => $price,
             'Currency'      => config('pckg.payment.currency'),
             'Paymentmethod' => $this->paymentMethod,
@@ -63,6 +57,8 @@ class Icepay extends AbstractHandler implements Handler
             'Reference'     => $this->paymentRecord->id,
             'EndUserIP'     => server('REMOTE_ADDR'),
         ];
+
+        return $data;
     }
 
     public function getTotal()
@@ -77,23 +73,19 @@ class Icepay extends AbstractHandler implements Handler
 
     protected function validatePostbackChecksum()
     {
-        $calculatedChecksum = sha1(
-            sprintf(
-                "%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s",
-                $this->icepay->api_secret,
-                $this->icepay->api_key,
-                $this->environment->post('Status'),
-                $this->environment->post('StatusCode'),
-                $this->environment->post('OrderID'),
-                $this->environment->post('PaymentID'),
-                $this->environment->post('Reference'),
-                $this->environment->post('TransactionID'),
-                $this->environment->post('Amount'),
-                $this->environment->post('Currency'),
-                $this->environment->post('Duration'),
-                $this->environment->post('ConsumerIPAddress')
-            )
-        );
+        $calculatedChecksum = sha1(sprintf("%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s|%s",
+                                           $this->icepay->api_secret,
+                                           $this->icepay->api_key,
+                                           $this->environment->post('Status'),
+                                           $this->environment->post('StatusCode'),
+                                           $this->environment->post('OrderID'),
+                                           $this->environment->post('PaymentID'),
+                                           $this->environment->post('Reference'),
+                                           $this->environment->post('TransactionID'),
+                                           $this->environment->post('Amount'),
+                                           $this->environment->post('Currency'),
+                                           $this->environment->post('Duration'),
+                                           $this->environment->post('ConsumerIPAddress')));
 
         $checksum = $this->environment->post('Checksum');
 
@@ -111,11 +103,10 @@ class Icepay extends AbstractHandler implements Handler
 
     public function getPaymentMethod($method)
     {
-        return (new Collection($this->getPaymentMethods()->PaymentMethods))->first(
-            function ($paymentMethod) use ($method) {
-                return $paymentMethod->PaymentMethodCode == $method;
-            }
-        );
+        return (new Collection($this->getPaymentMethods()->PaymentMethods))->first(function($paymentMethod) use ($method
+        ) {
+            return $paymentMethod->PaymentMethodCode == $method;
+        });
     }
 
     public function postNotification()
@@ -127,23 +118,39 @@ class Icepay extends AbstractHandler implements Handler
 
         $bodyData = (array)$this->environment->post(null);
 
-        $payment = Payment::getOrFail(
-            [
-                'id' => $reference,
-            ]
-        );
+        $payment = Payment::getOrFail([
+                                          'id' => $reference,
+                                      ]);
 
         $this->setPaymentRecord($payment);
 
         if ($status == 'OK') {
             $this->approvePayment('Icepay #' . $reference, $bodyData, $this->environment->post('TransactionID'));
+
             return;
         }
 
         $this->errorPayment($bodyData, $status);
     }
 
-    public function postStartPartial()
+    public function initPayment()
+    {
+        $config = $this->getPaymentMethod($this->paymentMethod);
+
+        $countries = collect($config->Issuers[0]->Countries ?? [])->keyBy('CountryCode')->map('CountryCode');
+        $issuers = collect($config->Issuers ?? [])->keyBy('IssuerKeyword')->map('Description');
+
+        return [
+            'countries' => $countries->all(),
+            'issuers'   => $issuers->all(),
+            'formData'  => [
+                'country' => $countries->keys()[0] ?? null,
+                'issuer'  => $issuers->keys()[0] ?? null,
+            ],
+        ];
+    }
+
+    public function postStart()
     {
         try {
             /**
@@ -171,27 +178,36 @@ class Icepay extends AbstractHandler implements Handler
              * Validate response.
              */
             if (!isset($payment->ProviderTransactionID) || !isset($payment->PaymentID)) {
-                throw new Exception("Icepay error - " . ($payment->Message ?? 'unknown error'));
+                return [
+                    'success' => false,
+                    'message' => 'Icepay payment provider error - ' . ($payment->Message ?? 'unknown error'),
+                ];
             }
 
             /**
              * Set ids.
              */
-            $this->paymentRecord->setAndSave(
-                [
-                    'transaction_id' => $payment->ProviderTransactionID,
-                    'payment_id'     => $payment->PaymentID,
-                ]
-            );
+            $this->paymentRecord->setAndSave([
+                                                 'transaction_id' => $payment->ProviderTransactionID,
+                                                 'payment_id'     => $payment->PaymentID,
+                                             ]);
 
             /**
              * Redirect to payment page.
              */
             $this->paymentRecord->addLog('redirected', $payment->PaymentScreenURL);
-            $this->environment->redirect($payment->PaymentScreenURL);
+
+            return [
+                'success'  => true,
+                'redirect' => $payment->PaymentScreenURL,
+            ];
         } catch (Throwable $e) {
             $this->paymentRecord->addLog('error');
-            response()->unavailable('Icepay payments are not available at the moment: ' . $e->getMessage());
+
+            return [
+                'success' => false,
+                'message' => 'Icepay payments are not available at the moment: ' . $e->getMessage(),
+            ];
         }
     }
 
@@ -203,11 +219,12 @@ class Icepay extends AbstractHandler implements Handler
     public function startIcepayPartialData($formClass, $handler, $fetch = [])
     {
         $form = resolve($formClass);
-        $form->setAction(url('derive.payment.postStartPartial', [
-            'handler' => $handler,
-            'order'   => $this->order->getOrder(),
-            'payment' => $this->paymentRecord,
-        ]));
+        $form->setAction(url('derive.payment.postStartPartial',
+                             [
+                                 'handler' => $handler,
+                                 'order'   => $this->order->getOrder(),
+                                 'payment' => $this->paymentRecord,
+                             ]));
 
         $config = $this->getPaymentMethod($this->paymentMethod);
         if ($config) {
@@ -224,13 +241,11 @@ class Icepay extends AbstractHandler implements Handler
             }
         }
 
-        vueManager()->addView(
-            'Derive/Basket:payment/_start_' . $handler,
-            [
-                'config' => $config,
-                'form'   => $form,
-            ]
-        );
+        vueManager()->addView('Derive/Basket:payment/_start_' . $handler,
+                              [
+                                  'config' => $config,
+                                  'form'   => $form,
+                              ]);
     }
 
 }

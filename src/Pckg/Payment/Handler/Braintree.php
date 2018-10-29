@@ -5,33 +5,22 @@ use Braintree\Configuration;
 use Braintree\Transaction;
 use Throwable;
 
+/**
+ * Class Braintree
+ *
+ * @package Pckg\Payment\Handler
+ */
 class Braintree extends AbstractHandler implements Handler
 {
 
-    protected $braintreeClientToken;
-
+    /**
+     * @var string
+     */
     protected $handler = 'braintree';
 
-    public function validate($request)
-    {
-        $rules = [
-            'holder'     => 'required',
-            'number'     => 'required',
-            'exp_month'  => 'required',
-            'exp_year'   => 'required',
-            'cvc'        => 'required',
-            'amount_int' => 'required',
-        ];
-
-        if (!$this->environment->validates($request, $rules)) {
-            return $this->environment->errorJsonResponse();
-        }
-
-        return [
-            'success' => true,
-        ];
-    }
-
+    /**
+     * @return $this|AbstractHandler
+     */
     public function initHandler()
     {
         Configuration::environment($this->environment->config('braintree.environment'));
@@ -42,28 +31,37 @@ class Braintree extends AbstractHandler implements Handler
         return $this;
     }
 
-    public function getBraintreeClientToken()
+    /**
+     * @return array|AbstractHandler
+     */
+    public function initPayment()
     {
-        return $this->braintreeClientToken;
-    }
-
-    public function startPartial()
-    {
+        $token = null;
         try {
-            $this->braintreeClientToken = ClientToken::generate();
+            $token = ClientToken::generate();
         } catch (Throwable $e) {
             response()->unavailable('Braintree payments are not available at the moment: ' . $e->getMessage());
         }
 
-        $this->paymentRecord->addLog('created', $this->braintreeClientToken);
+        $this->paymentRecord->addLog('created', $token);
+
+        return [
+            'token' => $token,
+        ];
     }
 
-    public function postStartPartial()
+    /**
+     * @return array|void
+     */
+    public function postStart()
     {
         $braintreeNonce = request()->post('payment_method_nonce');
 
         if (!$braintreeNonce) {
-            response()->bad('Missing payment method nonce.');
+            return [
+                'success' => false,
+                'message' => 'Missing payment method nonce.',
+            ];
         }
 
         $this->getPaymentRecord()->addLog('submitted');
@@ -79,13 +77,16 @@ class Braintree extends AbstractHandler implements Handler
         $this->paymentRecord->setJsonData('braintree_payment_method_nonce', $braintreeNonce)->save();
 
         /**
-         * @T00D00 - redirect to error page with error $result->message
+         * No success.
          */
         if (!$result->success) {
             $this->errorPayment($result);
 
-            $this->environment->flash('pckg.payment.order.' . $this->order->getId() . '.error', $result->message);
-            $this->environment->redirect($this->getErrorUrl());
+            return [
+                'success' => false,
+                'message' => $result->message,
+                'modal'   => 'error',
+            ];
         }
 
         /**
@@ -95,23 +96,28 @@ class Braintree extends AbstractHandler implements Handler
         $transaction = $result->transaction;
         if ($transaction->status == Transaction::SUBMITTED_FOR_SETTLEMENT) {
             $this->approvePayment("Braintree #" . $transaction->id, $result, $transaction->id, $transaction->status);
-            $this->environment->redirect($this->getSuccessUrl());
 
-            return;
+            return [
+                'success' => true,
+                'modal'   => 'success',
+                'payment' => $this->paymentRecord,
+            ];
         }
 
         $this->errorPayment($transaction, $transaction->status);
 
-        $flash = 'Unknown payment error';
+        $message = 'Unknown payment error';
         if ($transaction->status == Transaction::PROCESSOR_DECLINED) {
-            $flash = $transaction->processorResponseText;
+            $message = $transaction->processorResponseText;
         } elseif ($transaction->status == Transaction::GATEWAY_REJECTED) {
-            $flash = $transaction->gatewayRejectionReason;
+            $message = $transaction->gatewayRejectionReason;
         }
 
-        $this->environment->flash('pckg.payment.order.' . $this->order->getId() . '.error', $flash);
-
-        $this->environment->redirect($this->getErrorUrl());
+        return [
+            'success' => false,
+            'message' => $message,
+            'modal'   => 'error',
+        ];
     }
 
 }

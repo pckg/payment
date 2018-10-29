@@ -9,22 +9,15 @@ interface Handler
 
     public function initHandler();
 
-    /**
-     * @return $this
-     */
-    public function createPaymentRecord($data = []);
+    public function initPayment();
 
-    public function start();
+    public function getStart();
 
     public function check();
 
     public function postNotification();
 
     public function postStart();
-
-    public function startPartial();
-
-    public function postStartPartial();
 
     /**
      * @return $this
@@ -35,11 +28,6 @@ interface Handler
      * @return $this
      */
     public function setEnvironment(Environment $environment);
-
-    /**
-     * @return array
-     */
-    public function startPartialData();
 
     /**
      * @return Payment

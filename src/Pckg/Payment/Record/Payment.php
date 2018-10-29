@@ -2,6 +2,7 @@
 
 use Carbon\Carbon;
 use Derive\Orders\Entity\OrdersBills;
+use Pckg\Collection;
 use Pckg\Database\Record;
 use Pckg\Payment\Adapter\Order;
 use Pckg\Payment\Entity\Payments;
@@ -18,6 +19,22 @@ class Payment extends Record
             'user_id'    => auth('frontend')->user('id'),
             'data'       => json_encode($data),
             'price'      => $order->getTotal(),
+            'handler'    => $handler,
+            'status'     => 'created',
+            'created_at' => date('Y-m-d H:i:s'),
+        ];
+
+        $data['hash'] = sha1(json_encode($data) . config('hash') . microtime());
+
+        return static::create($data);
+    }
+
+    public static function createForInstalments(Collection $instalments, $handler)
+    {
+        $data = [
+            'user_id'    => auth('frontend')->user('id'),
+            'data'       => json_encode(['billIds' => $instalments->map('id')->toArray()]),
+            'price'      => $instalments->sum('price'),
             'handler'    => $handler,
             'status'     => 'created',
             'created_at' => date('Y-m-d H:i:s'),
@@ -81,6 +98,37 @@ class Payment extends Record
     public function getUniqueId()
     {
         return $this->hash;
+    }
+
+    public function applyCompanyConfig()
+    {
+        $instalments = $this->getBills();
+        $instalments->first()->order->applyCompanyConfig();
+    }
+
+    public function redirectToSummaryIfNotPayable()
+    {
+
+    }
+
+    public function redirectToSummaryIfOverbooked()
+    {
+
+    }
+
+    public function getDescription()
+    {
+        $instalments = $this->getBills();
+
+        return __('order_payment') . '#' . $instalments->map('order')->map(function(\Derive\Orders\Record\Order $order
+            ) {
+                return '#' . $order->id . '(' . $order->num . ')';
+            })->implode(',') . ' - ' . $instalments->map('id')->implode(',') . ')';
+    }
+
+    public function addGtm()
+    {
+        
     }
 
 }

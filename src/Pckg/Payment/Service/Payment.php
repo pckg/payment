@@ -75,22 +75,27 @@ class Payment
     public function getPaymentMethods()
     {
         $methods = [];
-        // $offersPaymentMethods = $this->order->getOrder()->offer->paymentMethods->keyBy('slug');
-
         foreach (config('pckg.payment.provider') as $method => $config) {
-            if (config('pckg.payment.provider.' . $method . '.enabled')/* && $offersPaymentMethods->hasKey($method)*/) {
-                $submethods = [];
-                foreach (config('pckg.payment.provider.' . $method . '.methods', []) as $submethod) {
-                    $submethods[$submethod] = [
-                        'url' => url('derive.payment.startPartial', ['handler' => $method . '-' . $submethod]),
-                    ];
-                }
+            if (!config('pckg.payment.provider.' . $method . '.enabled')) {
+                continue;
+            }
 
-                $methods[$method] = [
-                    'url'     => url('derive.payment.startPartial', ['handler' => $method]),
-                    'methods' => $submethods,
+            $submethods = [];
+            foreach (config('pckg.payment.provider.' . $method . '.methods', []) as $submethod) {
+                $submethods[$submethod] = [
+                    'url'          => url('derive.payment.startPartial', ['handler' => $method . '-' . $submethod]),
+                    'img'          => '/img/payment/' . $submethod . '.png',
+                    'vueComponent' => 'derive-payment-handler-' . $method . '-' . $submethod,
                 ];
             }
+
+            $methods[$method] = [
+                'url'          => url('derive.payment.startPartial', ['handler' => $method]),
+                'methods'      => $submethods,
+                'img'          => '/img/payment/' . $method . '.png',
+                'vueComponent' => 'derive-payment-handler-' . $method,
+                'group' => $config['group'] ?? false,
+            ];
         }
 
         return $methods;

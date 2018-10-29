@@ -10,13 +10,20 @@ class Proforma extends AbstractHandler implements Handler
         ];
     }
 
-    public function start()
+    public function getStart()
     {
-        $url = $this->environment->url(
-            $this->config['url_waiting'],
-            ['handler' => 'proforma', 'order' => $this->order->getOrder()]
-        );
-        $this->environment->redirect($url);
+        return view('Derive/Basket:payment/start_upn',
+                    [
+                        'bills' => $this->order->getBills(),
+                    ]);
+    }
+
+    public function postStart()
+    {
+        return [
+            'success'  => true,
+            'redirect' => $this->getWaitingUrl(),
+        ];
     }
 
 }
