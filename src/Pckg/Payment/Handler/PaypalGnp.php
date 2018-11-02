@@ -162,7 +162,7 @@ class PaypalGnp extends AbstractHandler implements Handler
         if ($json->state == "approved") {
             $transaction = end($json->transactions);
             $resource = end($transaction->related_resources);
-            $this->approvePayment("Paypal " . $resource->sale->id, $json, $json->id, $json->state);
+            $this->approvePayment("Paypal " . $resource->sale->id, $json, $json->id);
             $this->environment->redirect($this->getSuccessUrl());
 
             return;

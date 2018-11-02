@@ -95,7 +95,7 @@ class Braintree extends AbstractHandler implements Handler
          */
         $transaction = $result->transaction;
         if ($transaction->status == Transaction::SUBMITTED_FOR_SETTLEMENT) {
-            $this->approvePayment("Braintree #" . $transaction->id, $result, $transaction->id, $transaction->status);
+            $this->approvePayment("Braintree #" . $transaction->id, $result, $transaction->id);
 
             return [
                 'success' => true,
