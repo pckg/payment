@@ -1,6 +1,7 @@
 <?php namespace Pckg\Payment\Record;
 
 use Carbon\Carbon;
+use Derive\Orders\Entity\Orders;
 use Derive\Orders\Entity\OrdersBills;
 use Pckg\Collection;
 use Pckg\Database\Record;
@@ -42,7 +43,9 @@ class Payment extends Record
 
         $data['hash'] = sha1(json_encode($data) . config('hash') . microtime());
 
-        return static::create($data);
+        $payment = static::create($data);
+
+        return $payment;
     }
 
     public function getBills()

@@ -131,7 +131,6 @@ abstract class AbstractHandler implements Handler
                                              'status'         => $status,
                                              'transaction_id' => $transactionId,
                                          ]);
-        // $this->paymentRecord->distributeOrders();
     }
 
     public function errorPayment($data = null, $logStatus = 'error')
