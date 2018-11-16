@@ -2,7 +2,6 @@
 
 use Pckg\Database\Record;
 use Pckg\Payment\Entity\Moneta as MonetaEntity;
-use Pckg\Payment\Entity\Paypal as PaypalEntity;
 
 class Moneta extends Record
 {
