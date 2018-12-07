@@ -239,7 +239,7 @@ class PaypalGnp extends AbstractHandler implements Handler
          */
         if (isset($json->state) && $json->state == "completed") {
             $payment->addLog($json->state, $json);
-            $refundPaymentRecord->setAndSave(['status_id' => 'refund', 'transaction_id' => $json->id]);
+            $refundPaymentRecord->setAndSave(['status' => 'refund', 'transaction_id' => $json->id]);
 
             $instalments = $payment->getBills();
             $order = $instalments->first()->order();
