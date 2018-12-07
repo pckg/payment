@@ -22,4 +22,9 @@ class Payments extends Entity
                     ->foreignKey('id'); // JSON_CONTAINS()
     }
 
+    public function logs()
+    {
+        return $this->hasMany(PaymentLogs::class)->foreignKey('payment_id');
+    }
+
 }

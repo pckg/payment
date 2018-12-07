@@ -1,6 +1,8 @@
 <?php namespace Pckg\Payment\Handler;
 
+use Derive\Orders\Record\OrdersBill;
 use Exception;
+use Pckg\Payment\Record\Payment;
 
 class PaypalGnp extends AbstractHandler implements Handler
 {
@@ -77,12 +79,10 @@ class PaypalGnp extends AbstractHandler implements Handler
         $ch = curl_init();
 
         curl_setopt($ch, CURLOPT_URL, "https://" . $this->config['endpoint'] . "/v1/payments/payment");
-        curl_setopt($ch,
-                    CURLOPT_HTTPHEADER,
-                    [
-                        "Authorization: Bearer " . $accessToken,
-                        "Content-Type: application/json",
-                    ]);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                           "Authorization: Bearer " . $accessToken,
+                           "Content-Type: application/json",
+                       ]);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($arrData));
@@ -126,15 +126,12 @@ class PaypalGnp extends AbstractHandler implements Handler
 
         $ch = curl_init();
 
-        curl_setopt($ch,
-                    CURLOPT_URL,
-                    "https://" . $this->config['endpoint'] . "/v1/payments/payment/" . $this->paymentRecord->payment_id . "/execute/");
-        curl_setopt($ch,
-                    CURLOPT_HTTPHEADER,
-                    [
-                        "Authorization: Bearer " . $accessToken,
-                        "Content-Type: application/json",
-                    ]);
+        curl_setopt($ch, CURLOPT_URL, "https://" . $this->config['endpoint'] . "/v1/payments/payment/" .
+                       $this->paymentRecord->payment_id . "/execute/");
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                           "Authorization: Bearer " . $accessToken,
+                           "Content-Type: application/json",
+                       ]);
         curl_setopt($ch, CURLOPT_POST, true);
         curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($arrData));
@@ -183,6 +180,120 @@ class PaypalGnp extends AbstractHandler implements Handler
          * Redirect on error.
          */
         return $this->environment->redirect($this->getErrorUrl());
+    }
+
+    public function refund(Payment $payment, $amount = null)
+    {
+        /**
+         * Transaction ID is needed for refund transaction.
+         */
+        $transactionId = $payment->finalTransactionId;
+
+        if ($transactionId && $payment->payment_id && $payment->transaction_id && $payment->transaction_id == $payment->payment_id) {
+            $payment->setAndSave(['transaction_id' => $transactionId]);
+        }
+
+        if (!$transactionId) {
+            throw new Exception('Transaction ID not found');
+        }
+
+        /**
+         * We will issue transaction, create new payment record.
+         */
+        $refundPaymentRecord = Payment::createForRefund($payment, $amount);
+
+        $arrData = [
+            'amount'      => [
+                'total'    => $amount,
+                'currency' => $this->getCurrency(),
+            ],
+            'description' => 'Refund transaction #' . $payment->id,
+        ];
+
+        /**
+         * Save log.
+         */
+        $refundPaymentRecord->addLog('request:refund', $arrData);
+
+        /**
+         * Make request to paypal.
+         */
+        $result = $this->makeCurlRequest("/v1/payments/sale/" . $transactionId . "/refund", $arrData);
+
+        /**
+         * Handle empty result.
+         */
+        if (!$result) {
+            $refundPaymentRecord->addLog('response:empty');
+
+            return [
+                'success' => false,
+                'message' => 'Paypal payments are not available at the moment.',
+            ];
+        }
+
+        $json = json_decode($result);
+
+        /**
+         * Check for proper completed status.
+         */
+        if (isset($json->state) && $json->state == "completed") {
+            $payment->addLog($json->state, $json);
+            $refundPaymentRecord->setAndSave(['status_id' => 'refund', 'transaction_id' => $json->id]);
+
+            $instalments = $payment->getBills();
+            $order = $instalments->first()->order();
+            OrdersBill::create([
+                                   'order_id'     => $order->id,
+                                   'dt_added'     => date('Y-m-d H:i:s'),
+                                   'dt_confirmed' => date('Y-m-d H:i:s'),
+                                   'dt_valid'     => date('Y-m-d H:i:s'),
+                                   'type'         => 'refund',
+                                   'price'        => $amount,
+                                   'payed'        => $amount,
+                                   'notes'        => 'Refund Paypal #' . $json->id,
+                               ]);
+
+            return [
+                'success' => true,
+            ];
+        }
+
+        /**
+         * Add error log.
+         */
+        $payment->addLog($json->state ?? 'error', $json);
+
+        return [
+            'success' => false,
+            'message' => 'Paypal error: ' . ($json->message ?? 'unknown error'),
+            'info'    => $json,
+        ];
+    }
+
+    protected function makeCurlRequest($endpoint, $arrData)
+    {
+        $accessToken = $this->getAccessToken();
+
+        $ch = curl_init();
+
+        $headers = [
+            "Authorization: Bearer " . $accessToken,
+            "Content-Type: application/json",
+        ];
+        $url = "https://" . $this->config['endpoint'] . $endpoint;
+
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($arrData));
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+        $result = curl_exec($ch);
+        curl_close($ch);
+
+        return $result;
     }
 
 }

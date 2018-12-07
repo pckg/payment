@@ -15,6 +15,8 @@ interface Handler
 
     public function check();
 
+    public function refund(Payment $payment, $amound = null);
+
     public function postNotification();
 
     public function postStart();

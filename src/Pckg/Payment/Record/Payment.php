@@ -1,17 +1,34 @@
 <?php namespace Pckg\Payment\Record;
 
 use Carbon\Carbon;
-use Derive\Orders\Entity\Orders;
 use Derive\Orders\Entity\OrdersBills;
+use Derive\Orders\Record\OrdersBill;
 use Pckg\Collection;
+use Pckg\Concept\Reflect;
 use Pckg\Database\Record;
 use Pckg\Payment\Adapter\Order;
 use Pckg\Payment\Entity\Payments;
+use Pckg\Payment\Handler\AbstractHandler;
 
 class Payment extends Record
 {
 
     protected $entity = Payments::class;
+
+    public static function createForRefund(Payment $payment, $amount = null)
+    {
+        $data = [
+            'order_id'   => $payment->getBills()->first()->order_id,
+            'user_id'    => auth('frontend')->user('id'),
+            'price'      => $amount,
+            'handler'    => $payment->handler,
+            'status'     => 'created:refund',
+            'created_at' => date('Y-m-d H:i:s'),
+            'hash'       => sha1($amount . config('hash') . microtime()),
+        ];
+
+        return static::create($data);
+    }
 
     public static function createForOrderAndHandler(Order $order, $handler, $data)
     {
@@ -23,9 +40,8 @@ class Payment extends Record
             'handler'    => $handler,
             'status'     => 'created',
             'created_at' => date('Y-m-d H:i:s'),
+            'hash'       => sha1(json_encode($data) . config('hash') . microtime()),
         ];
-
-        $data['hash'] = sha1(json_encode($data) . config('hash') . microtime());
 
         return static::create($data);
     }
@@ -132,6 +148,62 @@ class Payment extends Record
     public function addGtm()
     {
         
+    }
+
+    public function getFinalTransactionIdAttribute()
+    {
+        if ($this->transaction_id && $this->payment_id && $this->transaction_id != $this->payment_id) {
+            return $this->transaction_id;
+        }
+
+        $log = $this->logs->first(function(PaymentLog $paymentLog){
+            return in_array($paymentLog->status, ['approved', 'payed']);
+        });
+
+        if (!$log) {
+            $instalments = $this->getBills()->filter(function(OrdersBill $ordersBill) {
+                return strpos($ordersBill->notes, 'Paypal ') !== false;
+            });
+
+            if ($instalments->count() > 0) {
+                $notes = $instalments->first()->notes;
+                $transactionStart = strpos($notes, 'Paypal ') + strlen('Paypal ');
+                $transactionEndSpace = strpos($notes, " ", $transactionStart);
+                $transactionEndLine = strpos($notes, "\n", $transactionStart);
+
+                if (!$transactionEndSpace && !$transactionEndLine) {
+                    return substr($notes, $transactionStart);
+                }
+                
+                $length = ($transactionEndSpace && $transactionEndLine
+                    ? ($transactionEndSpace < $transactionEndSpace ? $transactionEndSpace : $transactionEndLine)
+                    : ($transactionEndSpace ? $transactionEndSpace : $transactionEndLine)) - $transactionStart;
+
+                $transactionId = substr($notes, $transactionStart, $length);
+                
+                return $transactionId;
+            }
+
+            return null;
+        }
+
+        $data = json_decode($log->data('data'));
+
+        return $data->transactions[0]->related_resources[0]->sale->id ?? null;
+    }
+
+    /**
+     * @return AbstractHandler
+     * @throws \Exception
+     */
+    public function getHandler()
+    {
+        $handlerClass = $this->handler;
+        if (!$handlerClass) {
+            return null;
+        }
+
+        return Reflect::create($handlerClass);
     }
 
 }

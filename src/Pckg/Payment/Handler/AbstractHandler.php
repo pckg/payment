@@ -4,6 +4,7 @@ use Derive\Orders\Record\OrdersBill;
 use Pckg\Payment\Adapter\Environment;
 use Pckg\Payment\Adapter\Log;
 use Pckg\Payment\Adapter\Order;
+use Pckg\Payment\Record\Payment;
 
 abstract class AbstractHandler implements Handler
 {
@@ -21,7 +22,7 @@ abstract class AbstractHandler implements Handler
      */
     protected $environment;
 
-    public function __construct(Order $order)
+    public function __construct(Order $order = null)
     {
         $this->order = $order;
     }
@@ -96,6 +97,10 @@ abstract class AbstractHandler implements Handler
     }
 
     public function cancel()
+    {
+    }
+
+    public function refund(Payment $payment, $amount = null)
     {
     }
 
