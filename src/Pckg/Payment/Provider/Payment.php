@@ -1,5 +1,6 @@
 <?php namespace Pckg\Payment\Provider;
 
+use Derive\Platform\Resolver\Company;
 use Pckg\Framework\Provider;
 
 class Payment extends Provider
@@ -17,6 +18,17 @@ class Payment extends Provider
                            '.refund' => route('/[payment]/refund', 'refund')->resolvers([
                                                                                             'payment' => \Pckg\Payment\Resolver\Payment::class,
                                                                                         ]),
+                       ]),
+            routeGroup([
+                           'controller' => \Pckg\Payment\Controller\Payment::class,
+                           'urlPrefix'  => '/api/payment-methods',
+                           'namePrefix' => 'api.paymentMethods',
+                           'tags'       => ['group:admin'],
+                       ], [
+                           '.refund' => route('/[paymentMethod]/companies/[company]/settings',
+                                              'companySettings')->resolvers([
+                                                                                'company' => Company::class,
+                                                                            ]),
                        ]),
         ];
     }

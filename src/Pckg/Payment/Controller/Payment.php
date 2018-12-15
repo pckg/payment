@@ -1,5 +1,7 @@
 <?php namespace Pckg\Payment\Controller;
 
+use Derive\Platform\Record\Company;
+use Pckg\Payment\Form\PlatformSettings\Paypal;
 use Pckg\Payment\Handler\PaypalGnp;
 use Pckg\Payment\Service\Handlers;
 use Pckg\Payment\Service\PckgPayment;
@@ -8,7 +10,7 @@ class Payment
 {
 
     use Handlers, PckgPayment;
-    
+
     public function postRefundAction(\Pckg\Payment\Record\Payment $payment)
     {
         /**
@@ -45,6 +47,26 @@ class Payment
          * Issue refund and return response.
          */
         return $paymentService->getHandler()->refund($payment, $amount);
+    }
+
+    public function postCompanySettingsAction(Company $company, $paymentMethod)
+    {
+        $mapper = [
+            'paypal' => Paypal::class,
+        ];
+
+        $form = $mapper[$paymentMethod] ?? null;
+        if (!$form) {
+            throw new Exception('No mapper defined for payment method');
+        }
+
+        $form = resolve($form);
+
+        return [
+            'data'    => $form->getData(),
+            'success' => true,
+            'dummy'   => true,
+        ];
     }
 
 }
