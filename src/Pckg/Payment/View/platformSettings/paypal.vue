@@ -83,10 +83,15 @@
             },
             saveSettings: function () {
                 http.post('/api/payment-methods/' + this.myPaymentMethod.key + '/companies/' + this.myCompany.id + '/settings', this.collectSettings(), function () {
-
+                    $dispatcher.$emit('notification:success', 'Settings saved');
                 }, function () {
                     $dispatcher.$emit('notification:error', 'Error saving settings');
                 });
+            },
+            initialFetch: function () {
+                http.getJSON('/api/payment-methods/' + this.myPaymentMethod.key + '/companies/' + this.myCompany.id + '/settings', function (data) {
+                    this.myPaymentMethod = data.paymentMethod;
+                }.bind(this));
             }
         },
         watch: {
@@ -95,7 +100,13 @@
             },
             company: function (company) {
                 this.myCompany = company;
+            },
+            myCompany: function () {
+                this.initialFetch();
             }
+        },
+        created: function () {
+            this.initialFetch();
         }
     }
 </script>

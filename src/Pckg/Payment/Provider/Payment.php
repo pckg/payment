@@ -25,7 +25,7 @@ class Payment extends Provider
                            'namePrefix' => 'api.paymentMethods',
                            'tags'       => ['group:admin'],
                        ], [
-                           '.refund' => route('/[paymentMethod]/companies/[company]/settings',
+                           '.company' => route('/[paymentMethod]/companies/[company]/settings',
                                               'companySettings')->resolvers([
                                                                                 'company' => Company::class,
                                                                             ]),
