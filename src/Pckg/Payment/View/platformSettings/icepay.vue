@@ -1,5 +1,5 @@
 <template>
-    <div class="pckg-payment-provider-paypal-platform-config">
+    <div class="pckg-payment-provider-icepay-platform-config">
         <p>{{ myPaymentMethod.description }}</p>
 
         <div class="form-group">
@@ -11,19 +11,10 @@
 
         <template v-if="myPaymentMethod.enabled">
             <div class="form-group">
-                <label>Endpoint</label>
+                <label>Merchant</label>
                 <div>
-                    <input type="text" v-model="myPaymentMethod.endpoint" class="form-control"/>
+                    <input type="text" v-model="myPaymentMethod.merchant" class="form-control"/>
                 </div>
-                <htmlbuilder-validator-error :bag="errors" name="endpoint"></htmlbuilder-validator-error>
-            </div>
-
-            <div class="form-group">
-                <label>Client</label>
-                <div>
-                    <input type="text" v-model="myPaymentMethod.client" class="form-control"/>
-                </div>
-                <htmlbuilder-validator-error :bag="errors" name="client"></htmlbuilder-validator-error>
             </div>
 
             <div class="form-group">
@@ -31,7 +22,6 @@
                 <div>
                     <input type="text" v-model="myPaymentMethod.secret" class="form-control"/>
                 </div>
-                <htmlbuilder-validator-error :bag="errors" name="secret"></htmlbuilder-validator-error>
             </div>
 
             <!--<div class="form-group">
@@ -59,13 +49,12 @@
 <script>
     export default {
         mixins: [pckgPaymentConfig],
-        name: 'pckg-payment-provider-paypal-platform-config',
+        name: 'pckg-payment-provider-icepay-platform-config',
         methods: {
             collectSettings: function () {
                 return {
                     enabled: this.myPaymentMethod.enabled,
-                    endpoint: this.myPaymentMethod.endpoint,
-                    client: this.myPaymentMethod.client,
+                    merchant: this.myPaymentMethod.merchant,
                     secret: this.myPaymentMethod.secret,
                 };
             }

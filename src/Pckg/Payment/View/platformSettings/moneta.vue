@@ -1,5 +1,5 @@
 <template>
-    <div class="pckg-payment-provider-paypal-platform-config">
+    <div class="pckg-payment-provider-moneta-platform-config">
         <p>{{ myPaymentMethod.description }}</p>
 
         <div class="form-group">
@@ -11,27 +11,17 @@
 
         <template v-if="myPaymentMethod.enabled">
             <div class="form-group">
-                <label>Endpoint</label>
+                <label>Tarrification ID</label>
                 <div>
-                    <input type="text" v-model="myPaymentMethod.endpoint" class="form-control"/>
+                    <input type="text" v-model="myPaymentMethod.tarrificationId" class="form-control"/>
                 </div>
-                <htmlbuilder-validator-error :bag="errors" name="endpoint"></htmlbuilder-validator-error>
             </div>
 
             <div class="form-group">
-                <label>Client</label>
+                <label>URL</label>
                 <div>
-                    <input type="text" v-model="myPaymentMethod.client" class="form-control"/>
+                    <input type="text" v-model="myPaymentMethod.url" class="form-control"/>
                 </div>
-                <htmlbuilder-validator-error :bag="errors" name="client"></htmlbuilder-validator-error>
-            </div>
-
-            <div class="form-group">
-                <label>Secret</label>
-                <div>
-                    <input type="text" v-model="myPaymentMethod.secret" class="form-control"/>
-                </div>
-                <htmlbuilder-validator-error :bag="errors" name="secret"></htmlbuilder-validator-error>
             </div>
 
             <!--<div class="form-group">
@@ -59,14 +49,13 @@
 <script>
     export default {
         mixins: [pckgPaymentConfig],
-        name: 'pckg-payment-provider-paypal-platform-config',
+        name: 'pckg-payment-provider-moneta-platform-config',
         methods: {
             collectSettings: function () {
                 return {
                     enabled: this.myPaymentMethod.enabled,
-                    endpoint: this.myPaymentMethod.endpoint,
-                    client: this.myPaymentMethod.client,
-                    secret: this.myPaymentMethod.secret,
+                    tarrificationId: this.myPaymentMethod.tarrificationId,
+                    url: this.myPaymentMethod.url,
                 };
             }
         }

@@ -3,7 +3,7 @@
 use Pckg\Htmlbuilder\Decorator\Method\VueJS;
 use Pckg\Htmlbuilder\Element\Form;
 
-class Paypal extends Form implements Form\ResolvesOnRequest
+class Icepay extends Form implements Form\ResolvesOnRequest
 {
 
     public function initFields()
@@ -11,8 +11,7 @@ class Paypal extends Form implements Form\ResolvesOnRequest
         $this->addDecorator($this->decoratorFactory->create(VueJS::class));
 
         $this->addCheckbox('enabled')->setLabel('Enabled');
-        $this->addText('endpoint')->setLabel('Endpoint')->addValidator(new RequireWhenEnabled($this));
-        $this->addText('client')->setLabel('Client')->addValidator(new RequireWhenEnabled($this));
+        $this->addText('merchant')->setLabel('Merchant')->addValidator(new RequireWhenEnabled($this));
         $this->addText('secret')->setLabel('Secret')->addValidator(new RequireWhenEnabled($this));
 
         return $this;

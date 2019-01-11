@@ -1,5 +1,5 @@
 <template>
-    <div class="pckg-payment-provider-paypal-platform-config">
+    <div class="pckg-payment-provider-axcess-platform-config">
         <p>{{ myPaymentMethod.description }}</p>
 
         <div class="form-group">
@@ -15,23 +15,27 @@
                 <div>
                     <input type="text" v-model="myPaymentMethod.endpoint" class="form-control"/>
                 </div>
-                <htmlbuilder-validator-error :bag="errors" name="endpoint"></htmlbuilder-validator-error>
             </div>
 
             <div class="form-group">
-                <label>Client</label>
+                <label>User ID</label>
                 <div>
-                    <input type="text" v-model="myPaymentMethod.client" class="form-control"/>
+                    <input type="text" v-model="myPaymentMethod.userId" class="form-control"/>
                 </div>
-                <htmlbuilder-validator-error :bag="errors" name="client"></htmlbuilder-validator-error>
             </div>
 
             <div class="form-group">
-                <label>Secret</label>
+                <label>Password</label>
                 <div>
-                    <input type="text" v-model="myPaymentMethod.secret" class="form-control"/>
+                    <input type="text" v-model="myPaymentMethod.password" class="form-control"/>
                 </div>
-                <htmlbuilder-validator-error :bag="errors" name="secret"></htmlbuilder-validator-error>
+            </div>
+
+            <div class="form-group">
+                <label>Entity ID</label>
+                <div>
+                    <input type="text" v-model="myPaymentMethod.entityId" class="form-control"/>
+                </div>
             </div>
 
             <!--<div class="form-group">
@@ -59,14 +63,14 @@
 <script>
     export default {
         mixins: [pckgPaymentConfig],
-        name: 'pckg-payment-provider-paypal-platform-config',
+        name: 'pckg-payment-provider-axcess-platform-config',
         methods: {
             collectSettings: function () {
                 return {
                     enabled: this.myPaymentMethod.enabled,
                     endpoint: this.myPaymentMethod.endpoint,
-                    client: this.myPaymentMethod.client,
-                    secret: this.myPaymentMethod.secret,
+                    userId: this.myPaymentMethod.userId,
+                    password: this.myPaymentMethod.password,
                 };
             }
         }

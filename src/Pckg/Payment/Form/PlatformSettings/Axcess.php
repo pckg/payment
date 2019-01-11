@@ -3,7 +3,7 @@
 use Pckg\Htmlbuilder\Decorator\Method\VueJS;
 use Pckg\Htmlbuilder\Element\Form;
 
-class Paypal extends Form implements Form\ResolvesOnRequest
+class Axcess extends Form implements Form\ResolvesOnRequest
 {
 
     public function initFields()
@@ -12,8 +12,9 @@ class Paypal extends Form implements Form\ResolvesOnRequest
 
         $this->addCheckbox('enabled')->setLabel('Enabled');
         $this->addText('endpoint')->setLabel('Endpoint')->addValidator(new RequireWhenEnabled($this));
-        $this->addText('client')->setLabel('Client')->addValidator(new RequireWhenEnabled($this));
-        $this->addText('secret')->setLabel('Secret')->addValidator(new RequireWhenEnabled($this));
+        $this->addText('userId')->setLabel('User ID')->addValidator(new RequireWhenEnabled($this));
+        $this->addText('password')->setLabel('Password')->addValidator(new RequireWhenEnabled($this));
+        $this->addText('entityId')->setLabel('Entity ID')->addValidator(new RequireWhenEnabled($this));
 
         return $this;
     }

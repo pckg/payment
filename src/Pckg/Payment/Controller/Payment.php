@@ -3,7 +3,14 @@
 use Derive\Platform\Entity\Companies;
 use Derive\Platform\Record\Company;
 use Pckg\Generic\Record\SettingsMorph;
+use Pckg\Payment\Form\PlatformSettings\Axcess;
+use Pckg\Payment\Form\PlatformSettings\Braintree;
+use Pckg\Payment\Form\PlatformSettings\Cod;
+use Pckg\Payment\Form\PlatformSettings\Icepay;
+use Pckg\Payment\Form\PlatformSettings\Mollie;
+use Pckg\Payment\Form\PlatformSettings\Moneta;
 use Pckg\Payment\Form\PlatformSettings\Paypal;
+use Pckg\Payment\Form\PlatformSettings\Upn;
 use Pckg\Payment\Handler\PaypalGnp;
 use Pckg\Payment\Service\Handlers;
 use Pckg\Payment\Service\PckgPayment;
@@ -63,7 +70,14 @@ class Payment
     public function postCompanySettingsAction(Company $company, $paymentMethod)
     {
         $mapper = [
-            'paypal' => Paypal::class,
+            'paypal'    => Paypal::class,
+            'axcess'    => Axcess::class,
+            'braintree' => Braintree::class,
+            'cod'       => Cod::class,
+            'moneta'    => Moneta::class,
+            'upn'       => Upn::class,
+            'icepay'    => Icepay::class,
+            'mollie'    => Mollie::class,
         ];
 
         $form = $mapper[$paymentMethod] ?? null;
@@ -72,10 +86,13 @@ class Payment
         }
 
         $form = resolve($form);
+        $data = $form->getData();
+
+        return $data;
 
         SettingsMorph::makeItHappen(
             'pckg.payment.provider.' . $paymentMethod,
-            $form->getData(),
+            $data,
             Companies::class,
             $company->id
         );
