@@ -8,6 +8,8 @@ class RequireWhenEnabled extends AbstractValidator
 
     protected $form;
 
+    protected $msg = 'Select value';
+
     public function __construct(Form $form)
     {
         parent::__construct();
