@@ -88,8 +88,6 @@ class Payment
         $form = resolve($form);
         $data = $form->getData();
 
-        return $data;
-
         SettingsMorph::makeItHappen(
             'pckg.payment.provider.' . $paymentMethod,
             $data,
