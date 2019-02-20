@@ -4,6 +4,7 @@ use Pckg\Payment\Handler\Axcess;
 use Pckg\Payment\Handler\Braintree;
 use Pckg\Payment\Handler\Handler;
 use Pckg\Payment\Handler\Icepay;
+use Pckg\Payment\Handler\MojCent;
 use Pckg\Payment\Handler\Moneta;
 use Pckg\Payment\Handler\Paymill;
 use Pckg\Payment\Handler\PaypalGnp;
@@ -122,6 +123,11 @@ trait Handlers
     public function useAxcessHandler()
     {
         return $this->fullInitHandler(new Axcess($this->order));
+    }
+
+    public function useMojcentHandler()
+    {
+        return $this->fullInitHandler(new MojCent($this->order));
     }
 
 }
