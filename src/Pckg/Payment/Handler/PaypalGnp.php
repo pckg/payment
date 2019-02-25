@@ -75,6 +75,7 @@ class PaypalGnp extends AbstractHandler implements Handler
                 ],
             ],
         ];
+        $this->paymentRecord->addLog('requesting', $arrData);
 
         $ch = curl_init();
 

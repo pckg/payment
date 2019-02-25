@@ -15,6 +15,9 @@ abstract class AbstractHandler implements Handler
 
     protected $log;
 
+    /**
+     * @var Payment
+     */
     protected $paymentRecord;
 
     /**
