@@ -101,6 +101,7 @@ class PaypalGnp extends AbstractHandler implements Handler
         $json = json_decode($result);
 
         if (isset($json->state) && $json->state == "created") {
+            $this->paymentRecord->addLog('redirect', $result);
             $this->paymentRecord->setAndSave(['payment_id' => $json->id]);
 
             return [
@@ -108,6 +109,8 @@ class PaypalGnp extends AbstractHandler implements Handler
                 'redirect' => $json->links[1]->href,
             ];
         }
+
+        $this->paymentRecord->addLog('error', $result);
 
         return [
             'success' => false,
