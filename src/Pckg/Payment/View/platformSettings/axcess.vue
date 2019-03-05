@@ -71,6 +71,7 @@
                     endpoint: this.myPaymentMethod.endpoint,
                     userId: this.myPaymentMethod.userId,
                     password: this.myPaymentMethod.password,
+                    entityId: this.myPaymentMethod.entityId,
                 };
             }
         }
