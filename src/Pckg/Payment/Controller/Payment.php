@@ -82,7 +82,7 @@ class Payment
 
         $form = $mapper[$paymentMethod] ?? null;
         if (!$form) {
-            throw new Exception('No mapper defined for payment method');
+            throw new \Exception('No mapper defined for payment method');
         }
 
         $form = resolve($form);
