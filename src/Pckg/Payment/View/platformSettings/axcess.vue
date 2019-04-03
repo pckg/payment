@@ -38,6 +38,13 @@
                 </div>
             </div>
 
+            <div class="form-group">
+                <label>Brands</label>
+                <div>
+                    <input type="text" v-model="myPaymentMethod.brands" class="form-control"/>
+                </div>
+            </div>
+
             <!--<div class="form-group">
                 <label>Title</label>
                 <div>
@@ -72,6 +79,7 @@
                     userId: this.myPaymentMethod.userId,
                     password: this.myPaymentMethod.password,
                     entityId: this.myPaymentMethod.entityId,
+                    brands: this.myPaymentMethod.brands
                 };
             }
         }

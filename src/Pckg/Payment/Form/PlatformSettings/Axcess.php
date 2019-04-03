@@ -15,6 +15,7 @@ class Axcess extends Form implements Form\ResolvesOnRequest
         $this->addText('userId')->setLabel('User ID')->addValidator(new RequireWhenEnabled($this));
         $this->addText('password')->setLabel('Password')->addValidator(new RequireWhenEnabled($this));
         $this->addText('entityId')->setLabel('Entity ID')->addValidator(new RequireWhenEnabled($this));
+        $this->addText('brands')->setLabel('Brands')->addValidator(new RequireWhenEnabled($this));
 
         return $this;
     }
