@@ -8,4 +8,9 @@ class PaymentsMorphs extends Entity
 
     protected $record = PaymentsMorph::class;
 
+    public function payment()
+    {
+        return $this->belongsTo(Payments::class)->foreignKey('payment_id');
+    }
+
 }

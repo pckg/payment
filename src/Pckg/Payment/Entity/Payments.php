@@ -27,4 +27,9 @@ class Payments extends Entity
         return $this->hasMany(PaymentLogs::class)->foreignKey('payment_id');
     }
 
+    public function paymentsMorphs()
+    {
+        return $this->hasMany(PaymentsMorphs::class)->foreignKey('payment_id');
+    }
+
 }
