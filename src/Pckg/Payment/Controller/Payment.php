@@ -69,16 +69,7 @@ class Payment
 
     public function postCompanySettingsAction(Company $company, $paymentMethod)
     {
-        $mapper = [
-            'paypal'    => Paypal::class,
-            'axcess'    => Axcess::class,
-            'braintree' => Braintree::class,
-            'cod'       => Cod::class,
-            'moneta'    => Moneta::class,
-            'upn'       => Upn::class,
-            'icepay'    => Icepay::class,
-            'mollie'    => Mollie::class,
-        ];
+        $mapper = config('pckg.payment.formMapper', []);
 
         $form = $mapper[$paymentMethod] ?? null;
         if (!$form) {
