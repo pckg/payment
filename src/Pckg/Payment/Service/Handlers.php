@@ -1,5 +1,6 @@
 <?php namespace Pckg\Payment\Service;
 
+use Pckg\Database\Helper\Convention;
 use Pckg\Payment\Handler\Axcess;
 use Pckg\Payment\Handler\Braintree;
 use Pckg\Payment\Handler\Handler;
@@ -57,6 +58,7 @@ trait Handlers
             list($mainHandler, $subhandler) = explode('-', $handler);
             $classes[] = \Pckg\Payment\Handler::class . '\\' . ucfirst($mainHandler) . '\\' . ucfirst($subhandler);
             $classes[] = \Pckg\Payment\Handler::class . '\\' . ucfirst($mainHandler);
+            $classes[] = \Pckg\Payment\Handler::class . '\\' . str_replace(' ', '', Convention::toPascal(str_replace('-', ' ', $handler)));
         } else {
             $classes[] = \Pckg\Payment\Handler::class . '\\' . ucfirst($handler);
         }
