@@ -13,7 +13,7 @@ class CheckoutPortal extends Form implements Form\ResolvesOnRequest
         $this->addCheckbox('enabled')->setLabel('Enabled');
         $this->addText('mode')->setLabel('Mode');
         $this->addText('maid')->setLabel('MAID');
-        $this->addText('secretId')->setLabel('Secret ID');
+        $this->addText('secret')->setLabel('Secret ID');
         $this->addText('username')->setLabel('Username');
         $this->addText('password')->setLabel('Password');
 
