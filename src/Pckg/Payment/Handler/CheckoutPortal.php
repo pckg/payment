@@ -70,9 +70,9 @@ class CheckoutPortal extends AbstractHandler implements Handler
                 'success-redirect-url' => $successUrl,
                 'fail-redirect-url'    => $errorUrl,
                 'cancel-redirect-url'  => $cancelUrl,
-                'three-d'              => [
+                /*'three-d'              => [
                     'attempt-three-d' => 'true',
-                ],
+                ],*/
                 'notifications'        => [
                     'format'       => 'application/json-signed',
                     'notification' => [
