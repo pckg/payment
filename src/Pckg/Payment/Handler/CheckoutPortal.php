@@ -171,7 +171,7 @@ class CheckoutPortal extends AbstractHandler implements Handler
             throw new Exception('Missing request data');
         }
 
-        $secretKey = 'b3b131ad-ea7e-48bc-9e71-78d0c6ea579d';
+        $secretKey = 'a8c3fce6-8df7-4fd6-a1fd-62fa229c5e55';
         $sigBase64 = base64_encode(hash_hmac('sha256', $data['response-base64'], $secretKey, true));
 
         if ($data['response-signature-base64'] !== $sigBase64) {
