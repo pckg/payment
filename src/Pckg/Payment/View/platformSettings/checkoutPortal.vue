@@ -48,7 +48,7 @@
             <div class="form-group">
                 <label>Mode</label>
                 <div>
-                    <pckg-select :initial-options="initialOptions.mode" :initial-multiple="false"></pckg-select>
+                    <input type="text" v-model="myPaymentMethod.mode" class="form-control"/>
                 </div>
             </div>
         </template>
@@ -65,11 +65,12 @@
             collectSettings: function () {
                 return {
                     enabled: this.myPaymentMethod.enabled,
-                    maid: this.myPaymentMethod.enabled,
-                    username: this.myPaymentMethod.enabled,
-                    password: this.myPaymentMethod.enabled,
-                    secret: this.myPaymentMethod.enabled,
-                    endpoint: this.myPaymentMethod.enabled,
+                    maid: this.myPaymentMethod.maid,
+                    username: this.myPaymentMethod.username,
+                    password: this.myPaymentMethod.password,
+                    secret: this.myPaymentMethod.secret,
+                    endpoint: this.myPaymentMethod.endpoint,
+                    mode: this.myPaymentMethod.mode,
                 };
             }
         }

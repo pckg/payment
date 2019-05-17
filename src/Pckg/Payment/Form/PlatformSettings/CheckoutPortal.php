@@ -11,10 +11,7 @@ class CheckoutPortal extends Form implements Form\ResolvesOnRequest
         $this->addDecorator($this->decoratorFactory->create(VueJS::class));
 
         $this->addCheckbox('enabled')->setLabel('Enabled');
-        $this->addSelect('mode')->setLabel('Mode')->addOptions([
-                                                                   'embedded' => 'Embedded',
-                                                                   'seamless' => 'Seamless',
-                                                               ]);
+        $this->addText('mode')->setLabel('Mode');
         $this->addText('maid')->setLabel('MAID');
         $this->addText('secretId')->setLabel('Secret ID');
         $this->addText('username')->setLabel('Username');
