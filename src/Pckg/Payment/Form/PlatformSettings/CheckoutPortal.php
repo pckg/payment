@@ -16,6 +16,7 @@ class CheckoutPortal extends Form implements Form\ResolvesOnRequest
         $this->addText('secret')->setLabel('Secret ID');
         $this->addText('username')->setLabel('Username');
         $this->addText('password')->setLabel('Password');
+        $this->addText('endpoint')->setLabel('Endpoint');
 
         return $this;
     }
