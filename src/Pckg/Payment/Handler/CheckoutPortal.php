@@ -23,34 +23,17 @@ class CheckoutPortal extends AbstractHandler implements Handler
     protected $handler = 'checkoutPortal';
 
     /**
-     * @return $this|AbstractHandler
-     */
-    public function initHandler()
-    {
-        /*Configuration::environment($this->environment->config('braintree.environment'));
-        Configuration::merchantId($this->environment->config('braintree.merchant'));
-        Configuration::publicKey($this->environment->config('braintree.public'));
-        Configuration::privateKey($this->environment->config('braintree.private'));*/
-
-        return $this;
-    }
-
-    /**
      * @return array|AbstractHandler
      */
     public function initPayment()
     {
         $client = new Client();
 
-        $mode = 'embedded';
-        $username = '70000-APIDEMO-CARD';
-        $password = 'ohysS0-dvfMx';
-        $merchantAccount = '7a6dd74f-06ab-4f3f-a864-adc52687270a'; // MAID
-
-        /*$mode = 'seamless';
-        $username = '70000-APILUHN-CARD';
-        $password = '8mhwavKVb91T';
-        $merchantAccount = 'cad16b4a-abf2-450d-bcb8-1725a4cef443';*/
+        $mode = $this->environment->config('checkout-portal.mode', null);
+        $username = $this->environment->config('checkout-portal.username', null);
+        $password = $this->environment->config('checkout-portal.password', null);
+        $merchantAccount = $this->environment->config('checkout-portal.maid', null);
+        $endpoint = $this->environment->config('checkout-portal.endpoint', null);
 
         $value = number_format($this->paymentRecord->price, 2);
         $currency = config('pckg.payment.currency', null);
@@ -66,8 +49,6 @@ class CheckoutPortal extends AbstractHandler implements Handler
         $defaultUrl = $this->getCheckUrl();
         $pendingUrl = $this->getCheckUrl();
         $notificationUrl = $this->getNotificationUrl();
-
-        $url = 'https://wpp-test.wirecard.com/api/payment/register';
 
         $data = [
             'payment' => [
@@ -119,7 +100,7 @@ class CheckoutPortal extends AbstractHandler implements Handler
 
         $this->paymentRecord->addLog('requesting', $data);
 
-        $request = $client->post($url, [
+        $request = $client->post($endpoint, [
             'json'    => $data,
             'headers' => [
                 'Content-Type'  => 'application/json',
@@ -177,7 +158,7 @@ class CheckoutPortal extends AbstractHandler implements Handler
             throw new Exception('Missing request data');
         }
 
-        $secretKey = 'a8c3fce6-8df7-4fd6-a1fd-62fa229c5e55';
+        $secretKey = $this->environment->config('checkout-portal.secret');
         $sig = hash_hmac('sha256', $data['response-base64'], $secretKey, true);
 
         if (!hash_equals($sig, base64_decode($data['response-signature-base64']))) {
