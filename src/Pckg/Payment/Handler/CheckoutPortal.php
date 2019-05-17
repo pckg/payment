@@ -178,7 +178,7 @@ class CheckoutPortal extends AbstractHandler implements Handler
             throw new Exception('Signature missmatch');
         }
 
-        $response = base64_decode($data['response-base64']);
+        $response = json_decode(base64_decode($data['response-base64']));
         $requestId = $response['payment']['request-id'] ?? null;
 
         if ($requestId != $this->getPaymentRecord()->hash) {
