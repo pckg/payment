@@ -160,6 +160,12 @@ class CheckoutPortal extends AbstractHandler implements Handler
 
             return;
         }
+
+        if ($state === 'failed') {
+            $this->getPaymentRecord()->addLog('failed', $response);
+
+            return;
+        }
     }
 
     private function getIPNResponse()
@@ -183,7 +189,7 @@ class CheckoutPortal extends AbstractHandler implements Handler
 
         $this->getPaymentRecord()->addLog('notification', $response);
 
-        if ($requestId != $this->getPaymentRecord()->hash) {
+        if (strpos($requestId, $this->getPaymentRecord()->hash) === false) { // $hash, $hash-check-enrollment
             throw new Exception('Payment id missmatch: ' . $requestId);
         }
 
