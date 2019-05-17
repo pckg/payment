@@ -182,7 +182,8 @@ class CheckoutPortal extends AbstractHandler implements Handler
 
         if (!hash_equals($sig, base64_decode($data['response-signature-base64']))) {
             $this->getPaymentRecord()->addLog('missmatch', $data);
-            
+
+            return;
             throw new Exception('Signature missmatch');
         }
 
