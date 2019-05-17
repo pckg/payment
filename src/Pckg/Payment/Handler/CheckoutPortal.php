@@ -188,7 +188,7 @@ class CheckoutPortal extends AbstractHandler implements Handler
         return $response;
     }
 
-    public function postSuccessAction()
+    public function postSuccess()
     {
         $response = $this->getIPNResponse();
 
@@ -207,12 +207,12 @@ class CheckoutPortal extends AbstractHandler implements Handler
         }
     }
 
-    public function postErrorAction()
+    public function postError()
     {
         $response = $this->getIPNResponse();
     }
 
-    public function postCancelAction()
+    public function postCancel()
     {
         $response = $this->getIPNResponse();
     }
