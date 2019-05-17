@@ -129,7 +129,7 @@ abstract class AbstractHandler implements Handler
 
     public function approvePayment($description, $log, $transactionId, $status = 'approved')
     {
-        $this->paymentRecord->addLog('payed', $log);
+        $this->paymentRecord->addLog($status, $log);
 
         $this->order->getBills()->each(function(OrdersBill $ordersBill) use ($description) {
             $ordersBill->confirm($description);
