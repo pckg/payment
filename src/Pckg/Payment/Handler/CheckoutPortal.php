@@ -181,8 +181,10 @@ class CheckoutPortal extends AbstractHandler implements Handler
         $response = json_decode(base64_decode($data['response-base64']), true);
         $requestId = $response['payment']['request-id'] ?? null;
 
+        $this->getPaymentRecord()->addLog('notification', $response);
+
         if ($requestId != $this->getPaymentRecord()->hash) {
-            throw new Exception('Payment id missmatch');
+            throw new Exception('Payment id missmatch: ' . $requestId);
         }
 
         return $response;
