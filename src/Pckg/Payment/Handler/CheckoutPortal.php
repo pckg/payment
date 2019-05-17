@@ -198,7 +198,7 @@ class CheckoutPortal extends AbstractHandler implements Handler
             throw new Exception('Not successful state');
         }
 
-        $ok = collect($response['statuses']['status'] ?? [])->has(function($status) {
+        $ok = collect($response['payment']['statuses']['status'] ?? [])->has(function($status) {
             return $status['code'] == '201.0000';
         });
 

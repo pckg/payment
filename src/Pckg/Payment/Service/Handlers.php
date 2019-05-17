@@ -70,6 +70,8 @@ trait Handlers
 
             return $this->fullInitHandler(new $class($this->order));
         }
+
+        throw new \Exception('No handler defined for ' . $handler);
     }
 
     public function useBraintreeHandler()
