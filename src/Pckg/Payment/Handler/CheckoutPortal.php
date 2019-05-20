@@ -122,6 +122,11 @@ class CheckoutPortal extends AbstractHandler implements Handler
     {
         $response = $this->getIPNResponse();
         $state = $response['payment']['transaction-state'] ?? null;
+        $type = $response['payment']['transaction-type'] ?? null;
+
+        if ($type !== 'purchase') {
+            return;
+        }
 
         if ($state === 'success') {
             $description = "CheckoutPortal " . $response['payment']['transaction-id'];
@@ -164,7 +169,6 @@ class CheckoutPortal extends AbstractHandler implements Handler
         if (!hash_equals($sig, base64_decode($data['response-signature-base64']))) {
             $this->getPaymentRecord()->addLog('missmatch', $data);
 
-            return;
             throw new Exception('Signature missmatch');
         }
 
