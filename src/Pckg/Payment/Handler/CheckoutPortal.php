@@ -129,6 +129,10 @@ class CheckoutPortal extends AbstractHandler implements Handler
         }
 
         if ($state === 'success') {
+            if ($this->getPaymentRecord()->status === 'approved') {
+                return;
+            }
+
             $description = "CheckoutPortal " . $response['payment']['transaction-id'];
             $this->approvePayment($description, $response, $response['payment']['transaction-id']);
 
