@@ -87,6 +87,11 @@ class Payment extends Record
         return (new OrdersBills())->where('id', $billIds)->all();
     }
 
+    public function getOrdersAttribute()
+    {
+        return $this->getBills()->map('order')->keyBy('id')->rekey();
+    }
+
     public function getJsonData($key)
     {
         return json_decode($this->data('data'))->{$key} ?? null;
