@@ -150,6 +150,8 @@ class PaypalGnp extends AbstractHandler implements Handler
 
         $json = json_decode($result);
 
+        $this->log($json);
+
         if (!isset($json->state)) { // unknown error
             if ($json->name == 'PAYMENT_ALREADY_DONE') {
             }
