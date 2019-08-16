@@ -103,6 +103,16 @@ abstract class AbstractHandler implements Handler
     {
     }
 
+    public function getDownload()
+    {
+
+    }
+
+    public function postDownload()
+    {
+
+    }
+
     public function refund(Payment $payment, $amount = null)
     {
     }
@@ -158,7 +168,7 @@ abstract class AbstractHandler implements Handler
     {
         return $this->environment->url('derive.payment.start',
                                        [
-                                           'handler' => $this->handler,
+                                           // 'handler' => $this->handler, // ?needed?
                                            'payment' => $this->paymentRecord,
                                        ]);
     }
