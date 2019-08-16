@@ -23,7 +23,7 @@ class Proforma extends AbstractHandler implements Handler
 
     protected function generateSepa()
     {
-        $url = $this->getStartUrl();
+        $url = $this->getDownloadUrl();
         $outputDir = path('private') . 'sepa';
         $outputFile = 'sepa-' . $this->paymentRecord->getOrdersAttribute()->map('id')->implode('-') . '-' .
             date('YmdHis') . '.pdf';

@@ -223,4 +223,12 @@ abstract class AbstractHandler implements Handler
                                        ]);
     }
 
+    public function getDownloadUrl()
+    {
+        return $this->environment->url('derive.payment.download',
+                                       [
+                                           'payment' => $this->paymentRecord,
+                                       ]);
+    }
+
 }
