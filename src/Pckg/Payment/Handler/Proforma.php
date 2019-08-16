@@ -14,17 +14,15 @@ class Proforma extends AbstractHandler implements Handler
 
     public function getDownload()
     {
-        return view('Pckg/Generic:single', [
-            'content' => view('Derive/Basket:payment/start_upn', [
+        return view('Derive/Basket:payment/start_upn', [
                 'bills' => $this->order->getBills(),
-            ]),
-        ]);
+            ]);
     }
 
     protected function generateSepa()
     {
         $url = $this->getDownloadUrl();
-        $outputDir = path('private') . 'sepa';
+        $outputDir = path('private') . 'sepa/';
         $outputFile = 'sepa-' . $this->paymentRecord->getOrdersAttribute()->map('id')->implode('-') . '-' .
             date('YmdHis') . '.pdf';
         $pdf = Pdf::make($url, $outputDir, $outputFile);
