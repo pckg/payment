@@ -1,21 +1,41 @@
 <template>
     <div class="pckg-payment-provider-axcess-platform-config">
-        <p>{{ myPaymentMethod.description }}</p>
 
-        <div class="form-group">
-            <label>Enabled</label>
-            <div>
-                <d-input-checkbox v-model="myPaymentMethod.enabled"></d-input-checkbox>
-            </div>
-        </div>
+        <h3 class="__component-title">Mode and visibility</h3>
+
+        <form-group label="Enabled"
+                    type="toggle"
+                    v-model="myPaymentMethod.enabled"
+                    help="When checked payment method will be available for selection in purchase process"></form-group>
 
         <template v-if="myPaymentMethod.enabled">
-            <div class="form-group">
+
+            <form-group label="Mode"
+                        :help="help.mode">
+                <div slot="element">
+                    <button class="btn"
+                            :class="myPaymentMethod.endpoint === 'https://oppwa.com/' ? 'btn-success' : 'btn-default'"
+                            title="Production / live mode"
+                            @click.prevent="myPaymentMethod.endpoint = 'https://oppwa.com/'">
+                        Live
+                    </button>
+                    <button class="btn"
+                            :class="myPaymentMethod.endpoint !== 'https://oppwa.com/' ? 'btn-info' : 'btn-default'"
+                            title="Test / sandbox / dev mode"
+                            @click.prevent="myPaymentMethod.endpoint = 'https://test.oppwa.com/'">
+                        Sandbox
+                    </button>
+                </div>
+            </form-group>
+
+            <!--<div class="form-group">
                 <label>Endpoint</label>
                 <div>
                     <input type="text" v-model="myPaymentMethod.endpoint" class="form-control"/>
                 </div>
-            </div>
+            </div>-->
+
+            <h3 class="__component-title">Axcess Configuration</h3>
 
             <div class="form-group">
                 <label>User ID</label>

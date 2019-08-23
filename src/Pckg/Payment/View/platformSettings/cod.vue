@@ -1,15 +1,17 @@
 <template>
     <div class="pckg-payment-provider-cod-platform-config">
-        <p>{{ myPaymentMethod.description }}</p>
 
-        <div class="form-group">
-            <label>Enabled</label>
-            <div>
-                <d-input-checkbox v-model="myPaymentMethod.enabled"></d-input-checkbox>
-            </div>
-        </div>
+        <h3 class="__component-title">Mode and visibility</h3>
+
+        <form-group label="Enabled"
+                    type="toggle"
+                    v-model="myPaymentMethod.enabled"
+                    help="When checked payment method will be available for selection in purchase process"></form-group>
 
         <template v-if="myPaymentMethod.enabled">
+
+            <h3 class="__component-title">Configuration</h3>
+
             <!--<div class="form-group">
                 <label>Title</label>
                 <div>
