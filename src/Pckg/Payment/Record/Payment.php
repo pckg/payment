@@ -57,7 +57,12 @@ class Payment extends Record
             'created_at' => date('Y-m-d H:i:s'),
         ];
 
-        $data['hash'] = sha1(json_encode($data) . config('hash') . microtime());
+        /**
+         * Let's generate payment ids unique between platforms.
+         */
+        $id = config('identifier');
+        $string = $id  . ':' .json_encode($data) . ':' . config('hash') . ':' . uniqid();
+        $data['hash'] = substr($id . sha1($string), 0, 40);
 
         $payment = static::create($data);
 
