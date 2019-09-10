@@ -19,6 +19,12 @@
                 </div>
             </div>
 
+            <form-group label="Payment methods"
+                        type="select:multiple"
+                        :options="paymentMethodOptions"
+                        v-model="myPaymentMethod.methods"
+                        help="Select payment methods your store accepts"></form-group>
+
             <!--<div class="form-group">
                 <label>Title</label>
                 <div>
@@ -45,11 +51,26 @@
     export default {
         mixins: [pckgPaymentConfig],
         name: 'pckg-payment-provider-mollie-platform-config',
+        data: function () {
+            return Object.assign(pckgPaymentConfig.data.call(this), {
+                paymentMethodOptions: {
+                    options: {
+                        'ideal': 'iDEAL',
+                        'bancontact': 'Bancontact',
+                        'giropay': 'GiroPay',
+                        'creditcard': 'Visa & Mastercard',
+                        'eps': 'EPS',
+                        'sofort': 'Sofort'
+                    }
+                }
+            });
+        },
         methods: {
             collectSettings: function () {
                 return {
                     enabled: this.myPaymentMethod.enabled,
                     apiKey: this.myPaymentMethod.apiKey,
+                    methods: this.myPaymentMethod.methods,
                 };
             }
         }

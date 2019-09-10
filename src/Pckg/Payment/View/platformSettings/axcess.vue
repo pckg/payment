@@ -58,12 +58,11 @@
                 </div>
             </div>
 
-            <div class="form-group">
-                <label>Brands</label>
-                <div>
-                    <input type="text" v-model="myPaymentMethod.brands" class="form-control"/>
-                </div>
-            </div>
+            <form-group label="Payment methods"
+                        type="select:multiple"
+                        :options="paymentMethodOptions"
+                        v-model="myComputedBrands"
+                        help="Select payment methods your store accepts"></form-group>
 
             <!--<div class="form-group">
                 <label>Title</label>
@@ -91,6 +90,17 @@
     export default {
         mixins: [pckgPaymentConfig],
         name: 'pckg-payment-provider-axcess-platform-config',
+        data: function () {
+            return Object.assign(pckgPaymentConfig.data.call(this), {
+                paymentMethodOptions: {
+                    options: {
+                        'VISA': 'Visa',
+                        'MASTER': 'Mastercard',
+                        'AMEX': 'American Express',
+                    }
+                }
+            });
+        },
         methods: {
             collectSettings: function () {
                 return {
@@ -101,6 +111,16 @@
                     entityId: this.myPaymentMethod.entityId,
                     brands: this.myPaymentMethod.brands
                 };
+            }
+        },
+        computed: {
+            myComputedBrands: {
+                get: function () {
+                    return this.myPaymentMethod.brands.split(' ');
+                },
+                set: function (value) {
+                    return this.myPaymentMethod.brands = value.join(' ');
+                }
             }
         }
     }

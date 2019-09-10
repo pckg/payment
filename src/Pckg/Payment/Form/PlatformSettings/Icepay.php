@@ -13,6 +13,7 @@ class Icepay extends Form implements Form\ResolvesOnRequest
         $this->addCheckbox('enabled')->setLabel('Enabled');
         $this->addText('merchant')->setLabel('Merchant')->addValidator(new RequireWhenEnabled($this));
         $this->addText('secret')->setLabel('Secret')->addValidator(new RequireWhenEnabled($this));
+        $this->addText('methods')->setLabel('Methods')->addValidator(new RequireWhenEnabled($this));
 
         return $this;
     }

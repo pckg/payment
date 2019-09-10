@@ -34,7 +34,7 @@ class Mollie extends AbstractHandler implements Handler
                 'value'    => (string)number_format($this->order->getTotal(), 2, '.', ''),
             ],
             'description' => $this->getDescription(),
-            'redirectUrl' => $this->getSuccessUrl(),
+            'redirectUrl' => $this->getCheckUrl(),
             'webhookUrl'  => $this->getNotificationUrl(),
             'method'      => substr($this->handler, strpos($this->handler, '-') + 1),
         ];
@@ -114,6 +114,25 @@ class Mollie extends AbstractHandler implements Handler
         ) {
             return $paymentMethod->PaymentMethodCode == $method;
         });
+    }
+
+    public function check()
+    {
+        try {
+            $payment = $this->mollie->payments->get($this->paymentRecord->payment_id);
+
+            if ($payment->isPaid() && !$payment->hasRefunds() && !$payment->hasChargebacks()) {
+                return $this->environment->redirect($this->getSuccessUrl());
+            }
+
+            if ($payment->isFailed() || $payment->isExpired() || $payment->hasRefunds() || $payment->hasChargebacks()) {
+                return $this->environment->redirect($this->getErrorUrl());
+            }
+
+            return $this->environment->redirect($this->getWaitingUrl());
+        } catch (Throwable $e) {
+            throw $e;
+        }
     }
 
     public function postNotification()
