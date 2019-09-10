@@ -10,6 +10,26 @@
 
         <template v-if="myPaymentMethod.enabled">
 
+            <form-group label="Mode"
+                        :help="help.mode">
+                <div slot="element">
+                    <button class="btn"
+                            disabled
+                            :class="myPaymentMethod.apiKey && myPaymentMethod.apiKey.indexOf('live_') === 0 ? 'btn-success' : 'btn-default'"
+                            title="Production / live mode"
+                            @click.prevent>
+                        Live
+                    </button>
+                    <button class="btn"
+                            disabled
+                            :class="myPaymentMethod.apiKey && myPaymentMethod.apiKey.indexOf('test_') === 0 ? 'btn-info' : 'btn-default'"
+                            title="Test / sandbox / dev mode"
+                            @click.prevent>
+                        Sandbox
+                    </button>
+                </div>
+            </form-group>
+
             <h3 class="__component-title">Mollie Configuration</h3>
 
             <div class="form-group">
