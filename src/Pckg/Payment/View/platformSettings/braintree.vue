@@ -14,13 +14,13 @@
                         :help="help.mode">
                 <div slot="element">
                     <button class="btn"
-                            :class="myPaymentMethod.environment === 'live' ? 'btn-success' : 'btn-default'"
+                            :class="myPaymentMethod.environment === 'production' ? 'btn-success' : 'btn-default'"
                             title="Production / live mode"
-                            @click.prevent="myPaymentMethod.environment = 'live'">
+                            @click.prevent="myPaymentMethod.environment = 'production'">
                         Live
                     </button>
                     <button class="btn"
-                            :class="myPaymentMethod.environment !== 'live' ? 'btn-info' : 'btn-default'"
+                            :class="myPaymentMethod.environment !== 'production' ? 'btn-info' : 'btn-default'"
                             title="Test / sandbox / dev mode"
                             @click.prevent="myPaymentMethod.environment = 'sandbox'">
                         Sandbox
