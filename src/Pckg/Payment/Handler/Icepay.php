@@ -240,12 +240,6 @@ class Icepay extends AbstractHandler implements Handler
                 }
             }
         }
-
-        vueManager()->addView('Derive/Basket:payment/_start_' . $handler,
-                              [
-                                  'config' => $config,
-                                  'form'   => $form,
-                              ]);
     }
 
 }
