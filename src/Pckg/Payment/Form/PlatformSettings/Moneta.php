@@ -10,7 +10,6 @@ class Moneta extends Form implements Form\ResolvesOnRequest
     {
         $this->addDecorator($this->decoratorFactory->create(VueJS::class));
 
-        $this->addCheckbox('enabled')->setLabel('Enabled');
         $this->addText('tarrificationId')->setLabel('Tarrification ID')->addValidator(new RequireWhenEnabled($this));
         $this->addText('url')->setLabel('URL')->addValidator(new RequireWhenEnabled($this));
 

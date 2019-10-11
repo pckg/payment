@@ -10,7 +10,6 @@ class Mollie extends Form implements Form\ResolvesOnRequest
     {
         $this->addDecorator($this->decoratorFactory->create(VueJS::class));
 
-        $this->addCheckbox('enabled')->setLabel('Enabled');
         $this->addText('apiKey')->setLabel('Api Key')->addValidator(new RequireWhenEnabled($this));
         $this->addText('methods')->setLabel('Methods')->addValidator(new RequireWhenEnabled($this));
 

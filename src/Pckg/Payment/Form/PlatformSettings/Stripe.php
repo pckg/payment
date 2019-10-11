@@ -10,7 +10,6 @@ class Stripe extends Form implements Form\ResolvesOnRequest
     {
         $this->addDecorator($this->decoratorFactory->create(VueJS::class));
 
-        $this->addCheckbox('enabled')->setLabel('Enabled');
         $this->addText('secret')->setLabel('Secret')->addValidator(new RequireWhenEnabled($this));
         $this->addText('publishable')->setLabel('Publishable')->addValidator(new RequireWhenEnabled($this));
         $this->addText('signingSecret')->setLabel('Signing secret')->addValidator(new RequireWhenEnabled($this));

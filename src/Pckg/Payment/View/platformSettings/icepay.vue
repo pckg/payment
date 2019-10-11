@@ -1,54 +1,42 @@
 <template>
     <div class="pckg-payment-provider-icepay-platform-config">
 
-        <h3 class="__component-title">Mode and visibility</h3>
-
-        <form-group label="Enabled"
-                    type="toggle"
-                    v-model="myPaymentMethod.enabled"
-                    help="When checked payment method will be available for selection in purchase process"></form-group>
-
-        <template v-if="myPaymentMethod.enabled">
-
-            <h3 class="__component-title">Configuration</h3>
-
-            <div class="form-group">
-                <label>Merchant</label>
-                <div>
-                    <input type="text" v-model="myPaymentMethod.merchant" class="form-control"/>
-                </div>
+        <div class="form-group">
+            <label>Merchant</label>
+            <div>
+                <input type="text" v-model="myPaymentMethod.merchant" class="form-control"/>
             </div>
+        </div>
 
-            <div class="form-group">
-                <label>Secret</label>
-                <div>
-                    <input type="text" v-model="myPaymentMethod.secret" class="form-control"/>
-                </div>
+        <div class="form-group">
+            <label>Secret</label>
+            <div>
+                <input type="text" v-model="myPaymentMethod.secret" class="form-control"/>
             </div>
+        </div>
 
-            <form-group label="Payment methods"
-                        type="select:multiple"
-                        :options="paymentMethodOptions"
-                        v-model="myPaymentMethod.methods"
-                        help="Select payment methods your store accepts"></form-group>
+        <form-group label="Payment methods"
+                    type="select:multiple"
+                    :options="paymentMethodOptions"
+                    v-model="myPaymentMethod.methods"
+                    help="Select payment methods your store accepts"></form-group>
 
-            <!--<div class="form-group">
-                <label>Title</label>
-                <div>
-                    <input type="text" v-model="myPaymentMethod.title" class="form-control"/>
-                </div>
+        <!--<div class="form-group">
+            <label>Title</label>
+            <div>
+                <input type="text" v-model="myPaymentMethod.title" class="form-control"/>
             </div>
+        </div>
 
-            <div class="form-group">
-                <label>Picture</label>
-                <div v-if="!myPaymentMethod.icon">
-                    <img src="/img/payment/paypal.png" class="img-responsive">
-                    <div class="help">You're currently using defaut Comms payment method icon.</div>
-                    <pckg-htmlbuilder-dropzone :current="myPaymentMethod.icon" :url="myPaymentMethod.icon"
-                                               id="dynamic-dropzone-paypal"></pckg-htmlbuilder-dropzone>
-                </div>
-            </div>-->
-        </template>
+        <div class="form-group">
+            <label>Picture</label>
+            <div v-if="!myPaymentMethod.icon">
+                <img src="/img/payment/paypal.png" class="img-responsive">
+                <div class="help">You're currently using defaut Comms payment method icon.</div>
+                <pckg-htmlbuilder-dropzone :current="myPaymentMethod.icon" :url="myPaymentMethod.icon"
+                                           id="dynamic-dropzone-paypal"></pckg-htmlbuilder-dropzone>
+            </div>
+        </div>-->
 
         <button type="button" class="btn btn-primary" @click.prevent="saveSettings">Save settings</button>
     </div>
