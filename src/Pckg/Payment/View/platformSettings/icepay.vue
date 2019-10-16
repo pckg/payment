@@ -4,36 +4,36 @@
         <div class="form-group">
             <label>Merchant</label>
             <div>
-                <input type="text" v-model="myPaymentMethod.merchant" class="form-control"/>
+                <input type="text" v-model="paymentMethod.merchant" class="form-control"/>
             </div>
         </div>
 
         <div class="form-group">
             <label>Secret</label>
             <div>
-                <input type="text" v-model="myPaymentMethod.secret" class="form-control"/>
+                <input type="text" v-model="paymentMethod.secret" class="form-control"/>
             </div>
         </div>
 
         <form-group label="Payment methods"
                     type="select:multiple"
                     :options="paymentMethodOptions"
-                    v-model="myPaymentMethod.methods"
+                    v-model="paymentMethod.methods"
                     help="Select payment methods your store accepts"></form-group>
 
         <!--<div class="form-group">
             <label>Title</label>
             <div>
-                <input type="text" v-model="myPaymentMethod.title" class="form-control"/>
+                <input type="text" v-model="paymentMethod.title" class="form-control"/>
             </div>
         </div>
 
         <div class="form-group">
             <label>Picture</label>
-            <div v-if="!myPaymentMethod.icon">
+            <div v-if="!paymentMethod.icon">
                 <img src="/img/payment/paypal.png" class="img-responsive">
                 <div class="help">You're currently using defaut Comms payment method icon.</div>
-                <pckg-htmlbuilder-dropzone :current="myPaymentMethod.icon" :url="myPaymentMethod.icon"
+                <pckg-htmlbuilder-dropzone :current="paymentMethod.icon" :url="paymentMethod.icon"
                                            id="dynamic-dropzone-paypal"></pckg-htmlbuilder-dropzone>
             </div>
         </div>-->
@@ -63,10 +63,10 @@
         methods: {
             collectSettings: function () {
                 return {
-                    enabled: this.myPaymentMethod.enabled,
-                    merchant: this.myPaymentMethod.merchant,
-                    secret: this.myPaymentMethod.secret,
-                    methods: this.myPaymentMethod.methods,
+                    enabled: this.paymentMethod.enabled,
+                    merchant: this.paymentMethod.merchant,
+                    secret: this.paymentMethod.secret,
+                    methods: this.paymentMethod.methods,
                 };
             }
         }

@@ -5,15 +5,16 @@
                     :help="help.mode">
             <div slot="element">
                 <button class="btn"
-                        :class="myPaymentMethod.endpoint === 'https://oppwa.com/' ? 'btn-success' : 'btn-default'"
+                        :class="paymentMethod.endpoint === 'https://oppwa.com/' ? 'btn-success' : 'btn-default'"
                         title="Production / live mode"
-                        @click.prevent="myPaymentMethod.endpoint = 'https://oppwa.com/'">
+                        @click.prevent="paymentMethod.endpoint = 'https://oppwa.com/'">
                     Live
                 </button>
+                &nbsp;
                 <button class="btn"
-                        :class="myPaymentMethod.endpoint !== 'https://oppwa.com/' ? 'btn-info' : 'btn-default'"
+                        :class="paymentMethod.endpoint !== 'https://oppwa.com/' ? 'btn-info' : 'btn-default'"
                         title="Test / sandbox / dev mode"
-                        @click.prevent="myPaymentMethod.endpoint = 'https://test.oppwa.com/'">
+                        @click.prevent="paymentMethod.endpoint = 'https://test.oppwa.com/'">
                     Sandbox
                 </button>
             </div>
@@ -22,28 +23,28 @@
         <!--<div class="form-group">
             <label>Endpoint</label>
             <div>
-                <input type="text" v-model="myPaymentMethod.endpoint" class="form-control"/>
+                <input type="text" v-model="paymentMethod.endpoint" class="form-control"/>
             </div>
         </div>-->
 
         <div class="form-group">
             <label>User ID</label>
             <div>
-                <input type="text" v-model="myPaymentMethod.userId" class="form-control"/>
+                <input type="text" v-model="paymentMethod.userId" class="form-control"/>
             </div>
         </div>
 
         <div class="form-group">
             <label>Password</label>
             <div>
-                <input type="text" v-model="myPaymentMethod.password" class="form-control"/>
+                <input type="text" v-model="paymentMethod.password" class="form-control"/>
             </div>
         </div>
 
         <div class="form-group">
             <label>Entity ID</label>
             <div>
-                <input type="text" v-model="myPaymentMethod.entityId" class="form-control"/>
+                <input type="text" v-model="paymentMethod.entityId" class="form-control"/>
             </div>
         </div>
 
@@ -56,16 +57,16 @@
         <!--<div class="form-group">
             <label>Title</label>
             <div>
-                <input type="text" v-model="myPaymentMethod.title" class="form-control"/>
+                <input type="text" v-model="paymentMethod.title" class="form-control"/>
             </div>
         </div>
 
         <div class="form-group">
             <label>Picture</label>
-            <div v-if="!myPaymentMethod.icon">
+            <div v-if="!paymentMethod.icon">
                 <img src="/img/payment/paypal.png" class="img-responsive">
                 <div class="help">You're currently using defaut Comms payment method icon.</div>
-                <pckg-htmlbuilder-dropzone :current="myPaymentMethod.icon" :url="myPaymentMethod.icon"
+                <pckg-htmlbuilder-dropzone :current="paymentMethod.icon" :url="paymentMethod.icon"
                                            id="dynamic-dropzone-paypal"></pckg-htmlbuilder-dropzone>
             </div>
         </div>-->
@@ -92,22 +93,22 @@
         methods: {
             collectSettings: function () {
                 return {
-                    enabled: this.myPaymentMethod.enabled,
-                    endpoint: this.myPaymentMethod.endpoint,
-                    userId: this.myPaymentMethod.userId,
-                    password: this.myPaymentMethod.password,
-                    entityId: this.myPaymentMethod.entityId,
-                    brands: this.myPaymentMethod.brands
+                    enabled: this.paymentMethod.enabled,
+                    endpoint: this.paymentMethod.endpoint,
+                    userId: this.paymentMethod.userId,
+                    password: this.paymentMethod.password,
+                    entityId: this.paymentMethod.entityId,
+                    brands: this.paymentMethod.brands
                 };
             }
         },
         computed: {
             myComputedBrands: {
                 get: function () {
-                    return this.myPaymentMethod.brands.split(' ');
+                    return this.paymentMethod.brands.split(' ');
                 },
                 set: function (value) {
-                    return this.myPaymentMethod.brands = value.join(' ');
+                    return this.paymentMethod.brands = value.join(' ');
                 }
             }
         }

@@ -4,16 +4,16 @@
         <!--<div class="form-group">
             <label>Title</label>
             <div>
-                <input type="text" v-model="myPaymentMethod.title" class="form-control"/>
+                <input type="text" v-model="paymentMethod.title" class="form-control"/>
             </div>
         </div>
 
         <div class="form-group">
             <label>Picture</label>
-            <div v-if="!myPaymentMethod.icon">
+            <div v-if="!paymentMethod.icon">
                 <img src="/img/payment/paypal.png" class="img-responsive">
                 <div class="help">You're currently using defaut Comms payment method icon.</div>
-                <pckg-htmlbuilder-dropzone :current="myPaymentMethod.icon" :url="myPaymentMethod.icon"
+                <pckg-htmlbuilder-dropzone :current="paymentMethod.icon" :url="paymentMethod.icon"
                                            id="dynamic-dropzone-paypal"></pckg-htmlbuilder-dropzone>
             </div>
         </div>-->
@@ -29,7 +29,7 @@
         methods: {
             collectSettings: function () {
                 return {
-                    enabled: this.myPaymentMethod.enabled,
+                    enabled: this.paymentMethod.enabled,
                 };
             }
         }
