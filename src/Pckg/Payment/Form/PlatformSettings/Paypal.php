@@ -10,10 +10,9 @@ class Paypal extends Form implements Form\ResolvesOnRequest
     {
         $this->addDecorator($this->decoratorFactory->create(VueJS::class));
 
-        $this->addCheckbox('enabled')->setLabel('Enabled');
-        $this->addText('endpoint')->setLabel('Endpoint')->addValidator(new RequireWhenEnabled($this));
-        $this->addText('client')->setLabel('Client')->addValidator(new RequireWhenEnabled($this));
-        $this->addText('secret')->setLabel('Secret')->addValidator(new RequireWhenEnabled($this));
+        $this->addText('endpoint')->setLabel('Endpoint')->required()->addValidator(new RequireWhenEnabled($this));
+        $this->addText('client')->setLabel('Client')->required()->addValidator(new RequireWhenEnabled($this));
+        $this->addText('secret')->setLabel('Secret')->required()->addValidator(new RequireWhenEnabled($this));
 
         return $this;
     }

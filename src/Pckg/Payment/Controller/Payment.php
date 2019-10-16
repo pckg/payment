@@ -78,6 +78,7 @@ class Payment
 
         $form = resolve($form);
         $data = $form->getData();
+        $data['enabled'] = config('pckg.payment.provider.' . $paymentMethod . '.enabled');
 
         SettingsMorph::makeItHappen(
             'pckg.payment.provider.' . $paymentMethod,

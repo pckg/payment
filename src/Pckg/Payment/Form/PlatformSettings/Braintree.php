@@ -10,7 +10,6 @@ class Braintree extends Form implements Form\ResolvesOnRequest
     {
         $this->addDecorator($this->decoratorFactory->create(VueJS::class));
 
-        $this->addCheckbox('enabled')->setLabel('Enabled');
         $this->addText('environment')->setLabel('Environment')->addValidator(new RequireWhenEnabled($this));
         $this->addText('merchant')->setLabel('Merchant')->addValidator(new RequireWhenEnabled($this));
         $this->addText('public')->setLabel('Public')->addValidator(new RequireWhenEnabled($this));

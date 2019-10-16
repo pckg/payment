@@ -10,8 +10,6 @@ class Upn extends Form implements Form\ResolvesOnRequest
     {
         $this->addDecorator($this->decoratorFactory->create(VueJS::class));
 
-        $this->addCheckbox('enabled')->setLabel('Enabled');
-
         return $this;
     }
 
