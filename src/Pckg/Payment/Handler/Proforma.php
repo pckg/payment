@@ -23,8 +23,7 @@ class Proforma extends AbstractHandler implements Handler
     {
         $url = $this->getDownloadUrl();
         $outputDir = path('private') . 'sepa/';
-        $outputFile = 'sepa-' . $this->paymentRecord->getOrdersAttribute()->map('id')->implode('-') . '-' .
-            date('YmdHis') . '.pdf';
+        $outputFile = $this->paymentRecord->hash . '.pdf';
         $pdf = Pdf::make($url, $outputDir, $outputFile);
 
         return $outputFile;
@@ -37,9 +36,11 @@ class Proforma extends AbstractHandler implements Handler
      */
     public function postStart()
     {
+        $this->generateSepa();
+
         return [
             'success'  => true,
-            'download' => $this->generateSepa(),
+            'redirect' => '/payment/' . $this->paymentRecord->hash . '/download-file',
         ];
     }
 
