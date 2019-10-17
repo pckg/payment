@@ -14,6 +14,8 @@ class Proforma extends AbstractHandler implements Handler
 
     public function getDownload()
     {
+        assetManager()->addAssets(path('apps') . 'derive/public/less/pages/upnsepa.less', 'blank');
+
         return view('Derive/Basket:payment/start_upn', [
                 'bills' => $this->order->getBills(),
             ]);
