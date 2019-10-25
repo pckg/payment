@@ -134,4 +134,9 @@ trait Handlers
         return $this->fullInitHandler(new MojCent($this->order));
     }
 
+    public function useBankTransferHandler()
+    {
+        return $this->fullInitHandler(new MojCent($this->order));
+    }
+
 }

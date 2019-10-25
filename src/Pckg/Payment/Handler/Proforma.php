@@ -5,6 +5,10 @@ use Derive\Basket\Service\Pdf;
 class Proforma extends AbstractHandler implements Handler
 {
 
+    protected $downloadView = 'Derive/Basket:payment/start_upn';
+
+    protected $downloadFolder = 'upn';
+
     public function initHandler()
     {
         $this->config = [
@@ -16,15 +20,15 @@ class Proforma extends AbstractHandler implements Handler
     {
         assetManager()->addAssets(path('apps') . 'derive/public/less/pages/upnsepa.less', 'blank');
 
-        return view('Derive/Basket:payment/start_upn', [
-                'bills' => $this->order->getBills(),
-            ]);
+        return view($this->downloadView, [
+            'bills' => $this->order->getBills(),
+        ]);
     }
 
-    protected function generateSepa()
+    protected function generateDownload()
     {
         $url = $this->getDownloadUrl();
-        $outputDir = path('private') . 'sepa/';
+        $outputDir = path('private') . $this->downloadFolder . '/';
         $outputFile = $this->paymentRecord->hash . '.pdf';
         $pdf = Pdf::make($url, $outputDir, $outputFile);
 
@@ -38,7 +42,7 @@ class Proforma extends AbstractHandler implements Handler
      */
     public function postStart()
     {
-        $this->generateSepa();
+        $this->generateDownload();
 
         return [
             'success'  => true,
