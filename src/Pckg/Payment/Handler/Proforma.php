@@ -22,7 +22,14 @@ class Proforma extends AbstractHandler implements Handler
 
         return view($this->downloadView, [
             'bills' => $this->order->getBills(),
+            'order' => $this->order,
         ]);
+    }
+
+    public function downloadFile()
+    {
+        return response()->download(path('private') . $this->downloadFolder . '/' . $this->paymentRecord->hash . '.pdf',
+                                    strtoupper($this->downloadFolder) . ' payment.pdf');
     }
 
     protected function generateDownload()
