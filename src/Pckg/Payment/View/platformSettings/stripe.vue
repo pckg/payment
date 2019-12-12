@@ -51,9 +51,9 @@
         <div class="form-group">
             <label>Stripe Webhook</label>
             <div>
-                https://{{ domain }}/payment/stripe/notification
+                /payment/stripe/notification
             </div>
-            <div class="help">You need to add a Webhook in Stripe dashboard to process transactions properly.</div>
+            <div class="help">Webhook is automatically added to your Stripe account.</div>
         </div>
 
         <button type="button" class="btn btn-primary" @click.prevent="saveSettings">Save settings</button>
@@ -66,7 +66,7 @@
         mixins: [pckgPaymentConfig],
         name: 'pckg-payment-provider-stripe-platform-config',
         data: function () {
-            return Object.assign(pckgPaymentConfig.data.call(this), {domain: window.location.hostname})
+            return Object.assign(pckgPaymentConfig.data.call(this), {})
         },
         methods: {
             collectSettings: function () {
