@@ -5,14 +5,14 @@
                     :help="help.mode">
             <div slot="element">
                 <button class="btn"
-                        :class="paymentMethod.publishable.indexOf('prod') >= 0 ? 'btn-success' : 'btn-default'"
+                        :class="paymentMethod.publishable.indexOf('pk_live_') >= 0 ? 'btn-success' : 'btn-default'"
                         title="Production / live mode"
                         @click.prevent>
                     Live
                 </button>
                 &nbsp;
                 <button class="btn"
-                        :class="paymentMethod.publishable.indexOf('prod') == -1 ? 'btn-info' : 'btn-default'"
+                        :class="paymentMethod.publishable.indexOf('pk_live_') == -1 ? 'btn-info' : 'btn-default'"
                         title="Test / sandbox / dev mode"
                         @click.prevent>
                     Sandbox

@@ -129,6 +129,11 @@ class Mollie extends AbstractHandler implements Handler
                 return $this->environment->redirect($this->getErrorUrl());
             }
 
+            if ($payment->isCanceled()) {
+                return $this->environment->redirect($this->getCancelUrl());
+            }
+
+            sleep(5);
             return $this->environment->redirect($this->getWaitingUrl());
         } catch (Throwable $e) {
             throw $e;
