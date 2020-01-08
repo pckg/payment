@@ -69,6 +69,7 @@ class Payment
 
     public function postCompanySettingsAction(Company $company, $paymentMethod)
     {
+        $company->applyConfig();
         $mapper = config('pckg.payment.formMapper', []);
 
         $form = $mapper[$paymentMethod] ?? null;
