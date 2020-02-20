@@ -49,6 +49,15 @@ class Proforma extends AbstractHandler implements Handler
      */
     public function postStart()
     {
+        $download = !post('nodownload');
+
+        if (!$download) {
+            return [
+                'success' => true,
+                'modal'   => 'success',
+            ];
+        }
+
         $this->generateDownload();
 
         return [
