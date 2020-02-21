@@ -113,6 +113,11 @@ abstract class AbstractHandler implements Handler
 
     }
 
+    public function postUploadFile()
+    {
+
+    }
+
     public function refund(Payment $payment, $amount = null)
     {
     }
@@ -135,6 +140,28 @@ abstract class AbstractHandler implements Handler
     public function setPaymentId($paymentId)
     {
         $this->paymentRecord->setAndSave(['payment_id' => $paymentId]);
+    }
+
+    public function waitPayment($description, $log, $transactionId, $status = 'waiting')
+    {
+        $this->paymentRecord->addLog($status, $log);
+
+        $this->order->getBills()->keyBy('order_id')->each(function(OrdersBill $ordersBill) use ($description) {
+            $order = $ordersBill->order;
+            /**
+             * Payment confirms order so stock is okay.
+             */
+            $order->confirm();
+            /**
+             * Payment status is set as waiting.
+             */
+            $order->waitingForPayment();
+        });
+
+        $this->paymentRecord->setAndSave([
+                                             'status'         => $status,
+                                             'transaction_id' => $transactionId,
+                                         ]);
     }
 
     public function approvePayment($description, $log, $transactionId, $status = 'approved')
@@ -166,69 +193,60 @@ abstract class AbstractHandler implements Handler
 
     public function getStartUrl()
     {
-        return $this->environment->url('derive.payment.start',
-                                       [
-                                           // 'handler' => $this->handler, // ?needed?
-                                           'payment' => $this->paymentRecord,
-                                       ]);
+        return $this->environment->url('derive.payment.start', [
+            // 'handler' => $this->handler, // ?needed?
+            'payment' => $this->paymentRecord,
+        ]);
     }
 
     public function getErrorUrl()
     {
-        return $this->environment->url('derive.payment.error',
-                                       [
-                                           'payment' => $this->paymentRecord,
-                                       ]);
+        return $this->environment->url('derive.payment.error', [
+            'payment' => $this->paymentRecord,
+        ]);
     }
 
     public function getWaitingUrl()
     {
-        return $this->environment->url('derive.payment.waiting',
-                                       [
-                                           'payment' => $this->paymentRecord,
-                                       ]);
+        return $this->environment->url('derive.payment.waiting', [
+            'payment' => $this->paymentRecord,
+        ]);
     }
 
     public function getSuccessUrl()
     {
 
-        return $this->environment->url('derive.payment.success',
-                                       [
-                                           'payment' => $this->paymentRecord,
-                                       ]);
+        return $this->environment->url('derive.payment.success', [
+            'payment' => $this->paymentRecord,
+        ]);
     }
 
     public function getNotificationUrl()
     {
-        return $this->environment->url('derive.payment.notification',
-                                       [
-                                           'payment' => $this->paymentRecord,
-                                       ]);
+        return $this->environment->url('derive.payment.notification', [
+            'payment' => $this->paymentRecord,
+        ]);
     }
 
     public function getCheckUrl()
     {
-        return $this->environment->url('derive.payment.check',
-                                       [
-                                           'payment' => $this->paymentRecord,
-                                       ],
-                                       true);
+        return $this->environment->url('derive.payment.check', [
+            'payment' => $this->paymentRecord,
+        ], true);
     }
 
     public function getCancelUrl()
     {
-        return $this->environment->url('derive.payment.cancel',
-                                       [
-                                           'payment' => $this->paymentRecord,
-                                       ]);
+        return $this->environment->url('derive.payment.cancel', [
+            'payment' => $this->paymentRecord,
+        ]);
     }
 
     public function getDownloadUrl()
     {
-        return $this->environment->url('derive.payment.download',
-                                       [
-                                           'payment' => $this->paymentRecord,
-                                       ]);
+        return $this->environment->url('derive.payment.download', [
+            'payment' => $this->paymentRecord,
+        ]);
     }
 
 }

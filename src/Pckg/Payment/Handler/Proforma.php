@@ -52,6 +52,8 @@ class Proforma extends AbstractHandler implements Handler
         $download = !post('nodownload');
 
         if (!$download) {
+            $this->waitPayment('Bank Transfer #' . $this->paymentRecord->id, null, $this->paymentRecord->id);
+
             return [
                 'success' => true,
                 'modal'   => 'success',

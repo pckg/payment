@@ -18,6 +18,16 @@
             </div>
         </div>-->
 
+        <form-group label="IBAN"
+                    type="text"
+                    help="Enter IBAN details for company bank account"
+                    v-model="paymentMethod.iban"></form-group>
+
+        <form-group label="SWIFT/BIC"
+                    type="text"
+                    help="Enter your bank SWIFT/BIC code"
+                    v-model="paymentMethod.swiftbic"></form-group>
+
         <button type="button" class="btn btn-primary" @click.prevent="saveSettings">Save settings</button>
     </div>
 </template>
@@ -30,6 +40,8 @@
             collectSettings: function () {
                 return {
                     enabled: this.paymentMethod.enabled,
+                    iban: this.paymentMethod.iban,
+                    swiftbic: this.paymentMethod.swiftbic,
                 };
             }
         }
