@@ -115,7 +115,7 @@ class PaypalGnp extends AbstractHandler implements Handler
 
         return [
             'success' => false,
-            'message' => 'Unknown paypal error',
+            'message' => $json->info->message ?? 'Unknown paypal error',
             'info'    => $json,
         ];
     }

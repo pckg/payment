@@ -22,7 +22,7 @@ class Proforma extends AbstractHandler implements Handler
 
         return view($this->downloadView, [
             'bills' => $this->order->getBills(),
-            'order' => $this->order,
+            'order' => $this->order->getBills()->first()->order,
             'payment' => $this->paymentRecord,
             'iban'     => $this->environment->config($this->downloadFolder . '.iban'),
             'swiftbic' => $this->environment->config($this->downloadFolder . '.swiftbic'),
