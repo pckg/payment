@@ -48,6 +48,13 @@
             </div>
         </div>
 
+        <div class="form-group">
+            <label>Authorization bearer</label>
+            <div>
+                <input type="text" v-model="paymentMethod.authorizationBearer" class="form-control"/>
+            </div>
+        </div>
+
         <form-group label="Payment methods"
                     type="select:multiple"
                     :options="paymentMethodOptions"

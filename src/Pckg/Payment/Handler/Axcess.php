@@ -35,6 +35,14 @@ class Axcess extends AbstractHandler implements Handler
     }
 
     /**
+     * @return string|null
+     */
+    public function getAuthorizationBearer()
+    {
+        return config('pckg.payment.provider.axcess.authorizationBearer', null);
+    }
+
+    /**
      * @return string
      * Prepare Access processor for payment.
      */
@@ -62,6 +70,12 @@ class Axcess extends AbstractHandler implements Handler
             curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, strpos($url, 'test.') === false);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+            /**
+             * Axcess update.
+             */
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization:Bearer ' . $this->getAuthorizationBearer()]);
+
             $responseData = curl_exec($ch);
             $errno = curl_errno($ch);
             curl_close($ch);
@@ -114,6 +128,12 @@ class Axcess extends AbstractHandler implements Handler
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, strpos($url, 'test.') === false);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+
+            /**
+             * Axcess update.
+             */
+            curl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization:Bearer ' . $this->getAuthorizationBearer()]);
+
             $responseData = curl_exec($ch);
             curl_close($ch);
 
