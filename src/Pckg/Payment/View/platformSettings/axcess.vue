@@ -105,7 +105,8 @@
                     userId: this.paymentMethod.userId,
                     password: this.paymentMethod.password,
                     entityId: this.paymentMethod.entityId,
-                    brands: this.paymentMethod.brands
+                    brands: this.paymentMethod.brands,
+                    authorizationBearer: this.paymentMethod.authorizationBearer
                 };
             }
         },
