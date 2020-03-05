@@ -22,8 +22,8 @@ class BankTransfer extends Upn
     public function postUploadFile()
     {
         $upload = new Upload();
-        if (!$upload->validateUpload()) {
-            throw new \Exception('Invalid upload');
+        if (($message = $upload->validateUpload()) !== true) {
+            throw new \Exception('Invalid upload: ' . $message);
         }
         $dir = path('private') . 'bank-transfer-proof/';
         $finalName = $upload->save($dir);
