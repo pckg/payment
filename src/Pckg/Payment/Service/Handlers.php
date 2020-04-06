@@ -6,7 +6,7 @@ use Pckg\Payment\Handler\Braintree;
 use Pckg\Payment\Handler\Handler;
 use Pckg\Payment\Handler\Icepay;
 use Pckg\Payment\Handler\MojCent;
-use Pckg\Payment\Handler\Moneta;
+use Pckg\Payment\Handler\Valu;
 use Pckg\Payment\Handler\Paymill;
 use Pckg\Payment\Handler\PaypalGnp;
 use Pckg\Payment\Handler\PaypalRest;
@@ -114,9 +114,9 @@ trait Handlers
         return $this->fullInitHandler(new Proforma($this->order));
     }
 
-    public function useMonetaHandler()
+    public function useValuHandler()
     {
-        return $this->fullInitHandler(new Moneta($this->order));
+        return $this->fullInitHandler(new Valu($this->order));
     }
 
     public function useIcePayHandler()

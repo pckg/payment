@@ -3,7 +3,7 @@
 use CMoneta;
 use Derive\Orders\Record\OrdersBill;
 
-class Moneta extends AbstractHandler
+class Valu extends AbstractHandler
 {
 
     /**
@@ -14,8 +14,8 @@ class Moneta extends AbstractHandler
     public function initHandler()
     {
         $this->config = [
-            'tarifficationid' => $this->environment->config('moneta.tarifficationId'),
-            'url'             => $this->environment->config('moneta.url'),
+            'tarifficationid' => $this->environment->config('valu.tarifficationId'),
+            'url'             => $this->environment->config('valu.url'),
         ];
 
         include path('src') . "moneta" . path('ds') . "moneta.php";

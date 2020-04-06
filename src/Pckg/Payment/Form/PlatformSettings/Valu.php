@@ -3,7 +3,7 @@
 use Pckg\Htmlbuilder\Decorator\Method\VueJS;
 use Pckg\Htmlbuilder\Element\Form;
 
-class Moneta extends Form implements Form\ResolvesOnRequest
+class Valu extends Form implements Form\ResolvesOnRequest
 {
 
     public function initFields()

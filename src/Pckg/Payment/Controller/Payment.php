@@ -8,7 +8,7 @@ use Pckg\Payment\Form\PlatformSettings\Braintree;
 use Pckg\Payment\Form\PlatformSettings\Cod;
 use Pckg\Payment\Form\PlatformSettings\Icepay;
 use Pckg\Payment\Form\PlatformSettings\Mollie;
-use Pckg\Payment\Form\PlatformSettings\Moneta;
+use Pckg\Payment\Form\PlatformSettings\Valu;
 use Pckg\Payment\Form\PlatformSettings\Paypal;
 use Pckg\Payment\Form\PlatformSettings\Upn;
 use Pckg\Payment\Handler\PaypalGnp;

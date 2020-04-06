@@ -8,7 +8,7 @@ Project provides abstract implementation for payment providers:
  - icepay (credit cards, bancontact, eps, giropay, ideal, sofort)
  - braintree
  - axcess
- - moneta
+ - valu
  - proforma / upn
  
 Currently waiting for implementation:
