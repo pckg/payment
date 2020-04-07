@@ -1,0 +1,77 @@
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="MonetaOrder" elementFormDefault="qualified" targetNamespace="generic">
+	<xsd:annotation>
+		<xsd:documentation>This is an XML Schema defining the format of a Moneta Order XML</xsd:documentation>
+	</xsd:annotation>
+  	<xsd:element name="ORDER" type="OrderType" />
+  	<xsd:complexType name="OrderType">
+  		<xsd:sequence>
+			  <xsd:element name="ORDER_HEAD" type="OrderHeadType" />
+			  <xsd:element name="ORDER_LINE" type="OrderLine" />
+  		</xsd:sequence>
+  	</xsd:complexType>
+  	<xsd:complexType name="OrderHeadType">
+  		<xsd:sequence>
+  			<xsd:element name="CustomerTaxNumber" type="xsd:string" />
+  			<xsd:element name="CustomerFirstName" type="xsd:string" />
+  			<xsd:element name="CustomerMiddleName" type="xsd:string" />
+  			<xsd:element name="CustomerLastName" type="xsd:string" />
+  			<xsd:element name="CustomerNameSuffix" type="xsd:string" />
+  			<xsd:element name="CustomerCompanyName" type="xsd:string" />
+  			<xsd:element name="CustomerStreet" type="xsd:string" />
+  			<xsd:element name="CustomerHouse" type="xsd:string" />
+  			<xsd:element name="CustomerPostCode" type="xsd:int" />
+  			<xsd:element name="CustomerCity" type="xsd:string" />
+  			<xsd:element name="CustomerState" type="xsd:string" />
+  			<xsd:element name="CustomerCountry" type="xsd:string" />
+  			<xsd:element name="CustomerTelephone" type="xsd:string" />
+  			<xsd:element name="CustomerFax" type="xsd:string" />
+  			<xsd:element name="CustomerEMail" type="xsd:string" />
+  			<xsd:element name="DeliveryFirstName" type="xsd:string" />
+  			<xsd:element name="DeliveryMiddleName" type="xsd:string" />
+  			<xsd:element name="DeliveryLastName" type="xsd:string" />
+  			<xsd:element name="DeliveryNameSuffix" type="xsd:string" />
+  			<xsd:element name="DeliveryCompanyName" type="xsd:string" />
+  			<xsd:element name="DeliveryStreet" type="xsd:string" />
+  			<xsd:element name="DeliveryHouse" type="xsd:string" />
+  			<xsd:element name="DeliveryPostCode" type="xsd:int" />
+  			<xsd:element name="DeliveryCity" type="xsd:string" />
+  			<xsd:element name="DeliveryState" type="xsd:string" />
+  			<xsd:element name="DeliveryCountry" type="xsd:string" />
+  			<xsd:element name="DeliveryEMail" type="xsd:string" />
+  			<xsd:element name="DeliveryTelephone" type="xsd:string" />
+  			<xsd:element name="DeliveryFax" type="xsd:string" />
+			<xsd:element name="Currency" type="xsd:string" />
+  			<xsd:element name="Price" type="xsd:decimal" />
+  			<xsd:element name="Discount" type="xsd:decimal" />
+  			<xsd:element name="PriceNoDiscount" type="xsd:decimal" />
+  			<xsd:element name="DeliveryPrice" type="xsd:int" />
+  			<xsd:element name="DateFrom" type="xsd:string" />
+  			<xsd:element name="DateTo" type="xsd:string" />
+  			<xsd:element name="OrderNumberInternal" type="xsd:string" />
+  			<xsd:element name="OrderCreated" type="xsd:string" />
+  			<xsd:element name="NotificationDate" type="xsd:string" />
+  			<xsd:element name="DeliveryType" type="xsd:string" />      			
+  		</xsd:sequence>
+  	</xsd:complexType>
+  	<xsd:complexType name="OrderLine">
+  		<xsd:sequence>
+  			<xsd:element name="PRODUCT" type="ProductLine" maxOccurs="unbounded" />
+  		</xsd:sequence>
+  	</xsd:complexType>
+  	<xsd:complexType name="ProductLine">
+  		<xsd:sequence>
+  			<xsd:element name="PageDescription" type="xsd:string" />
+  			<xsd:element name="PriceSum" type="xsd:decimal" />
+  			<xsd:element name="Price" type="xsd:decimal" />
+  			<xsd:element name="Quantity" type="xsd:int" />
+  			<xsd:element name="TaxRate" type="xsd:decimal" />
+  			<xsd:element name="PriceNoTax" type="xsd:decimal" />
+  			<xsd:element name="PriceSumNoTax" type="xsd:decimal" />
+  			<xsd:element name="PriceTax" type="xsd:decimal" />
+  			<xsd:element name="LineDiscount" type="xsd:decimal" />
+  			<xsd:element name="PriceSumNoDiscount" type="xsd:decimal" />
+  			<xsd:element name="Unit" type="xsd:string" />
+  			<xsd:element name="ArticleNumber" type="xsd:string" />
+  		</xsd:sequence>
+  	</xsd:complexType>
+</xsd:schema>

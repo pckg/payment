@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="WINDOWS-1250" ?>
+<ORDER xmlns="MonetaOrder">
+  <ORDER_HEAD>        
+    <CustomerTaxNumber></CustomerTaxNumber>
+    <CustomerFirstName>Janez</CustomerFirstName>        
+    <CustomerMiddleName></CustomerMiddleName>
+    <CustomerLastName>Novak</CustomerLastName>
+    <CustomerNameSuffix></CustomerNameSuffix>
+    <CustomerCompanyName></CustomerCompanyName>
+    <CustomerStreet>Neka ulica</CustomerStreet>
+    <CustomerHouse>25</CustomerHouse>
+    <CustomerPostCode>1000</CustomerPostCode>
+    <CustomerCity>Ljubljana</CustomerCity>
+    <CustomerState></CustomerState>
+    <CustomerCountry>Slovenija</CustomerCountry>
+    <CustomerTelephone></CustomerTelephone>
+    <CustomerFax></CustomerFax>
+    <CustomerEMail>janezn00@email.si</CustomerEMail>
+    <DeliveryFirstName>Janez</DeliveryFirstName>
+    <DeliveryMiddleName></DeliveryMiddleName>
+    <DeliveryLastName>Novak</DeliveryLastName>
+    <DeliveryNameSuffix></DeliveryNameSuffix>
+    <DeliveryCompanyName></DeliveryCompanyName>
+    <DeliveryStreet>Neka ulica</DeliveryStreet>
+    <DeliveryHouse>25</DeliveryHouse>
+    <DeliveryPostCode>1000</DeliveryPostCode>
+    <DeliveryCity>Ljubljana</DeliveryCity>
+    <DeliveryState></DeliveryState>
+    <DeliveryCountry>Slovenija</DeliveryCountry>
+    <DeliveryEMail>janezn00@email.si</DeliveryEMail>
+    <DeliveryTelephone></DeliveryTelephone>
+    <DeliveryFax></DeliveryFax>
+    <Currency>SIT</Currency>
+    <Price>4000</Price>
+    <Discount>0</Discount>
+    <PriceNoDiscount>4000</PriceNoDiscount>
+    <DeliveryPrice>0</DeliveryPrice>
+    <DateFrom>2.2.2006</DateFrom>
+    <DateTo>2.2.2006</DateTo>
+    <OrderNumberInternal>7765</OrderNumberInternal>
+    <OrderCreated>2.2.2006</OrderCreated>
+    <NotificationDate>2.2.2006</NotificationDate>
+    <DeliveryType>OWN</DeliveryType>
+  </ORDER_HEAD>
+  <ORDER_LINE>
+    <PRODUCT>
+      <PageDescription>Štoparski vodnik po galaksiji</PageDescription>
+      <PriceSum>3500</PriceSum>
+      <Price>3500</Price>
+      <Quantity>1</Quantity>
+      <TaxRate>20</TaxRate>
+      <PriceNoTax>2916</PriceNoTax>
+      <PriceSumNoTax>2916</PriceSumNoTax>
+      <PriceTax>584</PriceTax>
+      <LineDiscount>0</LineDiscount>
+      <PriceSumNoDiscount>3500</PriceSumNoDiscount>
+      <Unit>IZV</Unit>
+      <ArticleNumber>ISBN:4327463473323</ArticleNumber>
+    </PRODUCT>
+    <PRODUCT>
+      <PageDescription>Stroški dostave</PageDescription>
+      <PriceSum>500</PriceSum>
+      <Price>500</Price>
+      <Quantity>1</Quantity>
+      <TaxRate>20</TaxRate>
+      <PriceNoTax>416</PriceNoTax>
+      <PriceSumNoTax>416</PriceSumNoTax>
+      <PriceTax>84</PriceTax>
+      <LineDiscount>0</LineDiscount>      
+      <PriceSumNoDiscount>500</PriceSumNoDiscount>
+      <Unit>DOS</Unit>
+      <ArticleNumber>Dostava</ArticleNumber>
+    </PRODUCT>
+  </ORDER_LINE>
+</ORDER>

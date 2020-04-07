@@ -1,7 +1,8 @@
 <?php namespace Pckg\Payment\Handler;
 
-use CMoneta;
 use Derive\Orders\Record\OrdersBill;
+use Pckg\Payment\Handler\Valu\CMoneta;
+use Pckg\Payment\Handler\Valu\ValuHelper;
 
 class Valu extends AbstractHandler
 {
@@ -18,10 +19,6 @@ class Valu extends AbstractHandler
             'url'             => $this->environment->config('valu.url'),
         ];
 
-        include path('src') . "moneta" . path('ds') . "moneta.php";
-        include path('src') . "moneta" . path('ds') . "functions.php";
-        include path('src') . "moneta" . path('ds') . "xmlfunctions.php";
-
         $this->moneta = new CMoneta();
 
         return $this;
@@ -37,14 +34,9 @@ class Valu extends AbstractHandler
         return $this->order->getTotalToPay();
     }
 
-    public function getPublicKey()
-    {
-        return $this->config['public_key'];
-    }
-
     public function startPartial()
     {
-        Functions_ResponseExpires();
+        ValuHelper::Functions_ResponseExpires();
 
         $nSkupnaCena = $this->order->getTotal();
 
@@ -59,7 +51,7 @@ class Valu extends AbstractHandler
         $sKraj = null;//@$city['title'];
 
         // kreiramo xml
-        $sXMLData = MakeOrderHead(
+        $sXMLData = ValuHelper::MakeOrderHead(
             $sDavcna,
             $sIme,
             $sPriimek,
@@ -75,7 +67,7 @@ class Valu extends AbstractHandler
         );
 
         // dodamo artikel
-        $sXMLData = $sXMLData . MakeOrderLine(
+        $sXMLData = $sXMLData . ValuHelper::MakeOrderLine(
                 __('order_payment') . " #" . $this->order->getId() . ' (' . $this->order->getNum(
                 ) . ' - ' . $this->order->getBills()->map('id')->implode(',') . ')',
                 $nSkupnaCena,
@@ -86,7 +78,7 @@ class Valu extends AbstractHandler
             );
 
         // generiramo zaključek naročila
-        $sXMLData = $sXMLData . MakeOrderEnd();
+        $sXMLData = $sXMLData . ValuHelper::MakeOrderEnd();
 
         // kreiramo CMoneta objekt
         $myMoneta = $this->moneta;
@@ -116,14 +108,14 @@ class Valu extends AbstractHandler
 
     public function check()
     {
-        Functions_ResponseExpires();
+        ValuHelper::Functions_ResponseExpires();
 
         // branje vhodnih parametrov
-        $sConfirmationID = Functions_RequestString("ConfirmationID", 32);
-        $sConfirmationSignature = Functions_RequestString("ConfirmationSignature", 250);
-        $nTarifficationError = Functions_RequestNumber("TARIFFICATIONERROR", 0, 1, 1);
-        $sConfirmationIDStatus = Functions_RequestString("ConfirmationIDStatus", 32);
-        $sIP = Functions_GetServerVariable('REMOTE_ADDR');
+        $sConfirmationID = ValuHelper::Functions_RequestString("ConfirmationID", 32);
+        $sConfirmationSignature = ValuHelper::Functions_RequestString("ConfirmationSignature", 250);
+        $nTarifficationError = ValuHelper::Functions_RequestNumber("TARIFFICATIONERROR", 0, 1, 1);
+        $sConfirmationIDStatus = ValuHelper::Functions_RequestString("ConfirmationIDStatus", 32);
+        $sIP = ValuHelper::Functions_GetServerVariable('REMOTE_ADDR');
         $sOutput = "<error>1</error>";
 
         // preverjanje IP Monete
@@ -174,7 +166,7 @@ class Valu extends AbstractHandler
 
     public function waiting()
     {
-        Functions_ResponseExpires();
+        ValuHelper::Functions_ResponseExpires();
 
         //$sMyName = 'http://' . Functions_GetServerVariable('HTTP_HOST') . Functions_GetServerVariable('SCRIPT_NAME');
         $sMyName = "https://gremonaparty.com";
@@ -187,7 +179,7 @@ class Valu extends AbstractHandler
         $sData = "";
 
         // Branje parametra ConfirmationID
-        $sConfirmationID = Functions_RequestString("ConfirmationID", 32);
+        $sConfirmationID = ValuHelper::Functions_RequestString("ConfirmationID", 32);
         //$sConfirmationID = "09082013100741";
 
         // kreiranje CMoneta objekta
@@ -231,8 +223,6 @@ class Valu extends AbstractHandler
                 : null) .
                   $sProviderData . '<br /><b>Status nakupa:</b> ' . $sStatus . '<br />' .
                   $sData . '<br /><br /><br /><a href="index.php">Nazaj</a>';
-
-        error_log("=== Moneta: " . nl2br($return));
 
         // HTML vsebina plačljive strani
         return $return;
