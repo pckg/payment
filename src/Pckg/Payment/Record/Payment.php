@@ -135,7 +135,7 @@ class Payment extends Record
             return null;
         }
 
-        return json_decode($log->data, true);
+        return json_decode($log->data('data'), true);
     }
 
     public function updateLog($status, $data)

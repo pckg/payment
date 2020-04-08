@@ -123,7 +123,6 @@ class Valu extends AbstractHandler
         // preverjanje IP Monete
         if (true || ($sIP == "213.229.249.103") || ($sIP == "213.229.249.104") || ($sIP == "213.229.249.117")) {
             // kreiranje CMoneta objekta
-            $myMoneta = $this->moneta;
             $purchaseStatus = $this->paymentRecord->getLog('valu:purchasestatus');
 
             // zahtevek za status nakupa?
@@ -160,18 +159,6 @@ class Valu extends AbstractHandler
 
         $sMyName = config('url');
 
-        $sStatus = "";
-        $sProviderData = "";
-
-        $sStatus = "";
-        $sData = "";
-
-        // Branje parametra ConfirmationID
-        $sConfirmationID = $this->paymentRecord->hash;
-
-        // kreiranje CMoneta objekta
-        $myMoneta = $this->moneta;
-
         $nRefreshCounter = $this->paymentRecord->getLog('valu:refreshcounter');
         $sPurchaseStatus = $this->paymentRecord->getLog('valu:purchasestatus');
         $sProviderData = $this->paymentRecord->getLog('valu:providerdata');
@@ -182,6 +169,7 @@ class Valu extends AbstractHandler
         } else if ($sPurchaseStatus == "vobdelavi") {
             // ok
             // response()->redirect($this->getWaitingUrl()); //
+            $sStatus = 'čakam na potrditev...';
         } else if ($sPurchaseStatus == "potrjeno") {
             $this->paymentRecord->updateLog('valu:purchasestatus', 'prikazano');
             response()->redirect($this->getSuccessUrl());
@@ -191,10 +179,10 @@ class Valu extends AbstractHandler
             $sStatus = "Napaka.";
         }
 
-        $return = $sProviderData . '<br /><b>Status nakupa:</b> ' . $sStatus . '<br />' . $sData . '<br /><br /><br /><a href="' . $this->getCheckUrl() . '">Preveri nakup</a>';
+        $return = $sProviderData . '<br /><b>Status nakupa:</b> ' . $sStatus . '<br /><br /><a href="' . $this->getCheckUrl() . '">Preveri nakup</a>';
 
         // HTML vsebina plačljive strani
-        return $return;
+        die($return);
     }
 
 }
