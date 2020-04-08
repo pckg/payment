@@ -21,6 +21,8 @@ interface Handler
 
     public function postNotification();
 
+    public function getNotification();
+
     public function postStart();
 
     /**

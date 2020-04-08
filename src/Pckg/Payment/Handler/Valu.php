@@ -98,7 +98,7 @@ class Valu extends AbstractHandler
     /**
      * Valu calls our endpoint to confirm the purchase.
      */
-    public function check()
+    public function getInfo()
     {
         ValuHelper::Functions_ResponseExpires();
 
@@ -149,7 +149,7 @@ class Valu extends AbstractHandler
      *
      * @return string|void
      */
-    public function getInfo()
+    public function getNotification()
     {
         ValuHelper::Functions_ResponseExpires();
 

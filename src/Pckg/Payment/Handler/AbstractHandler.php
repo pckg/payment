@@ -103,6 +103,11 @@ abstract class AbstractHandler implements Handler
     {
     }
 
+    public function getNotification()
+    {
+        return 'GET notification is not supported.';
+    }
+
     public function cancel()
     {
     }
