@@ -179,7 +179,10 @@ class Valu extends AbstractHandler
             $sStatus = "Napaka.";
         }
 
-        $return = $sProviderData . '<br /><b>Status nakupa:</b> ' . $sStatus . '<br /><br /><a href="' . $this->getCheckUrl() . '">Preveri nakup</a>';
+        $return = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" >
+  <head>' . $sProviderData . '</head><body><b>Status nakupa:</b> ' . $sStatus . '<br /><br /><a href="' . $this->getCheckUrl() . '">Preveri nakup</a></body></html>';
 
         // HTML vsebina plačljive strani
         die($return);
