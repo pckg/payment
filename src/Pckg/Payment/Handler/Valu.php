@@ -115,17 +115,20 @@ class Valu extends AbstractHandler
         $nRefreshCounter = $this->paymentRecord->getLog('valu:refreshcounter');
         $sPurchaseStatus = $this->paymentRecord->getLog('valu:purchasestatus');
         $sProviderData = $this->paymentRecord->getLog('valu:providerdata');
+        
         $this->paymentRecord->updateLog('valu:refreshcounter', $nRefreshCounter + 1);
 
+        $nextUrl = $this->getCheckUrl();
         if ($nRefreshCounter > 60) {
-            response()->redirect($this->getErrorUrl());
+            $nextUrl = $this->getErrorUrl();
+            // response()->redirect($this->getErrorUrl());
         } else if ($sPurchaseStatus == "vobdelavi") {
             // ok
             // response()->redirect($this->getWaitingUrl()); //
             $sStatus = 'čakam na potrditev...';
         } else if ($sPurchaseStatus == "potrjeno") {
             $this->paymentRecord->updateLog('valu:purchasestatus', 'prikazano');
-            response()->redirect($this->getSuccessUrl());
+            $nextUrl = $this->getSuccessUrl();
         } else if ($sPurchaseStatus == "zavrnjeno") {
             $sStatus = "Potrditvena stran je bila klicana s TARIFFICATIONERROR=1.";
         } else {
@@ -133,11 +136,11 @@ class Valu extends AbstractHandler
         }
 
         $return = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>' . $sProviderData . '</head><body><meta http-equiv="refresh" content="3'
+            . ($sPurchaseStatus === 'potrjeno' ? ('; url=' . $nextUrl) : '')
+            . '"><b>Status nakupa:</b> ' . $sStatus . '<br /><br /><a href="' . $this->getCheckUrl() . '">Preveri nakup</a></body></html>';
 
-<html xmlns="http://www.w3.org/1999/xhtml" >
-  <head>' . $sProviderData . '</head><body><b>Status nakupa:</b> ' . $sStatus . '<br /><br /><a href="' . $this->getCheckUrl() . '">Preveri nakup</a></body></html>';
-
-        // HTML vsebina plačljive strani
         die($return);
     }
 
