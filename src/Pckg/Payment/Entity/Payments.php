@@ -6,6 +6,7 @@ use Pckg\Database\Entity;
 use Pckg\Database\Relation\BelongsTo;
 use Pckg\Database\Relation\HasMany;
 use Pckg\Payment\Record\Payment;
+use Pckg\Payment\Record\PaymentsMorph;
 
 class Payments extends Entity
 {
@@ -17,11 +18,47 @@ class Payments extends Entity
         return $this->belongsTo(Orders::class)->foreignKey('order_id');
     }
 
+    /**
+     * Some old orders do not have that connection?
+     * Or do we have a new connection?
+     * 
+     * @return HasMany
+     */
     public function instalments()
     {
-        return $this->hasMany(OrdersBills::class)
-            ->primaryKey('JSON_EXTRACT(payments.data, "$.billIds")')
-            ->foreignKey('id'); // JSON_CONTAINS()
+        return $this->hasManyIn(OrdersBills::class)
+            ->primaryKey(function () {
+                return [
+                    /**
+                     * When used in PHP.
+                     */
+                    function (Payment $payment) {
+                        return json_decode($payment->data)->billIds ?? [];
+                    },
+                    /**
+                     * Actual key.
+                     */
+                    'id',
+                    /**
+                     * When used in MySQL?
+                     */
+                    // 'JSON_CONTAINS(payments.data, CAST(orders_bills.id as JSON), \'$.billIds\')',
+                    // 'JSON_UNQUOTE(JSON_EXTRACT(payments.data, \'$.billIds\')) = orders_bills.id',
+                    /**
+                     * When used in belongsToManyIn?
+                     */
+                    // 'JSON_EXTRACT(payments.data, "$.billIds")',
+                ];
+            })
+            ->foreignKey('id');
+    }
+
+    /**
+     * @return HasMany
+     */
+    public function instalmentsOverMorph()
+    {
+        return $this->hasMany(PaymentsMorph::class);
     }
 
     public function logs()
