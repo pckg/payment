@@ -78,7 +78,7 @@ class Valu extends AbstractHandler
 
         $sXMLData = '<meta name="Price" content="' . $this->getTotalToPay() . '">
  <meta name="Quantity" content="1">
- <meta name="VATRate" content="20">
+ <meta name="VATRate" content="22">
  <meta name="Description" content="' . htmlentities($this->getDescription()) .'">
  <meta name="Currency" content="' . $this->getCurrency() . '">';
 
@@ -101,9 +101,50 @@ class Valu extends AbstractHandler
     }
 
     /**
-     * Valu calls our endpoint to confirm the purchase, async.
+     * User is redirected back to our store, we need to display him the status.
+     * Should we redirect him to /waiting page and there make some checks?
+     *
+     * @return string|void
      */
     public function getInfo()
+    {
+        ValuHelper::Functions_ResponseExpires();
+
+        $sMyName = config('url');
+
+        $nRefreshCounter = $this->paymentRecord->getLog('valu:refreshcounter');
+        $sPurchaseStatus = $this->paymentRecord->getLog('valu:purchasestatus');
+        $sProviderData = $this->paymentRecord->getLog('valu:providerdata');
+        $this->paymentRecord->updateLog('valu:refreshcounter', $nRefreshCounter + 1);
+
+        if ($nRefreshCounter > 60) {
+            response()->redirect($this->getErrorUrl());
+        } else if ($sPurchaseStatus == "vobdelavi") {
+            // ok
+            // response()->redirect($this->getWaitingUrl()); //
+            $sStatus = 'čakam na potrditev...';
+        } else if ($sPurchaseStatus == "potrjeno") {
+            $this->paymentRecord->updateLog('valu:purchasestatus', 'prikazano');
+            response()->redirect($this->getSuccessUrl());
+        } else if ($sPurchaseStatus == "zavrnjeno") {
+            $sStatus = "Potrditvena stran je bila klicana s TARIFFICATIONERROR=1.";
+        } else {
+            $sStatus = "Napaka.";
+        }
+
+        $return = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" >
+  <head>' . $sProviderData . '</head><body><b>Status nakupa:</b> ' . $sStatus . '<br /><br /><a href="' . $this->getCheckUrl() . '">Preveri nakup</a></body></html>';
+
+        // HTML vsebina plačljive strani
+        die($return);
+    }
+
+    /**
+     * Valu calls our endpoint to confirm the purchase, async.
+     */
+    public function getNotification()
     {
         ValuHelper::Functions_ResponseExpires();
 
@@ -145,47 +186,6 @@ class Valu extends AbstractHandler
         }
 
         die($sOutput);
-    }
-
-    /**
-     * User is redirected back to our store, we need to display him the status.
-     * Should we redirect him to /waiting page and there make some checks?
-     *
-     * @return string|void
-     */
-    public function getNotification()
-    {
-        ValuHelper::Functions_ResponseExpires();
-
-        $sMyName = config('url');
-
-        $nRefreshCounter = $this->paymentRecord->getLog('valu:refreshcounter');
-        $sPurchaseStatus = $this->paymentRecord->getLog('valu:purchasestatus');
-        $sProviderData = $this->paymentRecord->getLog('valu:providerdata');
-        $this->paymentRecord->updateLog('valu:refreshcounter', $nRefreshCounter + 1);
-
-        if ($nRefreshCounter > 60) {
-            response()->redirect($this->getErrorUrl());
-        } else if ($sPurchaseStatus == "vobdelavi") {
-            // ok
-            // response()->redirect($this->getWaitingUrl()); //
-            $sStatus = 'čakam na potrditev...';
-        } else if ($sPurchaseStatus == "potrjeno") {
-            $this->paymentRecord->updateLog('valu:purchasestatus', 'prikazano');
-            response()->redirect($this->getSuccessUrl());
-        } else if ($sPurchaseStatus == "zavrnjeno") {
-            $sStatus = "Potrditvena stran je bila klicana s TARIFFICATIONERROR=1.";
-        } else {
-            $sStatus = "Napaka.";
-        }
-
-        $return = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-
-<html xmlns="http://www.w3.org/1999/xhtml" >
-  <head>' . $sProviderData . '</head><body><b>Status nakupa:</b> ' . $sStatus . '<br /><br /><a href="' . $this->getCheckUrl() . '">Preveri nakup</a></body></html>';
-
-        // HTML vsebina plačljive strani
-        die($return);
     }
 
 }
