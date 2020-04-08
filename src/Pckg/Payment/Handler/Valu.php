@@ -16,7 +16,7 @@ class Valu extends AbstractHandler
     public function initHandler()
     {
         $this->config = [
-            'tarifficationid' => $this->environment->config('valu.tarifficationId'),
+            'tarifficationId' => $this->environment->config('valu.tarifficationId'),
             'url' => $this->environment->config('valu.url'),
         ];
 
