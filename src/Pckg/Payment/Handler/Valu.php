@@ -115,7 +115,7 @@ class Valu extends AbstractHandler
         $nRefreshCounter = $this->paymentRecord->getLog('valu:refreshcounter');
         $sPurchaseStatus = $this->paymentRecord->getLog('valu:purchasestatus');
         $sProviderData = $this->paymentRecord->getLog('valu:providerdata');
-        
+
         $this->paymentRecord->updateLog('valu:refreshcounter', $nRefreshCounter + 1);
 
         $nextUrl = $this->getCheckUrl();
@@ -137,8 +137,7 @@ class Valu extends AbstractHandler
 
         $return = '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
-  <head>' . $sProviderData . '</head><body><meta http-equiv="refresh" content="3'
-            . ($sPurchaseStatus === 'potrjeno' ? ('; url=' . $nextUrl) : '')
+  <head>' . $sProviderData . '</head><body><meta http-equiv="refresh" content="3; url=' . $nextUrl
             . '"><b>Status nakupa:</b> ' . $sStatus . '<br /><br /><a href="' . $this->getCheckUrl() . '">Preveri nakup</a></body></html>';
 
         die($return);

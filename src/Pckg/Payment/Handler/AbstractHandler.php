@@ -241,7 +241,7 @@ abstract class AbstractHandler implements Handler
     {
         return $this->environment->url('derive.payment.check', [
             'payment' => $this->paymentRecord,
-        ], true);
+        ]);
     }
 
     public function getCancelUrl()
