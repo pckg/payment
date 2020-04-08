@@ -296,7 +296,7 @@ class ValuHelper
         $EOL = "\r\n";
 
         $nPriceNoTax = round((ValuHelper::Functions_CDbl($sPrice) * 100) / (100 + ValuHelper::Functions_CDbl($sTaxRate)), 2);
-        $nPriceSum = round((ValuHelper::Functions_CDbl($sPrice) * Functions_CInt($sQuantity)), 2);
+        $nPriceSum = round((ValuHelper::Functions_CDbl($sPrice) * ValuHelper::Functions_CInt($sQuantity)), 2);
         $nPriceSumNoTax = round((ValuHelper::Functions_CDbl($nPriceSum) * 100) / (100 + ValuHelper::Functions_CDbl($sTaxRate)), 2);
         $nPriceTax = round($nPriceSum - $nPriceSumNoTax, 2);
 
