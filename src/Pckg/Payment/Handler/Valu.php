@@ -34,7 +34,7 @@ class Valu extends AbstractHandler
     {
         ValuHelper::Functions_ResponseExpires();
 
-        $nSkupnaCena = $this->order->getTotal();
+        $nSkupnaCena = $this->getTotalToPay();
 
         $user = $this->order->getOrder()->user;
         $sIme = $user->name;
@@ -64,7 +64,7 @@ class Valu extends AbstractHandler
 
         // dodamo artikel
         $description = $this->paymentRecord->getDescription();
-        $sXMLData = $sXMLData . ValuHelper::MakeOrderLine(
+        /*$sXMLData = $sXMLData . ValuHelper::MakeOrderLine(
                 $description,
                 $nSkupnaCena,
                 0.0,
@@ -74,12 +74,17 @@ class Valu extends AbstractHandler
             );
 
         // generiramo zaključek naročila
-        $sXMLData = $sXMLData . ValuHelper::MakeOrderEnd();
+        $sXMLData = $sXMLData . ValuHelper::MakeOrderEnd();*/
+
+        $sXMLData = '<meta name="Price" content="' . $this->getTotalToPay() . '">
+ <meta name="Quantity" content="1">
+ <meta name="VATRate" content="20">
+ <meta name="Description" content="' . htmlentities($this->getDescription()) .'">
+ <meta name="Currency" content="' . $this->getCurrency() . '">';
 
         /**
          * Update data in database.
          */
-        $confirmationId = $this->getPaymentRecord()->hash;
         $sProviderDataX = $sXMLData; // str_replace("'", "''", $sXMLData); // ???
 
         $this->paymentRecord->addLog('valu:purchasestatus', 'vobdelavi');
@@ -87,7 +92,7 @@ class Valu extends AbstractHandler
         $this->paymentRecord->addLog('valu:providerdata', $sProviderDataX);
 
         // sestavimo url
-        $url = $this->config['url'] . "?TARIFFICATIONID=" . $this->config['tarifficationId'] . "&ConfirmationID=" . $sConfirmationID;
+        $url = $this->config['url'] . "?TARIFFICATIONID=" . $this->config['tarifficationId'] . "&ConfirmationID=" . $this->getPaymentRecord()->hash;
 
         return [
             'success' => true,
@@ -96,7 +101,7 @@ class Valu extends AbstractHandler
     }
 
     /**
-     * Valu calls our endpoint to confirm the purchase.
+     * Valu calls our endpoint to confirm the purchase, async.
      */
     public function getInfo()
     {
@@ -175,7 +180,8 @@ class Valu extends AbstractHandler
         if ($nRefreshCounter > 60) {
             response()->redirect($this->getErrorUrl());
         } else if ($sPurchaseStatus == "vobdelavi") {
-            response()->redirect($this->getWaitingUrl());
+            // ok
+            // response()->redirect($this->getWaitingUrl()); //
         } else if ($sPurchaseStatus == "potrjeno") {
             $this->paymentRecord->updateLog('valu:purchasestatus', 'prikazano');
             response()->redirect($this->getSuccessUrl());
@@ -185,7 +191,7 @@ class Valu extends AbstractHandler
             $sStatus = "Napaka.";
         }
 
-        $return = $sProviderData . '<br /><b>Status nakupa:</b> ' . $sStatus . '<br />' . $sData . '<br /><br /><br /><a href="' . $sMyName . '">Na domačo stran</a>';
+        $return = $sProviderData . '<br /><b>Status nakupa:</b> ' . $sStatus . '<br />' . $sData . '<br /><br /><br /><a href="' . $this->getCheckUrl() . '">Preveri nakup</a>';
 
         // HTML vsebina plačljive strani
         return $return;

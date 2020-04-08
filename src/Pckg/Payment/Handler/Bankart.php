@@ -152,12 +152,12 @@ class Bankart extends AbstractHandler implements Handler
         $myTransactionId = $callbackResult->getTransactionId();
         $gatewayTransactionId = $callbackResult->getReferenceId();
 
-        if ($callbackResult->getResult() == Result::RESULT_OK) {
+        if ($callbackResult->getResult() == \PaymentGateway\Client\Callback\Result::RESULT_OK) {
             $callbackResult->getResult();
 
             $this->approvePayment("Bankart #" . $gatewayTransactionId, $callbackResult, $gatewayTransactionId);
 
-        } elseif ($callbackResult->getResult() == Result::RESULT_ERROR) {
+        } elseif ($callbackResult->getResult() == \PaymentGateway\Client\Callback\Result::RESULT_ERROR) {
             $errors = $callbackResult->getErrors();
             $this->errorPayment($errors);
         }
