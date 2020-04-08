@@ -2,15 +2,18 @@
 
 use Pckg\Database\Helper\Convention;
 use Pckg\Payment\Handler\Axcess;
+use Pckg\Payment\Handler\Bankart;
 use Pckg\Payment\Handler\Braintree;
 use Pckg\Payment\Handler\Handler;
 use Pckg\Payment\Handler\Icepay;
 use Pckg\Payment\Handler\MojCent;
+use Pckg\Payment\Handler\Monri;
 use Pckg\Payment\Handler\Valu;
 use Pckg\Payment\Handler\Paymill;
 use Pckg\Payment\Handler\PaypalGnp;
 use Pckg\Payment\Handler\PaypalRest;
 use Pckg\Payment\Handler\Proforma;
+use Pckg\Payment\Handler\VivaWallet;
 
 trait Handlers
 {
@@ -119,6 +122,16 @@ trait Handlers
         return $this->fullInitHandler(new Valu($this->order));
     }
 
+    public function useBankartHandler()
+    {
+        return $this->fullInitHandler(new Bankart($this->order));
+    }
+
+    public function useMonriHanlder()
+    {
+        return $this->fullInitHandler(new Monri($this->order));
+    }
+
     public function useIcePayHandler()
     {
         return $this->fullInitHandler(new Icepay($this->order));
@@ -132,6 +145,11 @@ trait Handlers
     public function useMojcentHandler()
     {
         return $this->fullInitHandler(new MojCent($this->order));
+    }
+
+    public function useVivaWalletHandler()
+    {
+        return $this->fullInitHandler(new VivaWallet($this->order));
     }
 
     public function useBankTransferHandler()

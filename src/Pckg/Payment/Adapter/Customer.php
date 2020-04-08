@@ -19,6 +19,6 @@ interface Customer
 
     public function getCity();
 
-    public function getCountry();
+    public function getCountryCode();
 
 }
