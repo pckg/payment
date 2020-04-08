@@ -5,25 +5,25 @@
                     :help="help.mode">
             <div slot="element">
                 <button class="btn"
-                        :class="paymentMethod.url === 'https://moneta.mobitel.si/placevanje/ssl/TarifficationE.dll' ? 'btn-success' : 'btn-default'"
+                        :class="paymentMethod.url === 'https://placilo.valu.si/placevanje/TarifficationE.dll' ? 'btn-success' : 'btn-default'"
                         title="Production / live mode"
-                        @click.prevent="paymentMethod.url = 'https://moneta.mobitel.si/placevanje/ssl/TarifficationE.dll'">
+                        @click.prevent="paymentMethod.url = 'https://placilo.valu.si/placevanje/TarifficationE.dll'">
                     Live
                 </button>
                 &nbsp;
                 <button class="btn"
-                        :class="paymentMethod.url !== 'https://moneta.mobitel.si/placevanje/ssl/TarifficationE.dll' ? 'btn-info' : 'btn-default'"
+                        :class="paymentMethod.url !== 'https://placilo.valu.si/placevanje/TarifficationE.dll' ? 'btn-info' : 'btn-default'"
                         title="Test / sandbox / dev mode"
-                        @click.prevent="paymentMethod.url = 'https://test.moneta.mobitel.si/placevanje/ssl/TarifficationE.dll'">
+                        @click.prevent="paymentMethod.url = 'https://test-placilo.valu.si/placevanje/TarifficationE.dll'">
                     Sandbox
                 </button>
             </div>
         </form-group>
 
         <div class="form-group">
-            <label>Tarrification ID</label>
+            <label>Tariffication ID</label>
             <div>
-                <input type="text" v-model="paymentMethod.tarrificationId" class="form-control"/>
+                <input type="text" v-model="paymentMethod.tarifficationId" class="form-control"/>
             </div>
         </div>
 
@@ -39,7 +39,7 @@
             collectSettings: function () {
                 return {
                     enabled: this.paymentMethod.enabled,
-                    tarrificationId: this.paymentMethod.tarrificationId,
+                    tarifficationId: this.paymentMethod.tarifficationId,
                     url: this.paymentMethod.url,
                 };
             }

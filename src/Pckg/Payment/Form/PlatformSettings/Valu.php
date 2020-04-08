@@ -10,7 +10,7 @@ class Valu extends Form implements Form\ResolvesOnRequest
     {
         $this->addDecorator($this->decoratorFactory->create(VueJS::class));
 
-        $this->addText('tarrificationId')->setLabel('Tarrification ID')->addValidator(new RequireWhenEnabled($this));
+        $this->addText('tarifficationId')->setLabel('Tariffication ID')->addValidator(new RequireWhenEnabled($this));
         $this->addText('url')->setLabel('URL')->addValidator(new RequireWhenEnabled($this));
 
         return $this;

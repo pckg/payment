@@ -11,6 +11,8 @@ interface Handler
 
     public function initPayment();
 
+    public function getInfo();
+
     public function getStart();
 
     public function check();

@@ -1,5 +1,6 @@
 <?php namespace Pckg\Payment\Handler;
 
+use Carbon\Carbon;
 use Derive\Orders\Record\OrdersBill;
 use Pckg\Payment\Handler\Valu\CMoneta;
 use Pckg\Payment\Handler\Valu\ValuHelper;
@@ -16,7 +17,7 @@ class Valu extends AbstractHandler
     {
         $this->config = [
             'tarifficationid' => $this->environment->config('valu.tarifficationId'),
-            'url'             => $this->environment->config('valu.url'),
+            'url' => $this->environment->config('valu.url'),
         ];
 
         $this->moneta = new CMoneta();
@@ -24,17 +25,12 @@ class Valu extends AbstractHandler
         return $this;
     }
 
-    public function getTotal()
-    {
-        return $this->order->getTotal();
-    }
-
-    public function getTotalToPay()
-    {
-        return $this->order->getTotalToPay();
-    }
-
-    public function startPartial()
+    /**
+     * User submits the intent, we redirect it to Valu.
+     *
+     * @return array|void
+     */
+    public function postStart()
     {
         ValuHelper::Functions_ResponseExpires();
 
@@ -67,9 +63,9 @@ class Valu extends AbstractHandler
         );
 
         // dodamo artikel
+        $description = $this->paymentRecord->getDescription();
         $sXMLData = $sXMLData . ValuHelper::MakeOrderLine(
-                __('order_payment') . " #" . $this->order->getId() . ' (' . $this->order->getNum(
-                ) . ' - ' . $this->order->getBills()->map('id')->implode(',') . ')',
+                $description,
                 $nSkupnaCena,
                 0.0,
                 1,
@@ -80,25 +76,18 @@ class Valu extends AbstractHandler
         // generiramo zaključek naročila
         $sXMLData = $sXMLData . ValuHelper::MakeOrderEnd();
 
-        // kreiramo CMoneta objekt
-        $myMoneta = $this->moneta;
+        /**
+         * Update data in database.
+         */
+        $confirmationId = $this->getPaymentRecord()->hash;
+        $sProviderDataX = $sXMLData; // str_replace("'", "''", $sXMLData); // ???
 
-        // dodaj nakup v DB
-        $sConfirmationID = $myMoneta->AddMonetaPurchase(
-            $sXMLData,
-            [
-                "user_id"  => $user->id,
-                "order_id" => $this->order->getId(),
-                "data"     => json_encode(
-                    [
-                        'billIds' => $this->order->getBills()->map('id'),
-                    ]
-                ),
-            ]
-        );
+        $this->paymentRecord->addLog('valu:purchasestatus', 'vobdelavi');
+        $this->paymentRecord->addLog('valu:refreshcounter', 0);
+        $this->paymentRecord->addLog('valu:providerdata', $sProviderDataX);
 
         // sestavimo url
-        $url = $this->config['url'] . "?TARIFFICATIONID=" . $this->config['tarifficationid'] . "&ConfirmationID=" . $sConfirmationID;
+        $url = $this->config['url'] . "?TARIFFICATIONID=" . $this->config['tarifficationId'] . "&ConfirmationID=" . $sConfirmationID;
 
         return [
             'success' => true,
@@ -106,6 +95,9 @@ class Valu extends AbstractHandler
         ];
     }
 
+    /**
+     * Valu calls our endpoint to confirm the purchase.
+     */
     public function check()
     {
         ValuHelper::Functions_ResponseExpires();
@@ -118,60 +110,51 @@ class Valu extends AbstractHandler
         $sIP = ValuHelper::Functions_GetServerVariable('REMOTE_ADDR');
         $sOutput = "<error>1</error>";
 
+        $this->paymentRecord->addLog('check', ['confirmationSignature' => $sConfirmationSignature, 'tarifficationError' => $nTarifficationError, 'confirmationIdStatus' => $sConfirmationIDStatus]);
+
+        /**
+         * @T00D00 - this can be implemented after we HTTPS-offload traffic on proxy.
+         */
         // preverjanje IP Monete
-        if (($sIP == "213.229.249.103") || ($sIP == "213.229.249.104") || ($sIP == "213.229.249.117")) {
+        if (true || ($sIP == "213.229.249.103") || ($sIP == "213.229.249.104") || ($sIP == "213.229.249.117")) {
             // kreiranje CMoneta objekta
             $myMoneta = $this->moneta;
+            $purchaseStatus = $this->paymentRecord->getLog('valu:purchasestatus');
 
             // zahtevek za status nakupa?
             if ($sConfirmationIDStatus != "") {
-                if ($myMoneta->FindConfirmationID($sConfirmationIDStatus)) {
-                    $sOutput = "<status>" . $myMoneta->Get_PurchaseStatus() . "</status>";
-                }
-            } else {
-                // Iskanje ConfirmationID nakupa in potrjevanje nakupa
-                if ($myMoneta->FindConfirmationID($sConfirmationID)) {
-                    $sPurchaseStatus = $myMoneta->Get_PurchaseStatus();
+                $sOutput = "<status>" . $content . "</status>";
+            } else if ($purchaseStatus == "vobdelavi") {
+                if ($nTarifficationError == 0) {
+                    $sOutput = "<error>0</error>"; // tell moneta to make a payment
 
-                    if ($sPurchaseStatus == "vobdelavi") {
-                        if ($nTarifficationError == 0) {
-                            $myMoneta->ConfirmPurchase(
-                                "potrjeno",
-                                $sConfirmationID,
-                                $sConfirmationSignature,
-                                $nTarifficationError
-                            );
-                            $sOutput = "<error>0</error>";
+                    $this->approvePayment('Moneta #' . $sConfirmationID, null, $sConfirmationID);
 
-                            $this->approvePayment('Moneta #' . $sConfirmationID, null, $sConfirmationID);
+                    $this->paymentRecord->updateLog('valu:purchasestatus', 'potrjeno');
 
-                        } else {
-                            $this->errorPayment();
-                            $myMoneta->ConfirmPurchase(
-                                "zavrnjeno",
-                                $sConfirmationID,
-                                $sConfirmationSignature,
-                                $nTarifficationError
-                            );
-                        }
-                    }
+                } else {
+                    $this->errorPayment();
+
+                    $this->paymentRecord->updateLog('valu:purchasestatus', 'zavrnjeno');
                 }
             }
         }
 
-        error_log("=== Moneta: " . nl2br($sOutput));
-
         die($sOutput);
     }
 
-    public function waiting()
+    /**
+     * User is redirected back to our store, we need to display him the status.
+     * Should we redirect him to /waiting page and there make some checks?
+     *
+     * @return string|void
+     */
+    public function getInfo()
     {
         ValuHelper::Functions_ResponseExpires();
 
-        //$sMyName = 'http://' . Functions_GetServerVariable('HTTP_HOST') . Functions_GetServerVariable('SCRIPT_NAME');
-        $sMyName = "https://gremonaparty.com";
+        $sMyName = config('url');
 
-        $sConfirmationID = "";
         $sStatus = "";
         $sProviderData = "";
 
@@ -179,72 +162,33 @@ class Valu extends AbstractHandler
         $sData = "";
 
         // Branje parametra ConfirmationID
-        $sConfirmationID = ValuHelper::Functions_RequestString("ConfirmationID", 32);
-        //$sConfirmationID = "09082013100741";
+        $sConfirmationID = $this->paymentRecord->hash;
 
         // kreiranje CMoneta objekta
         $myMoneta = $this->moneta;
 
-        // Iskanje ConfirmationID nakupa
-        if (!$myMoneta->FindConfirmationID($sConfirmationID)) {
-            $sStatus = "ConfirmationID ne obstaja.";
+        $nRefreshCounter = $this->paymentRecord->getLog('valu:refreshcounter');
+        $sPurchaseStatus = $this->paymentRecord->getLog('valu:purchasestatus');
+        $sProviderData = $this->paymentRecord->getLog('valu:providerdata');
+        $this->paymentRecord->updateLog('valu:refreshcounter', $nRefreshCounter + 1);
+
+        if ($nRefreshCounter > 60) {
+            response()->redirect($this->getErrorUrl());
+        } else if ($sPurchaseStatus == "vobdelavi") {
+            response()->redirect($this->getWaitingUrl());
+        } else if ($sPurchaseStatus == "potrjeno") {
+            $this->paymentRecord->updateLog('valu:purchasestatus', 'prikazano');
+            response()->redirect($this->getSuccessUrl());
+        } else if ($sPurchaseStatus == "zavrnjeno") {
+            $sStatus = "Potrditvena stran je bila klicana s TARIFFICATIONERROR=1.";
         } else {
-            $nRefreshCounter = $myMoneta->Get_RefreshCounter();
-            $sPurchaseStatus = $myMoneta->Get_PurchaseStatus();
-            $sProviderData = $myMoneta->Get_ProviderData();
-
-            if ($nRefreshCounter > 60) {
-                $sStatus = "Potrditev ni uspela.";
-            } else if ($sPurchaseStatus == "vobdelavi") {
-                $sStatus = "čakam na potrditev...";
-            } else if ($sPurchaseStatus == "zavrnjeno") {
-                $sStatus = "Potrditvena stran je bila klicana s TARIFFICATIONERROR=1.";
-            } else if ($sPurchaseStatus == "potrjeno") {
-                $sStatus = "Potrjevanje uspešno.";
-                $sData = "<h1>Zahvaljujemo se vam za nakup.</h1>";
-
-                $myMoneta->SetPurchaseStatus("prikazano", $sConfirmationID);
-            } else {
-                $sStatus = "Napaka.";
-            }
-
-            // povečaj števec osvežitev
-            $myMoneta->AddRefreshCounter($sConfirmationID);
-
-            if ($sPurchaseStatus == "potrjeno") {
-                response()->redirect(
-                    url('derive.payment.success', ['handler' => 'moneta', 'order' => $this->order->getOrder()])
-                );
-            }
+            $sStatus = "Napaka.";
         }
 
-        $return = ($sStatus == "čakam na potrditev..."
-                ? ('<meta http-equiv="refresh" content="3; url=' . $sMyName . $_SERVER["REQUEST_URI"] . '" />')
-                : null) .
-                  $sProviderData . '<br /><b>Status nakupa:</b> ' . $sStatus . '<br />' .
-                  $sData . '<br /><br /><br /><a href="index.php">Nazaj</a>';
+        $return = $sProviderData . '<br /><b>Status nakupa:</b> ' . $sStatus . '<br />' . $sData . '<br /><br /><br /><a href="' . $sMyName . '">Na domačo stran</a>';
 
         // HTML vsebina plačljive strani
         return $return;
-    }
-
-    protected function makeTransaction($paymentId)
-    {
-    }
-
-    protected function handleTransactionResponse($response)
-    {
-        if ($response->getStatus() == 'closed') {
-            $this->order->setPaid();
-        }
-    }
-
-    public function getStartUrl()
-    {
-        return $this->environment->url(
-            'derive.payment.start',
-            ['handler' => 'moneta', 'order' => $this->order->getOrder()]
-        );
     }
 
 }

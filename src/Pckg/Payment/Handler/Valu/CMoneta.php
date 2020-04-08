@@ -7,31 +7,6 @@ class CMoneta
 
     var $m_nRefreshCounter, $m_sPurchaseStatus, $m_sProviderData;
 
-    public function AddMonetaPurchase($sProviderData, $additional = [])
-    {
-        $confirmationId = $this->MakeUniqueConfirmationID();
-        $sProviderDataX = str_replace("'", "''", $sProviderData);
-
-        $data = array_merge(
-            $additional,
-            [
-                'confirmationid' => $confirmationId,
-                'startdate'      => Carbon::now(),
-                'purchasestatus' => 'vobdelavi',
-                'refreshcounter' => '0',
-                'providerdata'   => $sProviderDataX,
-            ]
-        );
-
-        $moneta = MonetaRecord::create($data);
-
-        if ((!$moneta) || ($confirmationId == "")) {
-            die ('Error:confirmationid=' . $confirmationId);
-        }
-
-        return $confirmationId;
-    }
-
     public function SetPurchaseStatus($status, $confirmationId)
     {
         $moneta = (new Moneta())->where('confirmationid', $confirmationId)->oneOrFail();

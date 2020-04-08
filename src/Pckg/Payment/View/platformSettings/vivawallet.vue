@@ -21,9 +21,9 @@
         </form-group>
 
         <div class="form-group">
-            <label>Tarrification ID</label>
+            <label>Tariffication ID</label>
             <div>
-                <input type="text" v-model="paymentMethod.tarrificationId" class="form-control"/>
+                <input type="text" v-model="paymentMethod.tarifficationId" class="form-control"/>
             </div>
         </div>
 
@@ -39,7 +39,7 @@
             collectSettings: function () {
                 return {
                     enabled: this.paymentMethod.enabled,
-                    tarrificationId: this.paymentMethod.tarrificationId,
+                    tarifficationId: this.paymentMethod.tarifficationId,
                     url: this.paymentMethod.url,
                 };
             }

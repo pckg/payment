@@ -70,6 +70,10 @@ abstract class AbstractHandler implements Handler
     {
     }
 
+    public function getInfo()
+    {
+    }
+
     public function check()
     {
     }

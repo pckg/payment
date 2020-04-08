@@ -117,11 +117,37 @@ class Payment extends Record
     public function addLog($status, $log = null)
     {
         return PaymentLog::create([
-                                      'payment_id' => $this->id,
-                                      'created_at' => Carbon::now(),
-                                      'status'     => $status,
-                                      'data'       => json_encode($log),
-                                  ]);
+            'payment_id' => $this->id,
+            'created_at' => Carbon::now(),
+            'status'     => $status,
+            'data'       => json_encode($log),
+        ]);
+    }
+
+    public function getLog($status)
+    {
+        $log = PaymentLog::gets([
+            'payment_id' => $this->id,
+            'status' => $status,
+        ]);
+
+        if (!$log) {
+            return null;
+        }
+
+        return json_decode($log->data, true);
+    }
+
+    public function updateLog($status, $data)
+    {
+        $log = PaymentLog::getOrCreate([
+            'payment_id' => $this->id,
+            'status' => $status,
+        ], null, [
+            'created_at' => Carbon::now(),
+        ]);
+
+        $log->setAndSave(['data' => json_encode($data)]);
     }
 
     public function getUniqueId()
