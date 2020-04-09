@@ -10,8 +10,9 @@ class Monri extends Form implements Form\ResolvesOnRequest
     {
         $this->addDecorator($this->decoratorFactory->create(VueJS::class));
 
-        $this->addText('apiKey')->setLabel('Api Key')->addValidator(new RequireWhenEnabled($this));
-        $this->addText('methods')->setLabel('Methods')->addValidator(new RequireWhenEnabled($this));
+        $this->addText('url')->setLabel('URL')->addValidator(new RequireWhenEnabled($this));
+        $this->addText('apiKey')->setLabel('API key')->addValidator(new RequireWhenEnabled($this));
+        $this->addText('authenticityToken')->setLabel('Authenticity token')->addValidator(new RequireWhenEnabled($this));
 
         return $this;
     }

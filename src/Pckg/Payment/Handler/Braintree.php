@@ -100,7 +100,6 @@ class Braintree extends AbstractHandler implements Handler
             return [
                 'success' => true,
                 'modal'   => 'success',
-                'payment' => $this->paymentRecord,
             ];
         }
 

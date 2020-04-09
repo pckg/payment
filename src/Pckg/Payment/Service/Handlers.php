@@ -127,7 +127,7 @@ trait Handlers
         return $this->fullInitHandler(new Bankart($this->order));
     }
 
-    public function useMonriHanlder()
+    public function useMonriHandler()
     {
         return $this->fullInitHandler(new Monri($this->order));
     }

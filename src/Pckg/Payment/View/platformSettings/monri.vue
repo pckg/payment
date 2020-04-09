@@ -5,25 +5,32 @@
                     :help="help.mode">
             <div slot="element">
                 <button class="btn"
-                        :class="paymentMethod.url === 'https://moneta.mobitel.si/placevanje/ssl/TarifficationE.dll' ? 'btn-success' : 'btn-default'"
+                        :class="paymentMethod.url === 'https://ipg.monri.com' ? 'btn-success' : 'btn-default'"
                         title="Production / live mode"
-                        @click.prevent="paymentMethod.url = 'https://moneta.mobitel.si/placevanje/ssl/TarifficationE.dll'">
+                        @click.prevent="paymentMethod.url = 'https://ipg.monri.com'">
                     Live
                 </button>
                 &nbsp;
                 <button class="btn"
-                        :class="paymentMethod.url !== 'https://moneta.mobitel.si/placevanje/ssl/TarifficationE.dll' ? 'btn-info' : 'btn-default'"
+                        :class="paymentMethod.url !== 'https://ipg.monri.com' ? 'btn-info' : 'btn-default'"
                         title="Test / sandbox / dev mode"
-                        @click.prevent="paymentMethod.url = 'https://test.moneta.mobitel.si/placevanje/ssl/TarifficationE.dll'">
+                        @click.prevent="paymentMethod.url = 'https://ipgtest.monri.com'">
                     Sandbox
                 </button>
             </div>
         </form-group>
 
         <div class="form-group">
-            <label>Tariffication ID</label>
+            <label>API key</label>
             <div>
-                <input type="text" v-model="paymentMethod.tarifficationId" class="form-control"/>
+                <input type="text" v-model="paymentMethod.apiKey" class="form-control"/>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Authenticity token</label>
+            <div>
+                <input type="text" v-model="paymentMethod.authenticityToken" class="form-control"/>
             </div>
         </div>
 
@@ -39,7 +46,8 @@
             collectSettings: function () {
                 return {
                     enabled: this.paymentMethod.enabled,
-                    tarifficationId: this.paymentMethod.tarifficationId,
+                    authenticityToken: this.paymentMethod.authenticityToken,
+                    apiKey: this.paymentMethod.apiKey,
                     url: this.paymentMethod.url,
                 };
             }
