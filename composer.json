@@ -20,6 +20,16 @@
     "paymill/paymill": "4.*",
     "paypal/rest-api-sdk-php": "1.*",
     "braintree/braintree_php" : "3.*",
-    "mollie/mollie-api-php": "^2.0"
-  }
+    "mollie/mollie-api-php": "^2.0",
+    "stripe/stripe-php": "7.*",
+    "wirecard/payment-sdk-php": "dev-master",
+    "datalinx/pgc-php-client": "dev-master",
+    "icepay/api": "^0.0.1"
+  },
+  "repositories": [
+    {
+      "type": "vcs",
+      "url":  "git@github.com:DataLinx/PHPPaymentGateway.git"
+    }
+  ]
 }
