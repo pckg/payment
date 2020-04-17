@@ -55,6 +55,7 @@ class Payment extends Record
             'handler'    => $handler,
             'status'     => 'created',
             'created_at' => date('Y-m-d H:i:s'),
+            'currency'   => config('pckg.payment.currency'),
         ];
 
         /**
