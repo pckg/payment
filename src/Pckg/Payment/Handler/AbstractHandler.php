@@ -186,6 +186,27 @@ abstract class AbstractHandler implements Handler
                                              'transaction_id' => $transactionId,
                                          ]);
     }
+    
+    public function approveRefund($description, $log, $transactionId)
+    {
+        $this->paymentRecord->addLog('completed', $log);
+
+        $this->paymentRecord->setAndSave(['status' => 'refund', 'transaction_id' => $json->id]);
+
+        $instalments = $this->paymentRecord->getBills();
+        $order = $instalments->first()->order();
+
+        OrdersBill::create([
+            'order_id'     => $order->id,
+            'dt_added'     => date('Y-m-d H:i:s'),
+            'dt_confirmed' => date('Y-m-d H:i:s'),
+            'dt_valid'     => date('Y-m-d H:i:s'),
+            'type'         => 'refund',
+            'price'        => $amount,
+            'payed'        => $amount,
+            'notes'        => $description,
+        ]);    
+    }
 
     public function errorPayment($data = null, $logStatus = 'error')
     {

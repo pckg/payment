@@ -12,6 +12,7 @@ use Pckg\Payment\Form\PlatformSettings\Valu;
 use Pckg\Payment\Form\PlatformSettings\Paypal;
 use Pckg\Payment\Form\PlatformSettings\Upn;
 use Pckg\Payment\Handler\PaypalGnp;
+use Pckg\Payment\Handler\Stripe;
 use Pckg\Payment\Service\Handlers;
 use Pckg\Payment\Service\PckgPayment;
 
@@ -25,10 +26,10 @@ class Payment
         /**
          * Currently only paypal is supported.
          */
-        if ($payment->handler != PaypalGnp::class) {
+        if (!in_array($payment->handler, [PaypalGnp::class, Stripe::class])) {
             return [
                 'success' => false,
-                'message' => 'Only Paypal refunds are currently supported',
+                'message' => 'Refunds are not supported',
             ];
         }
 

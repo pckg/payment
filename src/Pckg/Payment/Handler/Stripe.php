@@ -1,5 +1,7 @@
 <?php namespace Pckg\Payment\Handler;
 
+use Derive\Orders\Record\OrdersBill;
+use Pckg\Payment\Record\Payment;
 use Throwable;
 
 class Stripe extends AbstractHandler implements Handler
@@ -8,6 +10,13 @@ class Stripe extends AbstractHandler implements Handler
     protected $clientSecret;
 
     protected $handler = 'stripe';
+
+    public function initHandler()
+    {
+        \Stripe\Stripe::setApiKey(config('pckg.payment.provider.stripe.secret'));
+
+        return $this;
+    }
 
     /**
      * @return string
@@ -31,8 +40,6 @@ class Stripe extends AbstractHandler implements Handler
     {
         $responseData = null;
         try {
-            \Stripe\Stripe::setApiKey(config('pckg.payment.provider.stripe.secret'));
-
             $intent = \Stripe\PaymentIntent::create([
                                                         'amount'   => $this->getTotalToPay(),
                                                         'currency' => strtolower($this->order->getCurrency()),
@@ -116,6 +123,52 @@ class Stripe extends AbstractHandler implements Handler
                 'success' => false,
             ];
         }
+    }
+
+    public function refund(Payment $payment, $amount = null)
+    {
+        $refundPaymentRecord = Payment::createForRefund($payment, $amount);
+        $params = [
+            //'id' => $refundPaymentRecord->hash,
+            'amount' => round($amount * 100),
+            'currency' => $payment->currency,
+            //'description' => 'REFUND',
+            'payment_intent' => $payment->transaction_id,
+            'reason' => post('reason', 'Test API refund'),
+        ];
+
+
+        /**
+         * Save log.
+         */
+        $refundPaymentRecord->addLog('request:refund', $params);
+
+        try {
+            $refund = \Stripe\Refund::create($params);
+
+            if ($refund->status === 'succeeded') {
+                $this->paymentRecord = $refundPaymentRecord;
+                $this->approveRefund('Refund Stripe #' . $refund->id, $refund, $refund->id);
+
+                return [
+                    'success' => true,
+                ];
+            }
+
+            $refundPaymentRecord->addLog('response:failed', $refund);
+        } catch (Throwable $e) {
+            $refundPaymentRecord->addLog('response:exception');
+
+            return [
+                'success' => false,
+                'message' => 'Refunds are not available at the moment.' . exception($e),
+            ];
+        }
+
+        return [
+            'success' => false,
+            'message' => 'Refunds are not available at the moment',
+        ];
     }
 
 }
