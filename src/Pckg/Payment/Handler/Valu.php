@@ -20,8 +20,6 @@ class Valu extends AbstractHandler
             'url' => $this->environment->config('valu.url'),
         ];
 
-        $this->moneta = new CMoneta();
-
         return $this;
     }
 
