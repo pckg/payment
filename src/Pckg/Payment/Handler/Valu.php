@@ -110,6 +110,7 @@ class Valu extends AbstractHandler
      */
     public function getInfo()
     {
+        $this->paymentRecord->addLog('getInfo', request()->get()->all());
         ValuHelper::Functions_ResponseExpires();
 
         $sMyName = config('url');
@@ -142,6 +143,8 @@ class Valu extends AbstractHandler
   <head>' . $sProviderData . '</head><body><meta http-equiv="refresh" content="3; url=' . $nextUrl
             . '"><b>Status nakupa:</b> ' . $sStatus . '<br /><br /><a href="' . $this->getCheckUrl() . '">Preveri nakup</a></body></html>';
 
+
+        $this->paymentRecord->addLog('getInfo:response', $return);
         die($return);
     }
 
@@ -151,6 +154,7 @@ class Valu extends AbstractHandler
      */
     public function getNotification()
     {
+        $this->paymentRecord->addLog('getNotification', request()->get()->all());
         ValuHelper::Functions_ResponseExpires();
 
         // branje vhodnih parametrov
@@ -189,6 +193,7 @@ class Valu extends AbstractHandler
                 }
             }
         }
+        $this->paymentRecord->addLog('getNotification:output', $sOutput);
 
         die($sOutput);
     }
