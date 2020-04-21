@@ -5,16 +5,16 @@
                     :help="help.mode">
             <div slot="element">
                 <button class="btn"
-                        :class="paymentMethod.url === 'https://moneta.mobitel.si/placevanje/ssl/TarifficationE.dll' ? 'btn-success' : 'btn-default'"
+                        :class="paymentMethod.url === 'https://www.vivapayments.com/' ? 'btn-success' : 'btn-default'"
                         title="Production / live mode"
-                        @click.prevent="paymentMethod.url = 'https://moneta.mobitel.si/placevanje/ssl/TarifficationE.dll'">
+                        @click.prevent="paymentMethod.url = 'https://www.vivapayments.com/'">
                     Live
                 </button>
                 &nbsp;
                 <button class="btn"
-                        :class="paymentMethod.url !== 'https://moneta.mobitel.si/placevanje/ssl/TarifficationE.dll' ? 'btn-info' : 'btn-default'"
+                        :class="paymentMethod.url !== 'https://www.vivapayments.com/' ? 'btn-info' : 'btn-default'"
                         title="Test / sandbox / dev mode"
-                        @click.prevent="paymentMethod.url = 'https://test.moneta.mobitel.si/placevanje/ssl/TarifficationE.dll'">
+                        @click.prevent="paymentMethod.url = 'https://demo.vivapayments.com/'">
                     Sandbox
                 </button>
             </div>

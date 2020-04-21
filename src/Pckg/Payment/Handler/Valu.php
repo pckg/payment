@@ -41,10 +41,10 @@ class Valu extends AbstractHandler
         $sPriimek = $user->surname;
         $sDavcna = null;
         $sEmail = $user->email;
-        $sUlica = $user->address;
+        $sUlica = null;
         $sHisnast = null;
-        $sPosta = null;//@$city['code'];
-        $sKraj = null;//@$city['title'];
+        $sPosta = null;
+        $sKraj = null;
 
         // kreiramo xml
         $sXMLData = ValuHelper::MakeOrderHead(
@@ -78,7 +78,7 @@ class Valu extends AbstractHandler
 
         $sXMLData = '<meta name="Price" content="' . $this->getTotalToPay() . '">
  <meta name="Quantity" content="1">
- <meta name="VATRate" content="22">
+ <meta name="VATRate" content="">
  <meta name="Description" content="' . htmlentities($this->getDescription()) .'">
  <meta name="Currency" content="' . $this->getCurrency() . '">';
 
@@ -103,6 +103,8 @@ class Valu extends AbstractHandler
     /**
      * User is redirected back to our store, we need to display him the status.
      * Should we redirect him to /waiting page and there make some checks?
+     *
+     * a.k.a nakup.php
      *
      * @return string|void
      */
@@ -145,6 +147,7 @@ class Valu extends AbstractHandler
 
     /**
      * Valu calls our endpoint to confirm the purchase, async.
+     * a.k.a. potrditev.php
      */
     public function getNotification()
     {
