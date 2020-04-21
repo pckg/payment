@@ -119,7 +119,7 @@ class Valu extends AbstractHandler
 
         $this->paymentRecord->updateLog('valu:refreshcounter', $nRefreshCounter + 1);
 
-        $nextUrl = request()->getUrl();
+        $nextUrl = request()->getUrl() . '?ConfirmationID=' . $this->paymentRecord->hash;
         if ($nRefreshCounter > 60) {
             $nextUrl = $this->getErrorUrl();
             // response()->redirect($this->getErrorUrl());
@@ -176,7 +176,7 @@ class Valu extends AbstractHandler
 
             // zahtevek za status nakupa?
             if ($sConfirmationIDStatus != "") {
-                $sOutput = "<status>" . $content . "</status>";
+                $sOutput = "<status>" . $purchaseStatus . "</status>";
             } else if ($purchaseStatus == "vobdelavi") {
                 if ($nTarifficationError == 0) {
                     $sOutput = "<error>0</error>"; // tell moneta to make a payment

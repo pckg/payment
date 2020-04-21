@@ -59,11 +59,14 @@ class Bankart extends AbstractHandler implements Handler
         /**
          * The following fields are mandatory: customer.billingAddress1, customer.billingCity, customer.billingPostcode
          */
-        $customer->setBillingCountry($orderCustomer->getCountryCode())
-            ->setEmail($orderCustomer->getEmail())
-            ->setBillingAddress1('Šmartno ob Paki 103')
-            ->setBillingCity('Šmartno ob Paki')
-            ->setBillingPostcode('3327');
+        $billingAddress = $this->order->getBillingAddress();
+        if ($billingAddress) {
+            $customer->setBillingCountry(strtoupper($billingAddress->country->code))
+                ->setEmail($orderCustomer->getEmail())
+                ->setBillingAddress1($billingAddress->address_line1)
+                ->setBillingCity($billingAddress->city)
+                ->setBillingPostcode($billingAddress->postal);
+        }
 
         /**
          * Set direct transaction, no pre or after authorization.
@@ -128,6 +131,7 @@ class Bankart extends AbstractHandler implements Handler
             return [
                 'success' => false,
                 'message' => 'Bankart did not return successful response',
+                'result' => $result,
             ];
         } catch (Throwable $e) {
             return [
@@ -147,14 +151,14 @@ class Bankart extends AbstractHandler implements Handler
         $client = $this->client;
 
         $client->validateCallbackWithGlobals();
-        $callbackResult = $client->readCallback(file_get_contents('php://input'));
+        $input = file_get_contents('php://input');
+        $this->paymentRecord->addLog('postNotification', $input);
+        $callbackResult = $client->readCallback($input);
 
         $myTransactionId = $callbackResult->getTransactionId();
         $gatewayTransactionId = $callbackResult->getReferenceId();
 
         if ($callbackResult->getResult() == \PaymentGateway\Client\Callback\Result::RESULT_OK) {
-            $callbackResult->getResult();
-
             $this->approvePayment("Bankart #" . $gatewayTransactionId, $callbackResult, $gatewayTransactionId);
 
         } elseif ($callbackResult->getResult() == \PaymentGateway\Client\Callback\Result::RESULT_ERROR) {
