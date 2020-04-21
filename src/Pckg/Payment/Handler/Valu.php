@@ -76,7 +76,7 @@ class Valu extends AbstractHandler
 
         $sXMLData = '<meta name="Price" content="' . $this->getTotalToPay() . '">
  <meta name="Quantity" content="1">
- <meta name="VATRate" content="">
+ <meta name="VATRate" content="0">
  <meta name="Description" content="' . htmlentities($this->getDescription()) .'">
  <meta name="Currency" content="' . $this->getCurrency() . '">';
 
@@ -119,7 +119,7 @@ class Valu extends AbstractHandler
 
         $this->paymentRecord->updateLog('valu:refreshcounter', $nRefreshCounter + 1);
 
-        $nextUrl = request()->getUrl() . '?ConfirmationID=' . $this->paymentRecord->hash;
+        $nextUrl = config('url') . request()->getUrl() . '?ConfirmationID=' . $this->paymentRecord->hash;
         if ($nRefreshCounter > 60) {
             $nextUrl = $this->getErrorUrl();
             // response()->redirect($this->getErrorUrl());
