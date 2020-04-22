@@ -1,6 +1,7 @@
 <?php namespace Pckg\Payment\Handler;
 
 use GuzzleHttp\Client;
+use Pckg\Framework\Exception;
 
 class VivaWallet extends AbstractHandler implements Handler
 {
@@ -158,9 +159,27 @@ class VivaWallet extends AbstractHandler implements Handler
 
     public function postCompanyNotification()
     {
-        return [
-            'success' => true,
-        ];
+        $this->paymentRecord->addLog('postCompanyNotification', post()->all());
+
+        $eventTypeId = post('EventTypeId', null);
+        if ($eventTypeId === 1796) {
+            $transactionId = post('EventData.TransactionId', null);
+            $this->approvePayment('VivaWallet #' . $transactionId, post()->all(), $transactionId);
+
+            return [
+                'success' => true
+            ];
+        } elseif ($eventTypeId === 1797) {
+            /**
+             * Refund a transaction?
+             */
+
+            return [
+                'success' => true,
+            ];
+        }
+
+        throw new Exception('Notification method event not supported.');
     }
 
 }
