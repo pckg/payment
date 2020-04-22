@@ -13,7 +13,7 @@ class Payment
 
     protected $environment;
 
-    public function setOrder(Order $order)
+    public function setOrder(Order $order = null)
     {
         $this->order = $order;
 
@@ -62,7 +62,7 @@ class Payment
         return $this->environment->config($handler . '.enabled');
     }
 
-    public function prepare(Order $order, $handler, Log $logger)
+    public function prepare(Order $order = null, $handler, Log $logger)
     {
         $this->setOrder($order);
         $this->useHandler($handler);

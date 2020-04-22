@@ -141,7 +141,7 @@ class VivaWallet extends AbstractHandler implements Handler
         ];
     }
 
-    public function getNotification()
+    public function getCompanyNotification()
     {
         $url = $this->config['url'] . 'api/messages/config/token';
         $bearer = $this->getToken();
@@ -156,7 +156,7 @@ class VivaWallet extends AbstractHandler implements Handler
         return json_decode($response->getBody()->getContents(), true);
     }
 
-    public function postNotification()
+    public function postCompanyNotification()
     {
         return [
             'success' => true,
