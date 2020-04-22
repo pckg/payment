@@ -63,12 +63,30 @@ class VivaWallet extends AbstractHandler implements Handler
     public function postStart()
     {
         $currency = $this->getCurrency();
-        if ($currency !== 'GBP') {
+
+        $currencyCode = null;
+        switch ($currency_code) {
+            case 'EUR':
+                $currencyCode = 978;
+                break;
+            case 'GBP':
+                $currencyCode = 826;
+                break;
+            case 'BGN':
+                $currencyCode = 975;
+                break;
+            case 'RON':
+                $currencyCode = 946;
+                break;
+        }
+
+        if (!$currency) {
             return [
                 'success' => false,
-                'message' => 'Only GBP is supported as currency'
+                'message' => $currency . ' is supported as currency'
             ];
         }
+
         $customer = $this->order->getCustomer();
 
         $data = [
@@ -79,7 +97,7 @@ class VivaWallet extends AbstractHandler implements Handler
             'allowRecurring' => false,
             'isPreAuth' => false,
             'amount' => $this->getTotalToPay(),
-            'currency' => $this->getCurrency(),
+            'currencyCode' => $currencyCode,
             'merchantTrns' => $this->paymentRecord->hash,
             'customerTrns' => $this->getDescription(),
             'disableCash' => true,
@@ -121,6 +139,21 @@ class VivaWallet extends AbstractHandler implements Handler
             'message' => 'VivaWallet error',
             'json' => $decoded,
         ];
+    }
+
+    public function getNotification()
+    {
+        $url = $this->config['url'] . 'api/messages/config/token';
+        $bearer = $this->getToken();
+        $response = $this->client->get($url, [
+            'headers' => [
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'Authorization' => 'Basic ' . $bearer
+            ]
+        ]);
+
+        return json_decode($response->getBody()->getContents(), true);
     }
 
     public function postNotification()
