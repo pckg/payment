@@ -21,9 +21,37 @@
         </form-group>
 
         <div class="form-group">
-            <label>Tariffication ID</label>
+            <label>Merchant ID</label>
             <div>
-                <input type="text" v-model="paymentMethod.tarifficationId" class="form-control"/>
+                <input type="text" v-model="paymentMethod.merchantId" class="form-control"/>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>API key</label>
+            <div>
+                <input type="text" v-model="paymentMethod.apiKey" class="form-control"/>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>API code</label>
+            <div>
+                <input type="text" v-model="paymentMethod.apiCode" class="form-control"/>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Client ID</label>
+            <div>
+                <input type="text" v-model="paymentMethod.clientId" class="form-control"/>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Client secret</label>
+            <div>
+                <input type="text" v-model="paymentMethod.clientSecret" class="form-control"/>
             </div>
         </div>
 
@@ -39,8 +67,12 @@
             collectSettings: function () {
                 return {
                     enabled: this.paymentMethod.enabled,
-                    tarifficationId: this.paymentMethod.tarifficationId,
                     url: this.paymentMethod.url,
+                    merchantId: this.paymentMethod.merchantId,
+                    apiKey: this.paymentMethod.apiKey,
+                    apiCode: this.paymentMethod.apiCode,
+                    clientId: this.paymentMethod.clientId,
+                    clientSecret: this.paymentMethod.clientSecret,
                 };
             }
         }

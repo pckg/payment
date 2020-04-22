@@ -10,8 +10,12 @@ class VivaWallet extends Form implements Form\ResolvesOnRequest
     {
         $this->addDecorator($this->decoratorFactory->create(VueJS::class));
 
-        $this->addText('apiKey')->setLabel('Api Key')->addValidator(new RequireWhenEnabled($this));
-        $this->addText('methods')->setLabel('Methods')->addValidator(new RequireWhenEnabled($this));
+        $this->addText('url')->setLabel('URL')->addValidator(new RequireWhenEnabled($this));
+        $this->addText('merchantId')->setLabel('Merchant ID')->addValidator(new RequireWhenEnabled($this));
+        $this->addText('apiKey')->setLabel('API key')->addValidator(new RequireWhenEnabled($this));
+        $this->addText('apiCode')->setLabel('API code')->addValidator(new RequireWhenEnabled($this));
+        $this->addText('clientId')->setLabel('Client ID')->addValidator(new RequireWhenEnabled($this));
+        $this->addText('clientSecret')->setLabel('Client secret')->addValidator(new RequireWhenEnabled($this));
 
         return $this;
     }
