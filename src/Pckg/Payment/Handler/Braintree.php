@@ -2,7 +2,9 @@
 
 use Braintree\ClientToken;
 use Braintree\Configuration;
+use Braintree\Gateway;
 use Braintree\Transaction;
+use Pckg\Payment\Record\Payment;
 use Throwable;
 
 /**
@@ -116,6 +118,39 @@ class Braintree extends AbstractHandler implements Handler
             'success' => false,
             'message' => $message,
             'modal'   => 'error',
+        ];
+    }
+
+    public function refund(Payment $payment, $amount = null)
+    {
+        $refundPaymentRecord = Payment::createForRefund($payment, $amount);
+
+        try {
+
+            $result = Configuration::gateway()->transaction()->refund($payment->transaction_id, $amount);
+
+            if ($result->success) {
+                $this->paymentRecord = $refundPaymentRecord;
+                $this->approveRefund('Refund Braintree #' . $result->transaction->id, $result, $refund->transaction->id);
+
+                return [
+                    'success' => true,
+                ];
+            }
+
+            $refundPaymentRecord->addLog('response:failed', $result);
+        } catch (Throwable $e) {
+            $refundPaymentRecord->addLog('response:exception');
+
+            return [
+                'success' => false,
+                'message' => 'Refunds are not available at the moment.' . exception($e),
+            ];
+        }
+
+        return [
+            'success' => false,
+            'message' => 'Refunds are not available at the moment',
         ];
     }
 

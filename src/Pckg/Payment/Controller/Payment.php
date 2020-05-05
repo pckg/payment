@@ -26,7 +26,7 @@ class Payment
         /**
          * Currently only paypal is supported.
          */
-        if (!in_array($payment->handler, [PaypalGnp::class, Stripe::class])) {
+        if (!in_array($payment->handler, [PaypalGnp::class, Stripe::class, \Pckg\Payment\Handler\Braintree::class])) {
             return [
                 'success' => false,
                 'message' => 'Refunds are not supported',

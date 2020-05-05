@@ -22,9 +22,11 @@ class Payment extends Record
             'user_id'    => auth('frontend')->user('id'),
             'price'      => $amount,
             'handler'    => $payment->handler,
+            'currency'   => $payment->currency,
             'status'     => 'created:refund',
             'created_at' => date('Y-m-d H:i:s'),
             'hash'       => sha1($amount . config('hash') . microtime()),
+            'data'       => json_encode(['billIds' => $payment->getBills()->map('id')->toArray()]),
         ];
 
         return static::create($data);
