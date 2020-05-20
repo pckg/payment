@@ -31,8 +31,9 @@ class Proforma extends AbstractHandler implements Handler
 
     public function downloadFile()
     {
-        return response()->download(path('private') . $this->downloadFolder . '/' . $this->paymentRecord->hash . '.pdf',
-                                    strtoupper($this->downloadFolder) . ' payment.pdf');
+        $original = path('private') . $this->downloadFolder . '/' . $this->paymentRecord->hash . '.pdf';
+        
+        return response()->download($original, strtoupper($this->downloadFolder) . ' payment.pdf');
     }
 
     protected function generateDownload()

@@ -63,9 +63,16 @@ class Payment
     {
         $company->applyConfig();
 
-        return [
+        /**
+         * Create handler and payment service.
+         */
+        $paymentService = $this->createPaymentService();
+        $paymentService->useHandler($paymentMethod);
+        $response = $paymentService->getHandler()->getCompanySettings();
+
+        return array_merge([
             'paymentMethod' => config('pckg.payment.provider.' . $paymentMethod, []),
-        ];
+        ], $response);
     }
 
     public function postCompanySettingsAction(Company $company, $paymentMethod)

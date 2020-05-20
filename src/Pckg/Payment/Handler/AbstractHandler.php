@@ -127,6 +127,11 @@ abstract class AbstractHandler implements Handler
 
     }
 
+    public function getCompanySettings()
+    {
+        return [];
+    }
+
     public function refund(Payment $payment, $amount = null)
     {
     }

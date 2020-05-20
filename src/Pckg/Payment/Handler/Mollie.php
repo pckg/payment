@@ -26,6 +26,15 @@ class Mollie extends AbstractHandler implements Handler
         return $this;
     }
 
+    public function getCompanySettings()
+    {
+        $paymentMethods = collect($this->mollie->methods->allActive(['resource' => 'orders']))->keyBy('id')->map('description')->all();
+
+        return [
+            'paymentMethods' => $paymentMethods,
+        ];
+    }
+
     private function getMolliePaymentData()
     {
         return [

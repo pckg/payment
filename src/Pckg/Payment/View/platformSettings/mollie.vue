@@ -63,18 +63,19 @@
         data: function () {
             return Object.assign(pckgPaymentConfig.data.call(this), {
                 paymentMethodOptions: {
-                    options: {
-                        'ideal': 'iDEAL',
-                        'bancontact': 'Bancontact',
-                        'giropay': 'GiroPay',
-                        'creditcard': 'Visa & Mastercard',
-                        'eps': 'EPS',
-                        'sofort': 'Sofort'
-                    }
+                    options: {}
                 }
             });
         },
+        created: function () {
+            this.initialFetch();
+        },
         methods: {
+            initialFetch: function () {
+                http.get('/api/payment-methods/' + this.paymentMethod.key + '/companies/' + this.myCompany.id + '/settings', function (data) {
+                    this.paymentMethodOptions.options = data.paymentMethods;
+                });
+            },
             collectSettings: function () {
                 return {
                     enabled: this.paymentMethod.enabled,

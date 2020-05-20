@@ -7,6 +7,7 @@ use Pckg\Payment\Handler\Braintree;
 use Pckg\Payment\Handler\Handler;
 use Pckg\Payment\Handler\Icepay;
 use Pckg\Payment\Handler\MojCent;
+use Pckg\Payment\Handler\Mollie;
 use Pckg\Payment\Handler\Monri;
 use Pckg\Payment\Handler\Valu;
 use Pckg\Payment\Handler\Paymill;
@@ -155,6 +156,11 @@ trait Handlers
     public function useBankTransferHandler()
     {
         return $this->fullInitHandler(new MojCent($this->order));
+    }
+
+    public function useMollieHandler()
+    {
+        return $this->fullInitHandler(new Mollie($this->order));
     }
 
 }
