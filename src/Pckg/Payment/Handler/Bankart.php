@@ -137,7 +137,8 @@ class Bankart extends AbstractHandler implements Handler
     public function postNotification()
     {
         $client = $this->client;
-
+        
+        $this->paymentRecord->addLog('notification', post()->all());
         $response = $this->client->acceptNotification();
 
         if ($response->getTransactionStatus() === NotificationInterface::STATUS_COMPLETED) {
