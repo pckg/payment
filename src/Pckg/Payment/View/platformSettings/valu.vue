@@ -5,14 +5,14 @@
                     :help="help.mode">
             <div slot="element">
                 <button class="btn"
-                        :class="paymentMethod.url === 'https://placilo.valu.si/placevanje/TarifficationE.dll' ? 'btn-success' : 'btn-default'"
+                        :class="paymentMethod.url === 'https://placilo.valu.si/te/TarifficationE.dll' ? 'btn-success' : 'btn-default'"
                         title="Production / live mode"
-                        @click.prevent="paymentMethod.url = 'https://placilo.valu.si/placevanje/TarifficationE.dll'">
+                        @click.prevent="paymentMethod.url = 'https://placilo.valu.si/te/TarifficationE.dll'">
                     Live
                 </button>
                 &nbsp;
                 <button class="btn"
-                        :class="paymentMethod.url !== 'https://placilo.valu.si/placevanje/TarifficationE.dll' ? 'btn-info' : 'btn-default'"
+                        :class="paymentMethod.url !== 'https://placilo.valu.si/te/TarifficationE.dll' ? 'btn-info' : 'btn-default'"
                         title="Test / sandbox / dev mode"
                         @click.prevent="paymentMethod.url = 'https://test-placilo.valu.si/placevanje/TarifficationE.dll'">
                     Sandbox

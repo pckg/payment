@@ -24,7 +24,8 @@
     "stripe/stripe-php": "7.*",
     "wirecard/payment-sdk-php": "dev-master",
     "datalinx/pgc-php-client": "dev-master",
-    "icepay/api": "^0.0.1"
+    "icepay/api": "^0.0.1",
+    "ampeco/omnipay-bankart": "dev-master"
   },
   "repositories": [
     {

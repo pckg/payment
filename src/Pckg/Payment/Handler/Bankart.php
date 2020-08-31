@@ -1,5 +1,8 @@
 <?php namespace Pckg\Payment\Handler;
 
+use Ampeco\OmnipayBankart\Gateway;
+use Omnipay\Common\Message\NotificationInterface;
+use Omnipay\Omnipay;
 use PaymentGateway\Client\Client;
 use PaymentGateway\Client\Data\Customer;
 use PaymentGateway\Client\Transaction\Debit;
@@ -13,7 +16,7 @@ class Bankart extends AbstractHandler implements Handler
     protected $handler = 'bankart';
 
     /**
-     * @var Client
+     * @var Gateway
      */
     protected $client;
 
@@ -39,8 +42,13 @@ class Bankart extends AbstractHandler implements Handler
         /**
          * Instantiate payment gateway client.
          */
-        Client::setApiUrl($this->environment->config('bankart.url'));
-        $this->client = new Client($username, $password, $apiKey, $sharedSecret);
+        $this->client = Omnipay::create('\Ampeco\OmnipayBankart\Gateway');
+        $this->client->initialize([
+            'username' => $username,
+            'password' => $password,
+            'apiKey' => $apiKey,
+            'sharedSecret' => $sharedSecret,
+        ]);
     }
 
     /**
@@ -53,96 +61,76 @@ class Bankart extends AbstractHandler implements Handler
          * Set customer details.
          */
         $client = $this->client;
-        $customer = new Customer();
-        $orderCustomer = $this->order->getCustomer();
+        $merchantTransactionId = $this->getPaymentRecord()->hash;
 
         /**
          * The following fields are mandatory: customer.billingAddress1, customer.billingCity, customer.billingPostcode
          */
+        $orderCustomer = $this->order->getCustomer();
         $billingAddress = $this->order->getBillingAddress();
-        if ($billingAddress) {
-            $customer->setBillingCountry(strtoupper($billingAddress->country->code))
-                ->setEmail($orderCustomer->getEmail())
-                ->setBillingAddress1($billingAddress->address_line1)
-                ->setBillingCity($billingAddress->city)
-                ->setBillingPostcode($billingAddress->postal);
+        $customer = [
+            'first_name' => null,
+            'last_name' => null,
+            'identification' => null,
+            'email' => null,
+            'billingAddress1' => 'None',
+            'billingCity' => 'Unknown',
+            'billingCountry' => 'NA',
+            'billingPostcode' => '0000',
+        ];
+        if ($orderCustomer) {
+            $customer = array_merge($customer, [
+                'email' => $orderCustomer->getEmail(),
+                'identification' => $orderCustomer->getId(),
+                'first_name' => $orderCustomer->getFirstName(),
+                'last_name' => $orderCustomer->getLastName(),
+            ]);
         }
+        if ($billingAddress) {
+            $city = $billingAddress->city;
+            $postal = $billingAddress->postal;
+            if (!$city && !$postal) {
+                try {
+                    [$city, $postal] = explode(" ", $billingAddress->address_line2, 2);
+                } catch (Throwable $e) {
 
-        /**
-         * Set direct transaction, no pre or after authorization.
-         */
-        $debit = new Debit();
-        $merchantTransactionId = $this->getPaymentRecord()->hash;
-
-        /**
-         * Define transaction.
-         */
-        $debit->setTransactionId($merchantTransactionId)
-            ->setSuccessUrl($this->getSuccessUrl())
-            ->setCancelUrl($this->getCancelUrl())
-            ->setCallbackUrl($this->getNotificationUrl())
-            ->setAmount($this->getTotalToPay())
-            ->setCurrency($this->getCurrency())
-            ->setCustomer($customer);
-
-        /**
-         * Send transaction.
-         */
-        try {
-            $result = $client->debit($debit);
-
-            $this->paymentRecord->addLog('created', json_encode($result));
-
-            /**
-             * Handle the result.
-             */
-            if ($result->isSuccess()) {
-                $this->paymentRecord->setAndSave([
-                    'payment_id' => $result->getReferenceId(),
-                ]);
-
-                $gatewayReferenceId = $result->getReferenceId(); //store it in your database
-
-                if ($result->getReturnType() == Result::RETURN_TYPE_ERROR) {
-                    $this->paymentRecord->addLog('error', $result->getErrors());
-
-                    return [
-                        'success' => false,
-                        'modal' => 'error',
-                    ];
-                } elseif ($result->getReturnType() == Result::RETURN_TYPE_REDIRECT) {
-                    return [
-                        'success' => true,
-                        'redirect' => $result->getRedirectUrl(),
-                    ];
-                } elseif ($result->getReturnType() == Result::RETURN_TYPE_PENDING) {
-                    return [
-                        'success' => true,
-                        'redirect' => $this->getWaitingUrl(),
-                    ];
-                } elseif ($result->getReturnType() == Result::RETURN_TYPE_FINISHED) {
-                    return [
-                        'success' => true,
-                        'redirect' => $result->getRedirectUrl(),
-                    ];
                 }
             }
-
-            return [
-                'success' => false,
-                'message' => 'Bankart did not return successful response',
-                'result' => $result,
-            ];
-        } catch (Throwable $e) {
-            return [
-                'success' => false,
-                'message' => 'bankart payments are not available at the moment: ' . $e->getMessage(),
-            ];
+            $customer = array_merge($customer, [
+                'billingCountry' => strtoupper($billingAddress->country->code),
+                'billingAddress1' => $billingAddress->address_line1,
+                'billingCity' => $city,
+                'billingPostcode' => $postal,
+            ]);
         }
 
+        $data = [
+            'transaction_id' => $merchantTransactionId,
+            'amount' => $this->getTotalToPay(),
+            'currency' => $this->getCurrency(),
+            'description' => $this->getDescription(),
+            'return_url' => $this->getSuccessUrl(),
+            'error_url' => $this->getErrorUrl(),
+            'cancel_url' => $this->getCancelUrl(),
+            'notify_url' => $this->getNotificationUrl(),
+            'customer' => $customer
+        ];
+
+        $response = $this->client->purchase($data)->send();
+
+        if (!$response->isSuccessful()) {
+            return [
+                'success' => false,
+                'message' => $response->getMessage(),
+            ];
+        }
+        $this->paymentRecord->setAndSave([
+            'payment_id' => $response->getTransactionReference(),
+        ]);
+
         return [
-            'success' => false,
-            'message' => 'Unknown response',
+            'success' => true,
+            'redirect' => $response->getRedirectUrl(),
         ];
     }
 
@@ -150,20 +138,18 @@ class Bankart extends AbstractHandler implements Handler
     {
         $client = $this->client;
 
-        $client->validateCallbackWithGlobals();
-        $input = file_get_contents('php://input');
-        $this->paymentRecord->addLog('postNotification', $input);
-        $callbackResult = $client->readCallback($input);
+        $response = $this->client->acceptNotification();
 
-        $myTransactionId = $callbackResult->getTransactionId();
-        $gatewayTransactionId = $callbackResult->getReferenceId();
+        if ($response->getTransactionStatus() === NotificationInterface::STATUS_COMPLETED) {
+            $myTransactionId = $response->getTransactionId();
+            $gatewayTransactionId = $response->getTransactionReference();
 
-        if ($callbackResult->getResult() == \PaymentGateway\Client\Callback\Result::RESULT_OK) {
-            $this->approvePayment("Bankart #" . $gatewayTransactionId, $callbackResult, $gatewayTransactionId);
+            if ($callbackResult->getResult() == \PaymentGateway\Client\Callback\Result::RESULT_OK) {
+                $this->approvePayment("Bankart #" . $gatewayTransactionId, $response, $gatewayTransactionId);
 
-        } elseif ($callbackResult->getResult() == \PaymentGateway\Client\Callback\Result::RESULT_ERROR) {
-            $errors = $callbackResult->getErrors();
-            $this->errorPayment($errors);
+            } elseif ($response->getResult() == \PaymentGateway\Client\Callback\Result::RESULT_ERROR) {
+                $this->errorPayment();
+            }
         }
 
         echo "OK";

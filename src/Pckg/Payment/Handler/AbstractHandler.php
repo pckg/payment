@@ -44,7 +44,7 @@ abstract class AbstractHandler implements Handler
 
     public function initPayment()
     {
-        return $this;
+        return [];
     }
 
     public function setLogger(Log $log)
