@@ -137,7 +137,7 @@ class Bankart extends AbstractHandler implements Handler
     public function postNotification()
     {
         $client = $this->client;
-        
+
         $this->paymentRecord->addLog('notification', post()->all());
         $response = $this->client->acceptNotification();
 
@@ -145,12 +145,9 @@ class Bankart extends AbstractHandler implements Handler
             $myTransactionId = $response->getTransactionId();
             $gatewayTransactionId = $response->getTransactionReference();
 
-            if ($callbackResult->getResult() == \PaymentGateway\Client\Callback\Result::RESULT_OK) {
-                $this->approvePayment("Bankart #" . $gatewayTransactionId, $response, $gatewayTransactionId);
-
-            } elseif ($response->getResult() == \PaymentGateway\Client\Callback\Result::RESULT_ERROR) {
-                $this->errorPayment();
-            }
+            $this->approvePayment("Bankart #" . $gatewayTransactionId, $response, $gatewayTransactionId);
+        } else {
+            $this->errorPayment();
         }
 
         echo "OK";
