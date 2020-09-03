@@ -201,7 +201,7 @@ abstract class AbstractOmnipay extends AbstractHandler
             'amount' => $this->getTotalToPay(),
             'currency' => $this->getCurrency(),
             'description' => $this->getDescription(),
-            'return_url' => $this->getSuccessUrl(),
+            'return_url' => $this->getCheckUrl(),
             'error_url' => $this->getErrorUrl(),
             'cancel_url' => $this->getCancelUrl(),
             'notify_url' => $this->getNotificationUrl(),
