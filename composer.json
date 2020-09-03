@@ -23,7 +23,6 @@
     "mollie/mollie-api-php": "^2.0",
     "stripe/stripe-php": "7.*",
     "wirecard/payment-sdk-php": "dev-master",
-    "datalinx/pgc-php-client": "dev-master",
     "icepay/api": "^0.0.1",
     "ampeco/omnipay-bankart": "dev-master",
     "eoler/omnipay-corvuspay": "*"
