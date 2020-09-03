@@ -9,6 +9,7 @@ use Pckg\Payment\Handler\Icepay;
 use Pckg\Payment\Handler\MojCent;
 use Pckg\Payment\Handler\Mollie;
 use Pckg\Payment\Handler\Monri;
+use Pckg\Payment\Handler\Omnipay\CorvusPay;
 use Pckg\Payment\Handler\Valu;
 use Pckg\Payment\Handler\Paymill;
 use Pckg\Payment\Handler\PaypalGnp;
@@ -45,16 +46,22 @@ trait Handlers
         return $this;
     }
 
+    /**
+     * @param $handler
+     * @return $this
+     * @throws \Exception
+     */
     public function useHandler($handler)
     {
         if (class_exists($handler)) {
             return $this->fullInitHandler(new $handler($this->order));
         }
 
-        if (method_exists($this, 'use' . ucfirst($handler) . 'Handler')) {
-            $this->{'use' . ucfirst($handler) . 'Handler'}();
+        $useHandlermethod = 'use' . ucfirst(Convention::toCamel($handler)) . 'Handler';
+        if (method_exists($this, $useHandlermethod)) {
+            $this->{$useHandlermethod}();
 
-            return;
+            return $this;
         }
 
         $classes = [];
@@ -126,6 +133,11 @@ trait Handlers
     public function useBankartHandler()
     {
         return $this->fullInitHandler(new Bankart($this->order));
+    }
+
+    public function useCorvusPayHandler()
+    {
+        return $this->fullInitHandler(new CorvusPay($this->order));
     }
 
     public function useMonriHandler()

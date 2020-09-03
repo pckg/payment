@@ -3,16 +3,10 @@
 use Derive\Platform\Entity\Companies;
 use Derive\Platform\Record\Company;
 use Pckg\Generic\Record\SettingsMorph;
-use Pckg\Payment\Form\PlatformSettings\Axcess;
-use Pckg\Payment\Form\PlatformSettings\Braintree;
-use Pckg\Payment\Form\PlatformSettings\Cod;
-use Pckg\Payment\Form\PlatformSettings\Icepay;
-use Pckg\Payment\Form\PlatformSettings\Mollie;
-use Pckg\Payment\Form\PlatformSettings\Valu;
-use Pckg\Payment\Form\PlatformSettings\Paypal;
-use Pckg\Payment\Form\PlatformSettings\Upn;
+use Pckg\Payment\Handler\Bankart;
 use Pckg\Payment\Handler\PaypalGnp;
 use Pckg\Payment\Handler\Stripe;
+use Pckg\Payment\Handler\Braintree;
 use Pckg\Payment\Service\Handlers;
 use Pckg\Payment\Service\PckgPayment;
 
@@ -26,7 +20,7 @@ class Payment
         /**
          * Currently only paypal is supported.
          */
-        if (!in_array($payment->handler, [PaypalGnp::class, Stripe::class, \Pckg\Payment\Handler\Braintree::class])) {
+        if (!in_array($payment->handler, [PaypalGnp::class, Stripe::class, Braintree::class, Bankart::class])) {
             return [
                 'success' => false,
                 'message' => 'Refunds are not supported',

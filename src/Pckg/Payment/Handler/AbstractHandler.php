@@ -134,6 +134,7 @@ abstract class AbstractHandler implements Handler
 
     public function refund(Payment $payment, $amount = null)
     {
+        throw new \Exception('Refunds are not supported by selected payment method');
     }
 
     public function getTotal()
