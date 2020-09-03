@@ -25,12 +25,13 @@
     "wirecard/payment-sdk-php": "dev-master",
     "datalinx/pgc-php-client": "dev-master",
     "icepay/api": "^0.0.1",
-    "ampeco/omnipay-bankart": "dev-master"
+    "ampeco/omnipay-bankart": "dev-master",
+    "eoler/omnipay-corvuspay": "*"
   },
   "repositories": [
     {
       "type": "vcs",
-      "url":  "git@github.com:DataLinx/PHPPaymentGateway.git"
+      "url": "https://github.com/Eoler/omnipay-corvuspay.git"
     }
   ]
 }
