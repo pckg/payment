@@ -32,7 +32,12 @@ abstract class AbstractOmnipay extends AbstractHandler
      */
     public function getOmnipayConfig()
     {
-        return only($this->environment->config($this->handler), $this->getOmnipayConfigKeys());
+        $config = [];
+        $env = $this->environment->config($this->handler);
+        foreach ($this->getOmnipayConfigKeys() as $i => $map) {
+            $config[$map] = $env[is_int($i) ? $map : $i];
+        }
+        return $config;
     }
 
     /**
