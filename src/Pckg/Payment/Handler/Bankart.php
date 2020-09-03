@@ -31,7 +31,7 @@ class Bankart extends AbstractOmnipay implements Handler
      */
     public function getOmnipayConfigKeys()
     {
-        return ['apiUsername', 'apiPassword', 'apiKey', 'sharedSecret'];
+        return ['apiUsername', 'apiPassword', 'apiKey', 'sharedSecret', 'publicIntegrationKey'];
     }
 
 }
