@@ -3,11 +3,21 @@
 use Carbon\Carbon;
 use Throwable;
 
+/**
+ * Class Monri
+ * @package Pckg\Payment\Handler
+ */
 class Monri extends AbstractHandler implements Handler
 {
 
+    /**
+     * @var string
+     */
     protected $handler = 'monri';
 
+    /**
+     * @return array
+     */
     public function initPayment()
     {
         $apiKey = $this->environment->config('monri.apiKey');
@@ -20,9 +30,13 @@ class Monri extends AbstractHandler implements Handler
             'digest' => $digest,
             'timestamp' => $timestamp,
             'randomToken' => $randomToken,
+            'url' => $this->environment->config('monri.url'),
         ];
     }
 
+    /**
+     * @return float|string
+     */
     public function getTotalToPay()
     {
         return round(parent::getTotalToPay() * 100); // in cents
@@ -30,7 +44,6 @@ class Monri extends AbstractHandler implements Handler
 
     /**
      * @return string
-     * Prepare Stripe processor for payment.
      */
     public function postStart()
     {
@@ -38,10 +51,10 @@ class Monri extends AbstractHandler implements Handler
         $transactionData = function ($transactionType) use ($t) {
             $amount = $t->getTotalToPay();
             $currency = $t->getCurrency();
-            $order_number = $t->getPaymentRecord()->hash;
+            $identifier = $t->getPaymentRecord()->hash;
             $apiKey = $t->environment->config('monri.apiKey');
             //digest = SHA512(key + order_number + amount + currency)
-            $digest = hash('sha512', $apiKey . $order_number . $amount . $currency);
+            $digest = hash('sha512', $apiKey . $identifier . $amount . $currency);
 
             $customer = $t->order->getCustomer();
 
@@ -52,7 +65,7 @@ class Monri extends AbstractHandler implements Handler
                 'order_info' => $t->order->getDescription(),
                 'currency' => $currency,
                 'digest' => $digest,
-                'order_number' => $order_number,
+                'order_number' => $identifier,
                 'ch_email' => $customer->getEmail(),
                 'authenticity_token' => $t->environment->config('monri.authenticityToken'),
                 'language' => 'en',
@@ -76,13 +89,12 @@ class Monri extends AbstractHandler implements Handler
         };
 
         $transactionData = $transactionData('purchase');
-        //d($transactionData);
-        $url = 'https://ipgtest.monri.com'; // change for production env
+        $url = $this->environment->config('monri.url');
 
         $data_string = json_encode(['transaction' => $transactionData]);
 
         // Execute transaction
-        $ch = curl_init($url . './v2/transaction');
+        $ch = curl_init($url . '/v2/transaction');
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
         curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -90,7 +102,6 @@ class Monri extends AbstractHandler implements Handler
                 'Content-Type: application/json',
                 'Content-Length: ' . strlen($data_string))
         );
-        // TODO: handle transaction result
         $transaction = curl_exec($ch);
 
         $decoded = json_decode($transaction, true);
