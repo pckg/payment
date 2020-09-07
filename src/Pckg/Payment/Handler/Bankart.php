@@ -40,4 +40,27 @@ class Bankart extends AbstractOmnipay implements Handler
         ];
     }
 
+    /**
+     * @return array
+     */
+    public function enrichOmnipayOrderDetails($data = [])
+    {
+        /**
+         * If you have an agreement with your acquiring banks to offer payments in installments,
+         * userField1 is used and becomes mandatory. In such cases send 00 or 01 when no installments are selected.
+         * In case of an invalid value, the payment will be declined.
+         *
+         * This only works for actual payments with instalments where the merchant recives whole payment
+         * upfront and the credit card issuer credits the customer. System will mark order as it was paid with single
+         * instalment.
+         *
+         * The customer needs to select number of instalments upfront.
+         */
+        if (post('bankartInstalments')) {
+            $data['extra_data']['userField1'] = str_pad(post('bankartInstalments'), 2, '0', STR_PAD_LEFT);
+        }
+
+        return $data;
+    }
+
 }

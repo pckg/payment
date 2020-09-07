@@ -15,6 +15,7 @@ class Bankart extends Form implements Form\ResolvesOnRequest
         $this->addText('apiUsername')->setLabel('API username')->addValidator(new RequireWhenEnabled($this));
         $this->addText('apiPassword')->setLabel('API password')->addValidator(new RequireWhenEnabled($this));
         $this->addText('publicIntegrationKey')->setLabel('Public integration key')->addValidator(new RequireWhenEnabled($this));
+        $this->addText('maxInstalments')->setLabel('Max instalments')->addValidator(new RequireWhenEnabled($this));
         $this->addText('url')->setLabel('API URL')->addValidator(new RequireWhenEnabled($this));
 
         return $this;

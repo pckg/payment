@@ -71,13 +71,14 @@ abstract class AbstractOmnipay extends AbstractHandler
         try {
             /**
              * Get customer and order details.
-             */
-            $data = $this->getOmnipayOrderDetails();
-
-            /**
              * Make the purchase call.
              */
-            $response = $this->client->purchase($data)->send();
+            $request = $this->client->purchase($this->getOmnipayOrderDetails());
+
+            /**
+             * Some parameters are not supported by the original gateway.
+             */
+            $response = $request->sendData($this->enrichOmnipayOrderDetails($request->getData()));
 
             /**
              * Check for successful response.
@@ -212,6 +213,15 @@ abstract class AbstractOmnipay extends AbstractHandler
             'notify_url' => $this->getNotificationUrl(),
             'customer' => $this->getOmnipayCustomer(),
         ];
+    }
+
+    /**
+     * @param array $data
+     * @return array|mixed
+     */
+    public function enrichOmnipayOrderDetails($data = [])
+    {
+        return $data;
     }
 
     /**

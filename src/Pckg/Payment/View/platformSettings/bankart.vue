@@ -55,6 +55,10 @@
             </div>
         </div>
 
+        <form-group label="Max number of instalments"
+                    type="number"
+                    v-model="paymentMethod.maxInstalments"></form-group>
+
         <button type="button" class="btn btn-primary" @click.prevent="saveSettings">Save settings</button>
     </div>
 </template>
@@ -72,6 +76,7 @@
                     apiKey: this.paymentMethod.apiKey,
                     sharedSecret: this.paymentMethod.sharedSecret,
                     publicIntegrationKey: this.paymentMethod.publicIntegrationKey,
+                    maxInstalments: this.paymentMethod.maxInstalments,
                     url: this.paymentMethod.url,
                 };
             }
