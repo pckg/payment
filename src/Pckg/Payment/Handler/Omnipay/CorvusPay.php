@@ -36,7 +36,7 @@ class CorvusPay extends AbstractOmnipay
         return $this->environment->config('corvus-pay.url') === 'https://test-wallet.corvuspay.com/';
     }
 
-    public function success()
+    public function postSuccess()
     {
         return $this->completePurchase();
     }
