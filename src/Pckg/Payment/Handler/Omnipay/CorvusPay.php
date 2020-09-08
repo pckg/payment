@@ -16,11 +16,24 @@ class CorvusPay extends AbstractOmnipay
     protected $handler = 'corvus-pay';
 
     /**
+     * @var bool
+     */
+    protected $startOnInit = true;
+
+    /**
      * @return string[]
      */
     public function getOmnipayConfigKeys()
     {
         return ['storeId', 'apiKey'];
+    }
+
+    /**
+     * @return bool
+     */
+    public function isTestMode()
+    {
+        return $this->environment->config('corvus-pay.url') === 'https://test-wallet.corvuspay.com/';
     }
 
 }

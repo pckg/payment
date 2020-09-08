@@ -30,6 +30,11 @@ abstract class AbstractOmnipay extends AbstractHandler
     /**
      * @return array
      */
+    abstract public function isTestMode();
+
+    /**
+     * @return array
+     */
     public function getOmnipayConfig()
     {
         $config = [];
@@ -37,6 +42,7 @@ abstract class AbstractOmnipay extends AbstractHandler
         foreach ($this->getOmnipayConfigKeys() as $i => $map) {
             $config[$map] = $env[is_int($i) ? $map : $i];
         }
+        $config['testMode'] = $this->isTestMode();
         return $config;
     }
 
@@ -50,13 +56,28 @@ abstract class AbstractOmnipay extends AbstractHandler
          * Get default config.
          */
         $config = $this->getOmnipayConfig();
-        $config['testMode'] = ($config['mode'] ?? null) === 'test';
 
         /**
          * Instantiate payment gateway client.
          */
         $this->client = Omnipay::create('\\' . $this->gateway);
         $this->client->initialize($config);
+    }
+
+    /**
+     * @return array|void
+     * @throws \Exception
+     */
+    public function initPayment()
+    {
+        if (!isset($this->startOnInit)) {
+            return parent::initPayment();
+        }
+
+        /**
+         * This is used for methods that require a POST request with parameters.
+         */
+        return $this->postStart();
     }
 
     /**
@@ -81,23 +102,7 @@ abstract class AbstractOmnipay extends AbstractHandler
             $response = $request->sendData($this->enrichOmnipayOrderDetails($request->getData()));
 
             /**
-             * Check for successful response.
-             */
-            if (!$response->isSuccessful()) {
-                return [
-                    'success' => false,
-                    'message' => $response->getMessage(),
-                ];
-            }
-
-            /**
-             * Set reference.
-             */
-            $this->paymentRecord->setAndSave([
-                'payment_id' => $response->getTransactionReference(),
-            ]);
-
-            /**
+             * Firs check for a redirect.
              * Send the redirect to the frontend.
              */
             if ($response->isRedirect()) {
@@ -108,25 +113,47 @@ abstract class AbstractOmnipay extends AbstractHandler
                         'success' => true,
                         'redirect' => $redirect,
                     ];
-                } else {
-                    // $response->getRedirectData() // associative array of fields which must be posted to the redirectUrl
-                    return [
-                        'success' => false,
-                        'message' => 'POST method not supported',
-                        'modal' => 'error',
-                    ];
                 }
+
+                /**
+                 * Submit the form with data on the frontend.
+                 */
+                return [
+                    'success' => true,
+                    'form' => [
+                        'url' => $redirect,
+                        'data' => $response->getRedirectData()
+                    ]
+                ];
+            }
+
+            /**
+             * Check for successful response.
+             */
+            if ($response->isSuccessful()) {
+                /**
+                 * Set reference.
+                 */
+                $this->paymentRecord->setAndSave([
+                    'payment_id' => $response->getTransactionReference(),
+                ]);
+
+                return [
+                    'success' => true,
+                    'modal' => 'success',
+                ];
             }
 
             return [
-                'success' => true,
-                'modal' => 'success',
+                'success' => false,
+                'message' => $response->getMessage(),
+                'code' => $response->getCode(),
             ];
         } catch (\Throwable $e) {
-
             return [
                 'success' => false,
                 'modal' => 'error',
+                'exception' => exception($e),
                 'message' => 'Payments are not available at the moment.',
             ];
         }
@@ -137,6 +164,10 @@ abstract class AbstractOmnipay extends AbstractHandler
      */
     public function postNotification()
     {
+        if (!$this->client->supportsAcceptNotification()) {
+            throw new \Exception('Gateway does not support acceptNotification()');
+        }
+
         $this->paymentRecord->addLog('notification', post()->all());
         $response = $this->client->acceptNotification();
 
@@ -160,6 +191,10 @@ abstract class AbstractOmnipay extends AbstractHandler
      */
     public function refund(Payment $payment, $amount = null)
     {
+        if (!$this->client->supportsRefund()) {
+            throw new \Exception('Gateway does not support refund()');
+        }
+
         $refundPaymentRecord = Payment::createForRefund($payment, $amount);
 
         try {

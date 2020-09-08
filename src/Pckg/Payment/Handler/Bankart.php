@@ -63,4 +63,12 @@ class Bankart extends AbstractOmnipay implements Handler
         return $data;
     }
 
+    /**
+     * @return bool
+     */
+    public function isTestMode()
+    {
+        return $this->environment->config('bankart.url') === 'https://bankart.paymentsandbox.cloud/';
+    }
+
 }
