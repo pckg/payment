@@ -9,6 +9,7 @@ use Pckg\Database\Record;
 use Pckg\Payment\Adapter\Order;
 use Pckg\Payment\Entity\Payments;
 use Pckg\Payment\Handler\AbstractHandler;
+use Pckg\Payment\Handler\Omnipay\CorvusPay;
 
 class Payment extends Record
 {
@@ -65,7 +66,15 @@ class Payment extends Record
          */
         $id = config('identifier');
         $string = $id  . ':' .json_encode($data) . ':' . config('hash') . ':' . uniqid();
-        $data['hash'] = substr($id . sha1($string), 0, 40);
+
+        /**
+         * For some reason, some handlers support max 30 chars. :/
+         */
+        $length = 40;
+        if (in_array($handler, [CorvusPay::class])) {
+            $length = 30;
+        }
+        $data['hash'] = substr($id . sha1($string), 0, $length);
 
         $payment = static::create($data);
 
