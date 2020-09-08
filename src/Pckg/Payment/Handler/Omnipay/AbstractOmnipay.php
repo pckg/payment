@@ -160,6 +160,29 @@ abstract class AbstractOmnipay extends AbstractHandler
     }
 
     /**
+     * @return bool|void
+     */
+    public function completePurchase()
+    {
+        if (!$this->client->supportsCompletePurchase()) {
+            return;
+        }
+
+        $response = $this->client->completePurchase()->send();
+        if ($response->isSuccessful()) {
+            $myTransactionId = $response->getTransactionId();
+            $gatewayTransactionId = $response->getTransactionReference();
+
+            $this->approvePayment(Convention::toCamel($this->handler) . ' #' . $gatewayTransactionId, $response, $gatewayTransactionId);
+
+            return true;
+        }
+
+        $this->errorPayment();
+        return false;
+    }
+
+    /**
      *
      */
     public function postNotification()
