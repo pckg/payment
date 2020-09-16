@@ -1,6 +1,7 @@
 <?php namespace Pckg\Payment\Service;
 
 use Pckg\Database\Helper\Convention;
+use Pckg\Payment\Handler\AbstractHandler;
 use Pckg\Payment\Handler\Axcess;
 use Pckg\Payment\Handler\Bankart;
 use Pckg\Payment\Handler\Braintree;
@@ -30,7 +31,7 @@ trait Handlers
     }
 
     /**
-     * @return Handler
+     * @return Handler|AbstractHandler
      */
     public function getHandler()
     {

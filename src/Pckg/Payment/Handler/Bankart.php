@@ -40,6 +40,13 @@ class Bankart extends AbstractOmnipay implements Handler
         ];
     }
 
+    public function initPayment()
+    {
+        return [
+            'creditedInstalments' => (int)$this->environment->config('bankart.maxInstalments')
+        ];
+    }
+
     /**
      * @return array
      */
