@@ -29,6 +29,17 @@ class CorvusPay extends AbstractOmnipay
     }
 
     /**
+     * @return array
+     */
+    public function getOmnipayConfig()
+    {
+        $config = parent::getOmnipayConfig();
+        $config['language'] = localeManager()->getDefaultFrontendLanguage()->slug ?? 'en';
+
+        return $config;
+    }
+
+    /**
      * @return bool
      */
     public function isTestMode()
