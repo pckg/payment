@@ -32,17 +32,19 @@ class Cod extends AbstractHandler implements Handler
     {
         $this->paymentRecord->addLog($status, $log);
 
-        $this->order->getBills()->keyBy('order_id')->each(function(OrdersBill $ordersBill) use ($description) {
-            /**
-             * Stock is not tracked here.
-             */
+        $confirmation = $this->environment->config('cod.confirmation');
+        $this->order->getBills()->keyBy('order_id')->each(function (OrdersBill $ordersBill) use ($confirmation) {
             $ordersBill->order->waitingForPaymentOnDelivery();
+
+            if ($confirmation === 'automatic') {
+                $ordersBill->order->confirm();
+            }
         });
 
         $this->paymentRecord->setAndSave([
-            'status'         => $status,
+            'status' => $status,
             'transaction_id' => $transactionId,
         ]);
     }
-    
+
 }

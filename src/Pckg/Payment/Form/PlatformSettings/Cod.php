@@ -10,6 +10,8 @@ class Cod extends Form implements Form\ResolvesOnRequest
     {
         $this->addDecorator($this->decoratorFactory->create(VueJS::class));
 
+        $this->addSelect('confirmation')->setLabel('Order confirmation')->required();
+
         return $this;
     }
 
