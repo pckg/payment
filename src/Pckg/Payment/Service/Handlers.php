@@ -4,6 +4,7 @@ use Pckg\Database\Helper\Convention;
 use Pckg\Payment\Handler\AbstractHandler;
 use Pckg\Payment\Handler\Axcess;
 use Pckg\Payment\Handler\Bankart;
+use Pckg\Payment\Handler\BankartCC;
 use Pckg\Payment\Handler\BankTransfer;
 use Pckg\Payment\Handler\Braintree;
 use Pckg\Payment\Handler\Handler;
