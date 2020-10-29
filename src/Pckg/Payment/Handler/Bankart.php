@@ -43,7 +43,7 @@ class Bankart extends AbstractOmnipay implements Handler
     public function initPayment()
     {
         return [
-            'creditedInstalments' => (int)$this->environment->config('bankart.maxInstalments')
+            'creditedInstalments' => (int)$this->environment->config($this->handler . '.maxInstalments'),
         ];
     }
 
@@ -75,7 +75,7 @@ class Bankart extends AbstractOmnipay implements Handler
      */
     public function isTestMode()
     {
-        return $this->environment->config('bankart.url') === 'https://bankart.paymentsandbox.cloud/';
+        return $this->environment->config($this->handler . '.url') === 'https://bankart.paymentsandbox.cloud/';
     }
 
 }

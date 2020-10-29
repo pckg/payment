@@ -137,6 +137,11 @@ trait Handlers
         return $this->fullInitHandler(new Bankart($this->order));
     }
 
+    public function useBankartCCHandler()
+    {
+        return $this->fullInitHandler(new BankartCC($this->order));
+    }
+
     public function useCorvusPayHandler()
     {
         return $this->fullInitHandler(new CorvusPay($this->order));

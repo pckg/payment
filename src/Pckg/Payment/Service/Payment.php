@@ -76,6 +76,10 @@ class Payment
     {
         $methods = [];
         foreach (config('pckg.payment.provider') as $method => $config) {
+            /**
+             * Skip disabled methods.
+             * @T00D00 - show sandbox to admin only?
+             */
             if (!config('pckg.payment.provider.' . $method . '.enabled')) {
                 continue;
             }
