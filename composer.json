@@ -1,7 +1,14 @@
 {
   "name": "pckg/payment",
   "description": "Full implementation of payment libraries like braintree, paypal, ideal and others",
-  "keywords": ["php", "payment", "paypal", "paymill", "sepa", "proforma"],
+  "keywords": [
+    "php",
+    "payment",
+    "paypal",
+    "paymill",
+    "sepa",
+    "proforma"
+  ],
   "homepage": "https://github.com/pckg/payment",
   "license": "MIT",
   "authors": [
@@ -10,16 +17,10 @@
       "email": "schtr4jh@schtr4jh.net"
     }
   ],
-  "minimum-stability": "dev",
-  "autoload": {
-    "psr-0": {
-      "Pckg": "src\\"
-    }
-  },
   "require": {
     "paymill/paymill": "4.*",
     "paypal/rest-api-sdk-php": "1.*",
-    "braintree/braintree_php" : "3.*",
+    "braintree/braintree_php": "3.*",
     "mollie/mollie-api-php": "^2.0",
     "stripe/stripe-php": "7.*",
     "wirecard/payment-sdk-php": "dev-master",
@@ -27,10 +28,32 @@
     "ampeco/omnipay-bankart": "dev-master",
     "eoler/omnipay-corvuspay": "*"
   },
+  "require-dev": {
+    "pckg-app/frontend-dev": "dev-master"
+  },
   "repositories": [
     {
       "type": "vcs",
       "url": "https://github.com/Eoler/omnipay-corvuspay.git"
     }
-  ]
+  ],
+  "autoload": {
+    "psr-0": {
+      "Pckg": "src\\"
+    }
+  },
+  "scripts": {
+    "test": [
+      "vendor/bin/phpunit --help --stop-on-defect",
+      "vendor/bin/phpcloc cloc src/",
+      "vendor/bin/phpstan analyse src/ --level=1 || true",
+      "vendor/bin/phpcs -p src/ || true",
+      "vendor/bin/codecept run"
+    ]
+  },
+  "scripts-descriptions": {
+    "test": "Run all tests and quality checks"
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true
 }
