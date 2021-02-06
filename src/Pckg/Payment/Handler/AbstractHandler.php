@@ -4,6 +4,7 @@ use Derive\Orders\Record\OrdersBill;
 use Pckg\Payment\Adapter\Environment;
 use Pckg\Payment\Adapter\Log;
 use Pckg\Payment\Adapter\Order;
+use Pckg\Payment\Entity\Payments;
 use Pckg\Payment\Record\Payment;
 
 abstract class AbstractHandler implements Handler
@@ -159,6 +160,8 @@ abstract class AbstractHandler implements Handler
 
     public function waitPayment($description, $log, $transactionId, $status = 'waiting')
     {
+        try {
+        (new Payments())->transaction(function() use ($description, $log, $transactionId, $status){
         $this->paymentRecord->addLog($status, $log);
 
         $this->order->getBills()->keyBy('order_id')->each(function(OrdersBill $ordersBill) use ($description) {
@@ -177,20 +180,47 @@ abstract class AbstractHandler implements Handler
                                              'status'         => $status,
                                              'transaction_id' => $transactionId,
                                          ]);
+
+        throw new \Exception("Reverted");
+        });
+        } catch (\Throwable $e) {
+            ddd(exception($e));
+        }
     }
 
+    /**
+     * @param $description
+     * @param $log
+     * @param $transactionId
+     * @param string $status
+     *
+     * Used to confirm transaction and related orders, packets and instalments.
+     */
     public function approvePayment($description, $log, $transactionId, $status = 'approved')
     {
         $this->paymentRecord->addLog($status, $log);
 
-        $this->order->getBills()->each(function(OrdersBill $ordersBill) use ($description) {
+        $this->order->getBills()->each(function (OrdersBill $ordersBill) use ($description) {
             $ordersBill->confirm($description);
         });
 
         $this->paymentRecord->setAndSave([
-                                             'status'         => $status,
-                                             'transaction_id' => $transactionId,
-                                         ]);
+            'status' => $status,
+            'transaction_id' => $transactionId,
+        ]);
+    }
+
+    /**
+     * Used to pre-authorize transaction.
+     * Should decrease stock?
+     */
+    public function authorizePayment($description, $log, $transactionId, $status = 'authorized')
+    {
+        $this->paymentRecord->addLog($status, $log);
+        $this->paymentRecord->setAndSave([
+            'status' => $status,
+            'transaction_id' => $transactionId,
+        ]);
     }
     
     public function approveRefund($description, $log, $transactionId)

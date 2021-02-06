@@ -61,7 +61,7 @@ class Axcess extends AbstractHandler implements Handler
                 . "&customer.givenName=" . $this->order->getCustomer()->getFirstName()
                 . "&customer.surname=" . $this->order->getCustomer()->getLastName()
                 . "&customer.email=" . $this->order->getCustomer()->getEmail()
-                . "&customer.ip=" . server('REMOTE_ADDR')
+                . "&customer.ip=" . request()->clientIp()
                 . "&paymentType=DB";
 
             $ch = curl_init();

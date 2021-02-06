@@ -55,7 +55,7 @@ class Icepay extends AbstractHandler implements Handler
             'Description'   => $this->order->getDescription(),
             'OrderID'       => $this->paymentRecord->id,
             'Reference'     => $this->paymentRecord->id,
-            'EndUserIP'     => server('REMOTE_ADDR'),
+            'EndUserIP'     => request()->clientIp(),
         ];
 
         return $data;

@@ -12,6 +12,10 @@ use Pckg\Payment\Record\Payment;
 abstract class AbstractOmnipay extends AbstractHandler
 {
 
+    const TRANSACTION_PURCHASE = 'purchase';
+
+    const TRANSACTION_PREAUTHORIZATION = 'authorize';
+
     /**
      * @var string
      */
@@ -81,11 +85,33 @@ abstract class AbstractOmnipay extends AbstractHandler
     }
 
     /**
+     * @return string
+     * Return "purchase" or "authorization"
+     */
+    public function getOmnipayTransactionMethod()
+    {
+        return $this->environment->config($this->handler . '.transactionMethod') ?? static::TRANSACTION_PURCHASE;
+    }
+
+    /**
+     * @param $request
+     * @return array|mixed
+     */
+    public function sendOmnipayEnrichedData($request)
+    {
+        return $request->sendData($this->enrichOmnipayOrderDetails($request->getData()));
+    }
+
+    /**
      * @throws \Exception
      */
     public function postStart()
     {
-        if (!$this->client->supportsPurchase()) {
+        /**
+         * Check for purchase / authorize support.
+         */
+        $transactionMethod = $this->getOmnipayTransactionMethod();
+        if (!$this->client->{['purchase' => 'supportsPurchase', 'authorize' => 'supportsAuthorize'][$transactionMethod]}()) {
             throw new \Exception('Gateway does not support purchase()');
         }
 
@@ -94,21 +120,26 @@ abstract class AbstractOmnipay extends AbstractHandler
              * Get customer and order details.
              * Make the purchase call.
              */
-            $request = $this->client->purchase($this->getOmnipayOrderDetails());
+            $request = $this->client->{$transactionMethod}($this->getOmnipayOrderDetails());
 
             /**
              * Some parameters are not supported by the original gateway.
              */
-            $response = $request->sendData($this->enrichOmnipayOrderDetails($request->getData()));
+            $response = $this->sendOmnipayEnrichedData();
 
             /**
-             * Firs check for a redirect.
+             * First check for a redirect.
              * Send the redirect to the frontend.
              */
             if ($response->isRedirect()) {
                 $redirect = $response->getRedirectUrl();
                 $method = $response->getRedirectMethod();
+
+                /**
+                 * GET method is redirected.
+                 */
                 if ($method === 'GET') {
+                    $this->paymentRecord->addLog('redirecting', 'Redirected');
                     return [
                         'success' => true,
                         'redirect' => $redirect,
@@ -118,6 +149,7 @@ abstract class AbstractOmnipay extends AbstractHandler
                 /**
                  * Submit the form with data on the frontend.
                  */
+                $this->paymentRecord->addLog('redirecting', 'Submitting form');
                 return [
                     'success' => true,
                     'form' => [
@@ -137,6 +169,7 @@ abstract class AbstractOmnipay extends AbstractHandler
                 $this->paymentRecord->setAndSave([
                     'payment_id' => $response->getTransactionReference(),
                 ]);
+                $this->paymentRecord->addLog('success', 'Success ' . $transactionMethod);
 
                 return [
                     'success' => true,
@@ -144,12 +177,17 @@ abstract class AbstractOmnipay extends AbstractHandler
                 ];
             }
 
+            $this->paymentRecord->addLog('error', $response->getMessage() . ' ' . $response->getCode());
+
             return [
                 'success' => false,
                 'message' => $response->getMessage(),
                 'code' => $response->getCode(),
             ];
         } catch (\Throwable $e) {
+
+            $this->paymentRecord->addLog('error', exception($e));
+
             return [
                 'success' => false,
                 'modal' => 'error',
@@ -157,6 +195,26 @@ abstract class AbstractOmnipay extends AbstractHandler
                 'message' => 'Payments are not available at the moment.',
             ];
         }
+    }
+
+    public function capture($notes = null, $log = [])
+    {
+        if (!$this->client->supportsCapture()) {
+            throw new \Exception('Client does not support capture');
+        }
+
+        $response = $this->client->capture()->send();
+
+        if ($response->isSuccessful()) {
+            $myTransactionId = $response->getTransactionId();
+            $gatewayTransactionId = $response->getTransactionReference();
+
+            $this->approvePayment(trim(Convention::toCamel($this->handler) . ' #' . $gatewayTransactionId . $notes), ($log ? [$log, $response] : $response), $gatewayTransactionId);
+
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -169,6 +227,7 @@ abstract class AbstractOmnipay extends AbstractHandler
         }
 
         $response = $this->client->completePurchase()->send();
+
         if ($response->isSuccessful()) {
             $myTransactionId = $response->getTransactionId();
             $gatewayTransactionId = $response->getTransactionReference();
@@ -198,9 +257,17 @@ abstract class AbstractOmnipay extends AbstractHandler
             $myTransactionId = $response->getTransactionId();
             $gatewayTransactionId = $response->getTransactionReference();
 
-            $this->approvePayment(Convention::toCamel($this->handler) . ' #' . $gatewayTransactionId, $response, $gatewayTransactionId);
+            /**
+             * Is every transaction approved?
+             * Shouldn't we only pre-authorize some?
+             */
+            if ($this->getOmnipayTransactionMethod() === static::TRANSACTION_PURCHASE) {
+                $this->approvePayment(Convention::toCamel($this->handler) . ' #' . $gatewayTransactionId, $response, $gatewayTransactionId);
+            } else {
+                $this->authorizePayment(Convention::toCamel($this->handler) . ' #' . $gatewayTransactionId, $response, $gatewayTransactionId);
+            }
         } else {
-            $this->errorPayment();
+            $this->errorPayment($response);
         }
 
         echo "OK";

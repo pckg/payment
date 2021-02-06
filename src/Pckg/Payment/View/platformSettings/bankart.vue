@@ -48,12 +48,17 @@
             </div>
         </div>
 
-        <div class="form-group">
-            <label>Public integration key</label>
-            <div>
-                <input type="text" v-model="paymentMethod.publicIntegrationKey" class="form-control"/>
-            </div>
+      <div class="form-group">
+        <label>Public integration key</label>
+        <div>
+          <input type="text" v-model="paymentMethod.publicIntegrationKey" class="form-control"/>
         </div>
+      </div>
+
+      <form-group label="Transaction method"
+                  type="select:single"
+                  :options="{options:{purchase:'Purchase',authorize:'Pre-authorization'}}"
+                  v-model="paymentMethod.transactionMethod"></form-group>
 
         <form-group label="Max number of instalments"
                     type="number"
@@ -77,6 +82,7 @@
                     sharedSecret: this.paymentMethod.sharedSecret,
                     publicIntegrationKey: this.paymentMethod.publicIntegrationKey,
                     maxInstalments: this.paymentMethod.maxInstalments,
+                    transactionMethod: this.paymentMethod.transactionMethod,
                     url: this.paymentMethod.url,
                 };
             }

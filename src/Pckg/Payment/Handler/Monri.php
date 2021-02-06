@@ -61,7 +61,7 @@ class Monri extends AbstractHandler implements Handler
             $data = [
                 "transaction_type" => $transactionType,
                 "amount" => $amount,
-                "ip" => '10.1.10.111',
+                "ip" => request()->clientIp(),
                 'order_info' => $t->order->getDescription(),
                 'currency' => $currency,
                 'digest' => $digest,
