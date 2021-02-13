@@ -15,6 +15,10 @@ interface Order
 
     public function getDelivery();
 
+    public function getDeliveryAddress();
+
+    public function getBillingAddress();
+
     public function getDate();
 
     public function getCurrency();
