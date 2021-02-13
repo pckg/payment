@@ -4,6 +4,7 @@ use Braintree\ClientToken;
 use Braintree\Configuration;
 use Braintree\Gateway;
 use Braintree\Transaction;
+use Derive\User\Record\Address;
 use Pckg\Payment\Record\Payment;
 use Throwable;
 
@@ -49,6 +50,69 @@ class Braintree extends AbstractHandler implements Handler
 
         return [
             'token' => $token,
+            'threeDSecure' => $this->transform3DS(),
+        ];
+    }
+
+    /**
+     * @param $string
+     * @return string|string[]|null
+     * https://stackoverflow.com/questions/1176904/php-how-to-remove-all-non-printable-characters-in-a-string
+     */
+    public function cleanASCII($string)
+    {
+        return preg_replace('/[\x00-\x1F\x7F]/u', '', $string);
+    }
+
+    public function transform3DS()
+    {
+        return [
+            'amount' => $this->getTotal(),
+            'email' => $this->order->getCustomer()->getEmail(),
+            'billingAddress' => $this->transformBillingAddress($this->order->getBillingAddress()),
+            'additionalInformation' => $this->transformAdditionalInformation(),
+        ];
+    }
+
+    public function transformBillingAddress(Address $address = null)
+    {
+        if (!$address) {
+            return [];
+        }
+
+        return [
+                'givenName' => $this->cleanASCII($address->name),
+                'surname' => $this->cleanASCII(''), // @T00D00
+                'phoneNumber' => $address->phone,
+            ] + $this->transformAddress($address);
+    }
+
+    public function transformAdditionalInformation()
+    {
+        if (!$deliveryAddress) {
+            return [];
+        }
+
+        $deliveryAddress = $this->order->getDeliveryAddress();
+
+        return [
+            'workPhoneNumber' => '',
+            'shippingGivenName' => $this->cleanASCII($address->name),
+            'shippingSurname' => '',
+            'shippingPhone' => $deliveryAddress->phone,
+            'shippingAddress' => $deliveryAddress ? $this->transformAddress($deliveryAddress) : [],
+        ];
+    }
+
+    public function transformAddress(Address $address)
+    {
+        return [
+            'streetAddress' => $address->address_line_1,
+            'extendedAddress' => $address->address_line_2,
+            'locality' => $address->city,
+            'region' => '', // @T00D00 - some countries have states/regions/provinces
+            'postalCode' => $address->postal,
+            'countryCodeAlpha2' => $address->country ? $address->country->getISO2() : '',
         ];
     }
 
@@ -69,12 +133,12 @@ class Braintree extends AbstractHandler implements Handler
         $this->getPaymentRecord()->addLog('submitted');
 
         $result = $braintreeNonce == $this->paymentRecord->getJsonData('braintree_payment_method_nonce') ? Transaction::find($this->paymentRecord->transaction_id) : Transaction::sale([
-                                                                                                                                                                                           'amount'             => $this->getTotal(),
-                                                                                                                                                                                           'paymentMethodNonce' => $braintreeNonce,
-                                                                                                                                                                                           'options'            => [
-                                                                                                                                                                                               'submitForSettlement' => true,
-                                                                                                                                                                                           ],
-                                                                                                                                                                                       ]);
+            'amount' => $this->getTotal(),
+            'paymentMethodNonce' => $braintreeNonce,
+            'options' => [
+                'submitForSettlement' => true,
+            ],
+        ]);
 
         $this->paymentRecord->setJsonData('braintree_payment_method_nonce', $braintreeNonce)->save();
 
@@ -87,7 +151,7 @@ class Braintree extends AbstractHandler implements Handler
             return [
                 'success' => false,
                 'message' => $result->message,
-                'modal'   => 'error',
+                'modal' => 'error',
             ];
         }
 
@@ -101,7 +165,7 @@ class Braintree extends AbstractHandler implements Handler
 
             return [
                 'success' => true,
-                'modal'   => 'success',
+                'modal' => 'success',
             ];
         }
 
@@ -117,7 +181,7 @@ class Braintree extends AbstractHandler implements Handler
         return [
             'success' => false,
             'message' => $message,
-            'modal'   => 'error',
+            'modal' => 'error',
         ];
     }
 
