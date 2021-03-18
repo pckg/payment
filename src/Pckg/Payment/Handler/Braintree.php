@@ -69,7 +69,7 @@ class Braintree extends AbstractHandler implements Handler
         return [
             'amount' => $this->getTotal(),
             'email' => $this->order->getCustomer()->getEmail(),
-            'billingAddress' => $this->transformBillingAddress($this->order->getBillingAddress()),
+            'billingAddress' => $this->transformBillingAddress($this->order->getBillingOrDeliveryAddress()),
             'additionalInformation' => $this->transformAdditionalInformation(),
         ];
     }
@@ -107,8 +107,8 @@ class Braintree extends AbstractHandler implements Handler
     public function transformAddress(Address $address)
     {
         return [
-            'streetAddress' => $address->address_line_1,
-            'extendedAddress' => $address->address_line_2,
+            'streetAddress' => $address->address_line1,
+            'extendedAddress' => $address->address_line2,
             'locality' => $address->city,
             'region' => '', // @T00D00 - some countries have states/regions/provinces
             'postalCode' => $address->postal,

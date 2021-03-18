@@ -61,7 +61,7 @@ class Monri extends AbstractHandler implements Handler
             $data = [
                 "transaction_type" => $transactionType,
                 "amount" => $amount,
-                "ip" => '10.1.10.111',
+                "ip" => request()->clientIp(),
                 'order_info' => $t->order->getDescription(),
                 'currency' => $currency,
                 'digest' => $digest,
@@ -73,12 +73,12 @@ class Monri extends AbstractHandler implements Handler
                 'temp_card_id' => post('token'),
             ];
 
-            $billingAddress = $t->order->getBillingAddress();
+            $billingAddress = $t->order->getBillingOrDeliveryAddress();
             if ($billingAddress) {
                 $data = array_merge($data, [
                     'ch_address' => $billingAddress->address_line1,
                     'ch_city' => $billingAddress->city,
-                    'ch_country' => strtoupper($billingAddress->country->code),
+                    'ch_country' => $billingAddress->country ? $billingAddress->country->getISO2() : '',
                     'ch_full_name' => $billingAddress->name,
                     'ch_phone' => $billingAddress->phone,
                     'ch_zip' => $billingAddress->postal,

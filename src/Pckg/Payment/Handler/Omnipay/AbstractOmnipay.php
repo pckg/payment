@@ -317,22 +317,13 @@ abstract class AbstractOmnipay extends AbstractHandler
         /**
          * Billing address.
          */
-        $billingAddress = $this->order->getBillingAddress();
+        $billingAddress = $this->order->getBillingOrDeliveryAddress();
         if ($billingAddress) {
-            $city = $billingAddress->city;
-            $postal = $billingAddress->postal;
-            if (!$city && !$postal) {
-                try {
-                    [$city, $postal] = explode(" ", $billingAddress->address_line2, 2);
-                } catch (Throwable $e) {
-
-                }
-            }
             $customer = array_merge($customer, [
-                'billingCountry' => strtoupper($billingAddress->country->code),
+                'billingCountry' => $billingAddress->country ? $billingAddress->country->getISO2() : '',
                 'billingAddress1' => $billingAddress->address_line1,
-                'billingCity' => $city,
-                'billingPostcode' => $postal,
+                'billingCity' => $billingAddress->city,
+                'billingPostcode' => $billingAddress->postal,
             ]);
         }
 
