@@ -3,6 +3,7 @@
 use Carbon\Carbon;
 use Derive\Basket\Service\Summary\Item\Item;
 use GuzzleHttp\Client;
+use GuzzleHttp\RequestOptions;
 use Throwable;
 
 /**
@@ -17,41 +18,51 @@ class Leanpay extends AbstractHandler implements Handler
      */
     protected $handler = 'leanpay';
 
-    public function getStart()
+    private function makeAmount($price)
+    {
+        if ((int)$price == $price) {
+            return number_format((int)$price, 0, '', ',');
+        }
+
+        return number_format((float)$price, 2, '.', ',');
+    }
+
+    public function initPayment()
     {
         try {
             $client = new Client();
             $endpoint = $this->environment->config('leanpay.url');
             $billingAddress = $this->order->getBillingAddress();
 
-            $response = $client->post($url . '/vendor/token', [
+            $postData = [
                 'vendorApiKey' => $this->environment->config('leanpay.apiKey'),
                 'vendorTransactionId' => $this->getPaymentRecord()->hash,
-                'amount' => $this->getTotalToPay(),
+                'amount' => $this->makeAmount($this->getTotalToPay()),
                 'successUrl' => $this->getSuccessUrl(),
                 'errorUrl' => $this->getErrorUrl(),
                 // set notification url in Leanpay Dashboard > Company > Development > API URL
                 'vendorPhoneNumber' => $billingAddress->phone ?? null,
                 'vendorFirstName' => $billingAddress->name ?? null,
-                'vendorFirstName' => $billingAddress->surname ?? null,
+                'vendorLastName' => $billingAddress->surname ?? null,
                 'vendorAddress' => $billingAddress->address_line1 ?? null,
                 'vendorZip' => $billingAddress->postal ?? null,
                 'vendorCity' => $billingAddress->city ?? null,
                 'language' => localeManager()->getDefaultFrontendLanguage()->slug ?? 'sl',
                 'vendorProductCode' => '',
-                'CartItems' => collect($this->order->getOrder()->getEstimate()->getItems())->map(function (Item $item) {
+                'CartItems' => collect($this->order->getBills()[0]->order->getEstimate()->getItems())->map(function (Item $item) {
                     return [
                         'name' => $item->getTitle(),
-                        'sku' => $item->getSku() ?? $item->getGtin(),
-                        'price' => $item->getPrice(),
+                        'sku' => $item->getSku() ?? ($item->getGtin() ?? $item->getTitle()),
+                        'price' => $this->makeAmount($item->getPrice()),
                         'qty' => $item->getQuantity(),
                         'lpProdCode' => '',
                     ];
                 })->all(),
-            ]);
+            ];
+            $response = $client->post($endpoint . '/vendor/token', $postData);
             $json = json_decode($response->getBody()->getContents(), true);
             if (!isset($json['token'])) {
-                throw new \Exception('Leanpay token is not set');
+                throw new \Exception('Leanpay token is not returned in response');
             }
 
             return [
@@ -61,7 +72,7 @@ class Leanpay extends AbstractHandler implements Handler
         } catch (Throwable $e) {
             return [
                 'success' => false,
-                'message' => 'Leanpay payments are not available at the moment.',
+                'message' => 'Leanpay payments are not available at the moment.' . exception($e),
             ];
         }
     }
