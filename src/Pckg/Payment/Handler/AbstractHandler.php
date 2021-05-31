@@ -192,7 +192,7 @@ abstract class AbstractHandler implements Handler
                                              'transaction_id' => $transactionId,
                                          ]);
     }
-    
+
     public function approveRefund($description, $log, $transactionId)
     {
         $this->paymentRecord->addLog('completed', $log);
@@ -211,15 +211,23 @@ abstract class AbstractHandler implements Handler
             'price'        => $amount,
             'payed'        => $amount,
             'notes'        => $description,
-        ]);    
+        ]);
     }
 
     public function errorPayment($data = null, $logStatus = 'error')
     {
         $this->paymentRecord->addLog($logStatus, $data);
         $this->paymentRecord->setAndSave([
-                                             'status' => 'error',
-                                         ]);
+            'status' => 'error',
+        ]);
+    }
+
+    public function cancelPayment($data = null, $logStatus = 'canceled')
+    {
+        $this->paymentRecord->addLog($logStatus, $data);
+        $this->paymentRecord->setAndSave([
+            'status' => 'canceled',
+        ]);
     }
 
     public function getCurrency()

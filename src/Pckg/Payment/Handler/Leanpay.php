@@ -30,6 +30,7 @@ class Leanpay extends AbstractHandler implements Handler
                 'amount' => $this->getTotalToPay(),
                 'successUrl' => $this->getSuccessUrl(),
                 'errorUrl' => $this->getErrorUrl(),
+                // set notification url in Leanpay Dashboard > Company > Development > API URL
                 'vendorPhoneNumber' => $billingAddress->phone ?? null,
                 'vendorFirstName' => $billingAddress->name ?? null,
                 'vendorFirstName' => $billingAddress->surname ?? null,
@@ -37,13 +38,14 @@ class Leanpay extends AbstractHandler implements Handler
                 'vendorZip' => $billingAddress->postal ?? null,
                 'vendorCity' => $billingAddress->city ?? null,
                 'language' => localeManager()->getDefaultFrontendLanguage()->slug ?? 'sl',
+                'vendorProductCode' => '',
                 'CartItems' => collect($this->order->getOrder()->getEstimate()->getItems())->map(function (Item $item) {
                     return [
                         'name' => $item->getTitle(),
                         'sku' => $item->getSku() ?? $item->getGtin(),
                         'price' => $item->getPrice(),
                         'qty' => $item->getQuantity(),
-                        'lpProdCode' => 1, // @T00D00
+                        'lpProdCode' => '',
                     ];
                 })->all(),
             ]);
@@ -62,5 +64,46 @@ class Leanpay extends AbstractHandler implements Handler
                 'message' => 'Leanpay payments are not available at the moment.',
             ];
         }
+    }
+
+    public function validateSignature(array $data)
+    {
+        $md5Signature = md5(
+            implode(
+                [
+                    $data['leanPayTransactionId'],
+                    $data['vendorTransactionId'],
+                    md5($this->environment->config('leanpay.apiSecret')),
+                    $data['amount'],
+                    $data['status']
+                ]
+            )
+        );
+
+        if ($md5Signature === $data['md5Signature']) {
+            return true;
+        }
+
+        throw new \Exception('Leanpay signature missmatch!');
+    }
+
+    public function postNotification()
+    {
+        $data = collect(post()->all())->only(['leanPayTransactionId', 'vendorTransactionId', 'amount', 'status', 'md5Signature'])->all();
+        $this->validateSignature($data);
+
+        if ($data['status'] === 'SUCCESS') {
+            $tid = $data['leanPayTransactionId'];
+            $this->approvePayment('Leanpay #' . $tid, $data, $tid);
+            return;
+        }
+
+        if ($data['status'] === 'CANCELED') {
+            $this->cancelPayment($data);
+            return;
+        }
+
+        $this->errorPayment($data);
+        return;
     }
 }
