@@ -21,10 +21,10 @@ class Leanpay extends AbstractHandler implements Handler
     private function makeAmount($price)
     {
         if ((int)$price == $price) {
-            return number_format((int)$price, 0, '', ',');
+            return number_format((int)$price, 0, '', '');
         }
 
-        return number_format((float)$price, 2, '.', ',');
+        return number_format((float)$price, 2, '.', '');
     }
 
     public function initPayment()
@@ -59,7 +59,7 @@ class Leanpay extends AbstractHandler implements Handler
                     ];
                 })->all(),
             ];
-            $response = $client->post($endpoint . '/vendor/token', $postData);
+            $response = $client->post($endpoint . '/vendor/token', [RequestOptions::JSON => $postData]);
             $json = json_decode($response->getBody()->getContents(), true);
             if (!isset($json['token'])) {
                 throw new \Exception('Leanpay token is not returned in response');
