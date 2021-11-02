@@ -20,33 +20,6 @@ class Monri extends AbstractHandler implements Handler
      */
     public function initPayment()
     {
-        $apiKey = $this->environment->config('monri.apiKey');
-        $timestamp = (new Carbon())->toISOString();
-        $randomToken = $this->getPaymentRecord()->hash;
-        $digest = hash('sha512', $apiKey . $randomToken . $timestamp);
-
-        return [
-            'authenticityToken' => $this->environment->config('monri.authenticityToken'),
-            'digest' => $digest,
-            'timestamp' => $timestamp,
-            'randomToken' => $randomToken,
-            'url' => $this->environment->config('monri.url'),
-        ];
-    }
-
-    /**
-     * @return float|string
-     */
-    public function getTotalToPay()
-    {
-        return round(parent::getTotalToPay() * 100); // in cents
-    }
-
-    /**
-     * @return string
-     */
-    public function postStart()
-    {
         $t = $this;
         $transactionData = function ($transactionType) use ($t) {
             $amount = $t->getTotalToPay();
@@ -80,7 +53,7 @@ class Monri extends AbstractHandler implements Handler
                     'ch_city' => $billingAddress->city,
                     'ch_country' => $billingAddress->country ? $billingAddress->country->getISO2() : '',
                     'ch_full_name' => $billingAddress->name,
-                    'ch_phone' => $billingAddress->phone,
+                    'ch_phone' => '123123123',//$billingAddress->phone,
                     'ch_zip' => $billingAddress->postal,
                 ]);
             }
@@ -90,35 +63,75 @@ class Monri extends AbstractHandler implements Handler
 
         $transactionData = $transactionData('purchase');
 
-        $decoded = $this->callCurl('/v2/transaction', ['transaction' => $transactionData]);
+        try {
+            $decoded = $this->callCurl('/v2/payment/new', $transactionData);
 
-        if (isset($decoded['secure_message'])) {
+            if ($decoded['client_secret'] ?? null) {
+                $this->log($decoded);
+
+                return [
+                    'url' => $this->environment->config('monri.url'),
+                    'authenticityToken' => $this->environment->config('monri.authenticityToken'),
+                    'clientSecret' => $decoded['client_secret'],
+                    'transactionParams' => [
+                        'address' => $transactionData['ch_address'] ?? null,
+                        'fullName' => $transactionData['ch_full_name'] ?? null,
+                        'city' => $transactionData['ch_city'] ?? null,
+                        'zip' => $transactionData['ch_zip'] ?? null,
+                        'phone' => $transactionData['ch_phone'] ?? null,
+                        'country' => $transactionData['ch_country'] ?? null,
+                        'email' => $transactionData['ch_email'] ?? null,
+                        'orderInfo' => $transactionData['order_info'] ?? null,
+                    ]
+                ];
+            }
+
+            $this->errorPayment($decoded);
+
             return [
-                'success' => true,
-                'threeDSecure' => [
-                    'action' => $decoded['secure_message']['acs_url'],
-                    'PaReq' => $decoded['secure_message']['pareq'],
-                    'TermUrl' => null,
-                    'MD' => $decoded['secure_message']['authenticity_token'],
-                ],
+                'success' => false,
+                'message' => 'Monri payments are not available - cannot create payment',
+            ];
+        } catch (Throwable $e) {
+            error_log(exception($e));
+            $this->errorPayment(['e' => exception($e)]);
+
+            return [
+                'success' => false,
+                'message' => 'Monri payments are not available - cannot create payment',
             ];
         }
 
-        if ($decoded['transaction']['response_message'] === 'approved') {
-            $this->approvePayment('Monri #' . $decoded['transaction']['id'], $transaction, $decoded['transaction']['id']);
-            return [
-                'success' => true,
-                'modal' => 'success',
-            ];
-        }
-
-        $this->errorPayment($transaction);
+        $apiKey = $this->environment->config('monri.apiKey');
+        $timestamp = (new Carbon())->toISOString();
+        $randomToken = $this->getPaymentRecord()->hash;
+        $digest = hash('sha512', $apiKey . $randomToken . $timestamp);
 
         return [
-            'success' => false,
-            'modal' => 'error',
-            'data' => $decoded,
+            'authenticityToken' => $this->environment->config('monri.authenticityToken'),
+            'digest' => $digest,
+            'timestamp' => $timestamp,
+            'randomToken' => $randomToken,
+            'url' => $this->environment->config('monri.url'),
         ];
+    }
+
+    public function postStart()
+    {
+        $this->log(post()->all());
+
+        return [
+            'success' => true,
+            'modal' => 'success',
+        ];
+    }
+
+    /**
+     * @return float|string
+     */
+    public function getTotalToPay()
+    {
+        return round(parent::getTotalToPay() * 100); // in cents
     }
 
     protected function callCurl($endpoint, $postData)
@@ -127,14 +140,21 @@ class Monri extends AbstractHandler implements Handler
 
         $data_string = json_encode($postData);
 
+        $key = $this->environment->config('monri.apiKey');
+        $timestamp = time();
+        $digest = hash('sha512', $this->environment->config('monri.apiKey') . $timestamp . $this->environment->config('monri.authenticityToken') . $data_string);
+        $authorization = "WP3-v2 " . $this->environment->config('monri.authenticityToken') . " " . $timestamp . " " . $digest;
+
         // Execute transaction
         $ch = curl_init($url . $endpoint);
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "POST");
         curl_setopt($ch, CURLOPT_POSTFIELDS, $data_string);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_HTTPHEADER, array(
+        curl_setopt($ch, CURLOPT_HTTPHEADER, [
                 'Content-Type: application/json',
-                'Content-Length: ' . strlen($data_string))
+                'Content-Length: ' . strlen($data_string),
+                'Authorization: ' . $authorization,
+            ]
         );
         $transaction = curl_exec($ch);
 
@@ -168,7 +188,7 @@ class Monri extends AbstractHandler implements Handler
                 ];
             }
 
-            if (!$digest !== $checkdigest) {
+            if ($digest !== $checkdigest) {
                 $this->paymentRecord->addLog('error', post()->all());
                 throw new Exception('Digest mismatch');
             }
@@ -201,32 +221,5 @@ class Monri extends AbstractHandler implements Handler
         } catch (Exception $e) {
             error_log('MONRI PAYMENT EXCEPTION: ' . exception($e));
         }
-    }
-
-    /**
-     * Check for valid 3dsecure response
-     **/
-    function postNotification2()
-    {
-        $paRes = post('PaRes');
-        if (!$paRes) {
-            return;
-        }
-
-        $resultXml = $this->callCurl('/pares', ['secure_message' => ['MD' => post('MD'), 'PaRes' => post('PaRes')]]);
-
-        if (($resultXml['status'] ?? null) !== 'approved') {
-            $this->errorPayment($resultXml);
-
-            return [
-                'success' => false,
-            ];
-        }
-
-        $this->approvePayment($resultXml);
-
-        return [
-            'success' => true,
-        ];
     }
 }
