@@ -164,20 +164,35 @@ class Monri extends AbstractHandler implements Handler
     public function postNotification()
     {
         $approvalCode = post('approval_code');
-        $digest = post('digest');
         $orderNumber = post('order_number');
         $responseCode = post('response_code');
 
         // payment should be auto resolved here?
-        if (!$digest || !$approvalCode || !$orderNumber) {
-            return;
+        if (!$approvalCode || !$orderNumber || !$responseCode) {
+            throw new \Exception('Missing notification parameter');
         }
 
         try {
-            $url = 'https://' . server('SERVER_NAME') . dirname(server('REQUEST_URI')) . '?' . server('QUERY_STRING');
-            $url = parse_url(preg_replace('/&digest=[^&]*/', '', $url));
-            $url = 'https://' . $url['host'] . $url['path'] . '?' . $url['query'];
-            $checkdigest = hash('sha512', $this->environment->config('monri.apiKey') . $url);
+            $authorizationHeader = request()->header('Authorization');
+            if (!$authorizationHeader) {
+                throw new \Exception('Missing authentication header');
+            }
+
+            if (!strpos($authorizationHeader, 'WP3-callback ') !== 0) {
+                throw new \Exception('Invalid authentication method');
+            }
+
+            [$authMethod, $header] = explode(' ', $authorizationHeader, 2);
+            $checkdigest = hash('sha512', $this->environment->config('monri.apiKey') . json_encode(post()->all()));
+
+            if ($digest !== $checkdigest) {
+                $this->paymentRecord->addLog('error', post()->all());
+                throw new Exception('Digest mismatch');
+            }
+
+            //$url = 'https://' . server('SERVER_NAME') . dirname(server('REQUEST_URI')) . '?' . server('QUERY_STRING');
+            //$url = parse_url(preg_replace('/&digest=[^&]*/', '', $url));
+            //$url = 'https://' . $url['host'] . $url['path'] . '?' . $url['query'];
 
             if ($this->paymentRecord->status === 'approved') {
                 $this->paymentRecord->addLog('approved', post()->all());
@@ -186,11 +201,6 @@ class Monri extends AbstractHandler implements Handler
                     'issuerCode' => $responseCode,
                     'note' => 'Already approved',
                 ];
-            }
-
-            if ($digest !== $checkdigest) {
-                $this->paymentRecord->addLog('error', post()->all());
-                throw new Exception('Digest mismatch');
             }
 
             if ($responseCode === "0000") {
