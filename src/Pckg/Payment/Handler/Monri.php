@@ -178,7 +178,7 @@ class Monri extends AbstractHandler implements Handler
                 throw new \Exception('Missing authentication header');
             }
 
-            if (!strpos($authorizationHeader, 'WP3-callback ') !== 0) {
+            if (strpos($authorizationHeader, 'WP3-callback ') !== 0) {
                 throw new \Exception('Invalid authentication method');
             }
 
