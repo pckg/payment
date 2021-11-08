@@ -228,7 +228,7 @@ class Monri extends AbstractHandler implements Handler
                 'success' => false,
                 'issuerCode' => $responseCode,
             ];
-        } catch (Exception $e) {
+        } catch (Throwable $e) {
             error_log('MONRI PAYMENT EXCEPTION: ' . exception($e));
         }
     }
