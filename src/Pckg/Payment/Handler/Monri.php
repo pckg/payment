@@ -172,64 +172,57 @@ class Monri extends AbstractHandler implements Handler
             throw new \Exception('Missing notification parameter');
         }
 
-        try {
-            $authorizationHeader = request()->header('Authorization');
-            if (!$authorizationHeader) {
-                throw new \Exception('Missing authentication header');
-            }
+        $authorizationHeader = request()->header('Authorization');
+        if (!$authorizationHeader) {
+            throw new \Exception('Missing authentication header');
+        }
 
-            if (strpos($authorizationHeader, 'WP3-callback ') !== 0) {
-                throw new \Exception('Invalid authentication method');
-            }
+        /*if (strpos($authorizationHeader, 'WP3-callback ') !== 0) {
+            throw new \Exception('Invalid authentication method');
+        }
 
-            [$authMethod, $header] = explode(' ', $authorizationHeader, 2);
-            $checkdigest = hash('sha512', $this->environment->config('monri.apiKey') . json_encode(post()->all()));
+        [$authMethod, $header] = explode(' ', $authorizationHeader, 2);
+        $checkdigest = hash('sha512', $this->environment->config('monri.apiKey') . json_encode(post()->all()));
 
-            if ($digest !== $checkdigest) {
-                $this->paymentRecord->addLog('error', post()->all());
-                throw new Exception('Digest mismatch');
-            }
+        if ($digest !== $checkdigest) {
+            $this->paymentRecord->addLog('error', post()->all());
+            throw new Exception('Digest mismatch');
+        }*/
 
-            //$url = 'https://' . server('SERVER_NAME') . dirname(server('REQUEST_URI')) . '?' . server('QUERY_STRING');
-            //$url = parse_url(preg_replace('/&digest=[^&]*/', '', $url));
-            //$url = 'https://' . $url['host'] . $url['path'] . '?' . $url['query'];
+        //$url = 'https://' . server('SERVER_NAME') . dirname(server('REQUEST_URI')) . '?' . server('QUERY_STRING');
+        //$url = parse_url(preg_replace('/&digest=[^&]*/', '', $url));
+        //$url = 'https://' . $url['host'] . $url['path'] . '?' . $url['query'];
 
-            if ($this->paymentRecord->status === 'approved') {
-                $this->paymentRecord->addLog('approved', post()->all());
-                return [
-                    'success' => true,
-                    'issuerCode' => $responseCode,
-                    'note' => 'Already approved',
-                ];
-            }
-
-            if ($responseCode === "0000") {
-                $this->approvePayment('Monri #', post()->all(), post('approval_code'));
-
-                // for server?
-                return [
-                    'success' => true,
-                    'issuerCode' => $responseCode,
-                ];
-            }
-
-            if ($responseCode === "pending") {
-                $this->paymentRecord->addLog('pending', post()->all());
-
-                return [
-                    'success' => true,
-                    'issuerCode' => $responseCode,
-                ];
-            }
-
-            $this->errorPayment(post()->all());
-
+        if ($this->paymentRecord->status === 'approved') {
+            $this->paymentRecord->addLog('approved', post()->all());
             return [
-                'success' => false,
+                'success' => true,
+                'issuerCode' => $responseCode,
+                'note' => 'Already approved',
+            ];
+        }
+
+        if ($responseCode === "0000") {
+            $this->approvePayment('Monri #', post()->all(), post('approval_code'));
+
+            // for server?
+            return [
+                'success' => true,
                 'issuerCode' => $responseCode,
             ];
-        } catch (Throwable $e) {
-            error_log('MONRI PAYMENT EXCEPTION: ' . exception($e));
         }
+
+        if ($responseCode === "pending") {
+            $this->paymentRecord->addLog('pending', post()->all());
+
+            return [
+                'success' => true,
+                'issuerCode' => $responseCode,
+            ];
+        }
+
+        $this->errorPayment(post()->all());
+
+        return parent::postNotification();
     }
 }

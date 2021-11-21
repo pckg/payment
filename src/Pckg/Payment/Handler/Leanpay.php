@@ -106,15 +106,21 @@ class Leanpay extends AbstractHandler implements Handler
         if ($data['status'] === 'SUCCESS') {
             $tid = $data['leanPayTransactionId'];
             $this->approvePayment('Leanpay #' . $tid, $data, $tid);
-            return;
+
+            return [
+                'success' => true,
+            ];
         }
 
         if ($data['status'] === 'CANCELED') {
             $this->cancelPayment($data);
-            return;
+
+            return [
+                'success' => false,
+                'message' => 'Payment canceled',
+            ];
         }
 
         $this->errorPayment($data);
-        return;
     }
 }

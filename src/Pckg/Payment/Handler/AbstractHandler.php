@@ -101,6 +101,7 @@ abstract class AbstractHandler implements Handler
 
     public function postNotification()
     {
+        throw new \Exception('Missing notification implementation');
     }
 
     public function getNotification()

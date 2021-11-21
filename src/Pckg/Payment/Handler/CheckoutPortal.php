@@ -125,37 +125,52 @@ class CheckoutPortal extends AbstractHandler implements Handler
         $type = $response['payment']['transaction-type'] ?? null;
 
         if ($type !== 'purchase') {
-            return;
+            parent::postNotification();
         }
 
         if ($state === 'success') {
             if ($this->getPaymentRecord()->status === 'approved') {
-                return;
+                return [
+                    'success' => true,
+                    'message' => 'Already approved',
+                ];
             }
 
             $description = "CheckoutPortal " . $response['payment']['transaction-id'];
             $this->approvePayment($description, $response, $response['payment']['transaction-id']);
 
-            return;
+            return [
+                'success' => true,
+            ];
         }
 
         if ($state === 'canceled') {
             $this->getPaymentRecord()->addLog('canceled', $response);
 
-            return;
+            return [
+                'success' => false,
+                'message' => 'Canceled',
+            ];
         }
 
         if ($state === 'error') {
             $this->getPaymentRecord()->addLog('error', $response);
-
-            return;
+            return [
+                'success' => false,
+                'message' => 'Payment error',
+            ];
         }
 
         if ($state === 'failed') {
             $this->getPaymentRecord()->addLog('failed', $response);
 
-            return;
+            return[
+                'success' => false,
+                'message' => 'Payment failed',
+            ];
         }
+
+        return parent::postNotification();
     }
 
     private function getIPNResponse()

@@ -92,20 +92,9 @@ class Stripe extends AbstractHandler implements Handler
                 'message' => 'Unexpected value',
             ];
         } catch (\Stripe\Exception\SignatureVerificationException $e) {
-
-            response()->code(400);
-
-            return [
-                'success' => false,
-                'error'   => true,
-                'message' => 'Invalid signature',
-            ];
+            throw $e;
         } catch (Throwable $e) {
-            return [
-                'success' => false,
-                'error'   => true,
-                'message' => 'Other exception',
-            ];
+            throw $e;
         }
 
         if ($event->type == "payment_intent.succeeded") {

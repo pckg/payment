@@ -199,8 +199,10 @@ abstract class AbstractOmnipay extends AbstractHandler
             $gatewayTransactionId = $response->getTransactionReference();
 
             $this->approvePayment(Convention::toCamel($this->handler) . ' #' . $gatewayTransactionId, $response, $gatewayTransactionId);
-        } else {
-            $this->errorPayment();
+
+            return [
+                'success' => true,
+            ];
         }
 
         echo "OK";
