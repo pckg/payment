@@ -1,20 +1,22 @@
-<?php namespace Pckg\Payment\Controller;
+<?php
 
-use Derive\Platform\Entity\Companies;
-use Derive\Platform\Record\Company;
+namespace Pckg\Payment\Controller;
+
 use Pckg\Generic\Record\SettingsMorph;
+use Pckg\Payment\Entity\Companies;
 use Pckg\Payment\Handler\Bankart;
 use Pckg\Payment\Handler\BankartCC;
 use Pckg\Payment\Handler\PaypalGnp;
 use Pckg\Payment\Handler\Stripe;
 use Pckg\Payment\Handler\Braintree;
+use Pckg\Payment\Record\Company;
 use Pckg\Payment\Service\Handlers;
 use Pckg\Payment\Service\PckgPayment;
 
 class Payment
 {
-
-    use Handlers, PckgPayment;
+    use Handlers;
+    use PckgPayment;
 
     public function postRefundAction(\Pckg\Payment\Record\Payment $payment)
     {
@@ -96,5 +98,4 @@ class Payment
             'success' => true,
         ];
     }
-
 }

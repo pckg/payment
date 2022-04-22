@@ -1,10 +1,10 @@
-<?php namespace Pckg\Payment\Adapter;
+<?php
+
+namespace Pckg\Payment\Adapter;
 
 abstract class AbstractCustomer implements Customer
 {
-
     protected $customer;
-
     public function __construct($customer)
     {
         $this->customer = $customer;
@@ -14,5 +14,4 @@ abstract class AbstractCustomer implements Customer
     {
         return $this->getLastName() . ' ' . $this->getFirstName();
     }
-
 }

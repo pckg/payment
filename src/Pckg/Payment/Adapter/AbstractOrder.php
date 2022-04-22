@@ -1,10 +1,10 @@
-<?php namespace Pckg\Payment\Adapter;
+<?php
+
+namespace Pckg\Payment\Adapter;
 
 abstract class AbstractOrder implements Order
 {
-
     protected $order;
-
     public function __construct($order)
     {
         $this->order = $order;
@@ -24,5 +24,4 @@ abstract class AbstractOrder implements Order
     {
         return sha1($this->getId());
     }
-
 }

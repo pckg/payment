@@ -1,13 +1,13 @@
-<?php namespace Pckg\Payment\Adapter\Environment;
+<?php
+
+namespace Pckg\Payment\Adapter\Environment;
 
 use Pckg\Payment\Adapter\Environment;
 
 class Pckg implements Environment
 {
-
     protected $validator;
-
-    /**
+/**
      * @param        $request
      * @param array  $rules
      */
@@ -60,5 +60,4 @@ class Pckg implements Environment
     {
         return flash($key, $val);
     }
-
 }

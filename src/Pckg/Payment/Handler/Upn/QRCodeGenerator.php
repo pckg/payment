@@ -2,14 +2,14 @@
 
 namespace Pckg\Payment\Handler\Upn;
 
-use \Exception;
+use Exception;
 
 class QRCodeGenerator
 {
     private string $payer_name;
     private string $payer_address;
     private string $payer_post;
-    
+
     private float $amount;
 
     private string $receiver_name;

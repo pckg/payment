@@ -1,16 +1,14 @@
-<?php namespace Pckg\Payment\Handler;
+<?php
+
+namespace Pckg\Payment\Handler;
 
 use Exception;
 
 class Paypal extends AbstractHandler implements Handler
 {
-
     const ACK_SUCCESS = 'Success';
-
     const CHECKOUTSTATUS_PAYMENT_ACTION_NOT_INITIATED = 'PaymentActionNotInitiated';
-
     const PAYMENTACTION = 'Sale';
-
     public function initHandler()
     {
         $this->config = [
@@ -22,7 +20,6 @@ class Paypal extends AbstractHandler implements Handler
             'url_return' => $this->environment->config('paypal.url_return'),
             'url_cancel' => $this->environment->config('paypal.url_cancel'),
         ];
-
         return $this;
     }
 
@@ -30,23 +27,14 @@ class Paypal extends AbstractHandler implements Handler
     {
         $fields = [
             'METHOD'       => 'SetExpressCheckout',
-            'RETURNURL'    => $this->environment->url(
-                $this->config['url_return'],
-                ['handler' => 'paypal', 'order' => $this->order->getOrder()]
-            ),
-            'CANCELURL'    => $this->environment->url(
-                $this->config['url_cancel'],
-                ['handler' => 'paypal', 'order' => $this->order->getOrder()]
-            ),
+            'RETURNURL'    => $this->environment->url($this->config['url_return'], ['handler' => 'paypal', 'order' => $this->order->getOrder()]),
+            'CANCELURL'    => $this->environment->url($this->config['url_cancel'], ['handler' => 'paypal', 'order' => $this->order->getOrder()]),
             'NOSHIPPING'   => '1',
             'ALLOWNOTE'    => '0',
             'ADDROVERRIDE' => '0',
         ];
-
         $fields = array_merge($fields, $this->fetchOrderData());
-
         $response = $this->makeRequest($fields);
-
         if ($response['ACK'] == static::ACK_SUCCESS) {
             $url = str_replace('[token]', $response['TOKEN'], $this->config['url_token']);
             $this->environment->redirect($url);
@@ -93,7 +81,6 @@ class Paypal extends AbstractHandler implements Handler
             'PAYMENTREQEUST_0_CURRENCYCODE'  => $this->order->getCurrency(),
             'PAYMENTREQEUST_0_ITEMAMT'       => $productsSum,
         ];
-
         foreach ($products as $i => $product) {
             $fields['L_PAYMENTREQUEST_0_NAME' . $i] = $product['NAME'];
             $fields['L_PAYMENTREQUEST_0_AMT' . $i] = $product['AMT'];
@@ -107,7 +94,6 @@ class Paypal extends AbstractHandler implements Handler
     {
         $fields = array_merge($fields, $this->getApiCredentials());
         $postFields = $this->stringifyFields($fields);
-
         $options = [
             CURLOPT_URL            => $this->config['url'],
             CURLOPT_HEADER         => false,
@@ -122,13 +108,11 @@ class Paypal extends AbstractHandler implements Handler
             CURLOPT_TIMEOUT        => 30,
             CURLOPT_CONNECTTIMEOUT => 30,
         ];
-
         $ch = curl_init();
         curl_setopt_array($ch, $options);
         $response = curl_exec($ch);
         $error = curl_error($ch);
         curl_close($ch);
-
         if (!$response) {
             throw new Exception("Request has failed! ($error)");
         }
@@ -170,9 +154,7 @@ class Paypal extends AbstractHandler implements Handler
             'METHOD' => 'GetExpressCheckoutDetails',
             'TOKEN'  => $token,
         ];
-
         $response = $this->makeRequest($fields);
-
         if ($response['CHECKOUTSTATUS'] == static::CHECKOUTSTATUS_PAYMENT_ACTION_NOT_INITIATED && isset($response['PAYERID'])) {
             $fields = [
                 'METHOD'        => 'DoExpressCheckoutPayment',
@@ -182,9 +164,7 @@ class Paypal extends AbstractHandler implements Handler
                 'AMT'           => $response['AMT'],
                 'CURRENCYCODE'  => $response['CURRENCYCODE'],
             ];
-
             $response = $this->makeRequest($fields);
-
             if ($response['ACK'] == static::ACK_SUCCESS) {
                 $this->order->setPaid();
             }
@@ -193,7 +173,5 @@ class Paypal extends AbstractHandler implements Handler
 
     public function error()
     {
-
     }
-
 }

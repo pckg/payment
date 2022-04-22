@@ -1,4 +1,6 @@
-<?php namespace Pckg\Payment\Entity;
+<?php
+
+namespace Pckg\Payment\Entity;
 
 use Derive\Orders\Entity\Orders;
 use Derive\Orders\Entity\OrdersBills;
@@ -10,7 +12,6 @@ use Pckg\Payment\Record\PaymentsMorph;
 
 class Payments extends Entity
 {
-
     protected $record = Payment::class;
 
     public function order()
@@ -21,7 +22,7 @@ class Payments extends Entity
     /**
      * Some old orders do not have that connection?
      * Or do we have a new connection?
-     * 
+     *
      * @return HasMany
      */
     public function instalments()
@@ -79,5 +80,4 @@ class Payments extends Entity
             });
         });
     }
-
 }

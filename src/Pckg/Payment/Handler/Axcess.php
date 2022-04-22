@@ -1,10 +1,11 @@
-<?php namespace Pckg\Payment\Handler;
+<?php
+
+namespace Pckg\Payment\Handler;
 
 use Throwable;
 
 class Axcess extends AbstractHandler implements Handler
 {
-
     protected $axcessToken;
 
     protected $handler = 'axcess';
@@ -186,5 +187,4 @@ class Axcess extends AbstractHandler implements Handler
             return $this->environment->redirect($this->getErrorUrl());
         }
     }
-
 }

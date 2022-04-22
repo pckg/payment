@@ -1,4 +1,6 @@
-<?php namespace Pckg\Payment\Handler;
+<?php
+
+namespace Pckg\Payment\Handler;
 
 use Carbon\Carbon;
 use Derive\Orders\Record\OrdersBill;
@@ -7,12 +9,6 @@ use Pckg\Payment\Handler\Valu\ValuHelper;
 
 class Valu extends AbstractHandler
 {
-
-    /**
-     * @var CMoneta
-     */
-    protected $moneta;
-
     public function initHandler()
     {
         $this->config = [
@@ -77,7 +73,7 @@ class Valu extends AbstractHandler
         $sXMLData = '<meta name="Price" content="' . $this->getTotalToPay() . '">
  <meta name="Quantity" content="1">
  <meta name="VATRate" content="0">
- <meta name="Description" content="' . htmlentities($this->getDescription()) .'">
+ <meta name="Description" content="' . htmlentities($this->getDescription()) . '">
  <meta name="Currency" content="' . $this->getCurrency() . '">';
 
         /**
@@ -184,7 +180,6 @@ class Valu extends AbstractHandler
                     $this->approvePayment('Moneta #' . $sConfirmationID, null, $sConfirmationID);
 
                     $this->paymentRecord->updateLog('valu:purchasestatus', 'potrjeno');
-
                 } else {
                     $this->errorPayment();
 
@@ -196,5 +191,4 @@ class Valu extends AbstractHandler
 
         die($sOutput);
     }
-
 }

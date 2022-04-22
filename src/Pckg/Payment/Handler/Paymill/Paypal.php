@@ -1,4 +1,6 @@
-<?php namespace Pckg\Payment\Handler\Paymill;
+<?php
+
+namespace Pckg\Payment\Handler\Paymill;
 
 use Paymill\Models\Request\Checksum;
 use Paymill\Models\Request\Transaction;
@@ -6,7 +8,6 @@ use Pckg\Payment\Handler\Paymill;
 
 class Paypal extends Paymill
 {
-
     public function validate($request)
     {
         return [
@@ -24,41 +25,31 @@ class Paypal extends Paymill
                  ->setDescription('Description')
                  ->setReturnUrl($this->getReturnUrl())
                  ->setCancelUrl($this->getCancelUrl());
-
         $response = $this->paymill->create($checksum);
-
         return $response->getId();
     }
 
-    private function getReturnUrl()
+    public function getReturnUrl()
     {
-        return $this->environment->fullUrl(
-            $this->environment->config('paymill-paypal.url_return'),
-            [
+        return $this->environment->fullUrl($this->environment->config('paymill-paypal.url_return'), [
                 'handler' => 'paymill-paypal',
                 'listing' => $this->order->getOrder(),
-            ]
-        );
+            ]);
     }
 
-    private function getCancelUrl()
+    public function getCancelUrl()
     {
-        return $this->environment->fullUrl(
-            $this->environment->config('paymill-paypal.url_cancel'),
-            [
+        return $this->environment->fullUrl($this->environment->config('paymill-paypal.url_cancel'), [
                 'handler' => 'paymill-paypal',
                 'listing' => $this->order->getOrder(),
-            ]
-        );
+            ]);
     }
 
     public function success()
     {
         $transaction = new Transaction();
         $transaction->setId($this->environment->request('paymill_trx_id'));
-
         $response = $this->paymill->getOne($transaction);
-
         if ($response->getStatus() == 'closed') {
             $this->order->setPaid();
         }
@@ -66,18 +57,11 @@ class Paypal extends Paymill
 
     public function getValidateUrl()
     {
-        return $this->environment->url(
-            'payment.validate',
-            ['handler' => 'paymill-paypal', 'order' => $this->order->getOrder()]
-        );
+        return $this->environment->url('payment.validate', ['handler' => 'paymill-paypal', 'order' => $this->order->getOrder()]);
     }
 
     public function getStartUrl()
     {
-        return $this->environment->url(
-            'payment.start',
-            ['handler' => 'paymill-paypal', 'order' => $this->order->getOrder()]
-        );
+        return $this->environment->url('payment.start', ['handler' => 'paymill-paypal', 'order' => $this->order->getOrder()]);
     }
-
 }

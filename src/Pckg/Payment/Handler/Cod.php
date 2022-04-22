@@ -1,10 +1,11 @@
-<?php namespace Pckg\Payment\Handler;
+<?php
+
+namespace Pckg\Payment\Handler;
 
 use Derive\Orders\Record\OrdersBill;
 
 class Cod extends AbstractHandler implements Handler
 {
-
     /**
      * Triggered when user submitts "Pay now" button in payment popup.
      *
@@ -46,5 +47,4 @@ class Cod extends AbstractHandler implements Handler
             'transaction_id' => $transactionId,
         ]);
     }
-
 }

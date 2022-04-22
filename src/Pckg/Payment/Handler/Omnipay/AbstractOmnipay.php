@@ -1,4 +1,6 @@
-<?php namespace Pckg\Payment\Handler\Omnipay;
+<?php
+
+namespace Pckg\Payment\Handler\Omnipay;
 
 use Omnipay\Common\AbstractGateway;
 use Omnipay\Common\GatewayInterface;
@@ -9,9 +11,11 @@ use Pckg\Database\Helper\Convention;
 use Pckg\Payment\Handler\AbstractHandler;
 use Pckg\Payment\Record\Payment;
 
+/**
+ * @property string $handler
+ */
 abstract class AbstractOmnipay extends AbstractHandler
 {
-
     /**
      * @var string
      */
@@ -399,5 +403,4 @@ abstract class AbstractOmnipay extends AbstractHandler
 
         return $customer;
     }
-
 }

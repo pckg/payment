@@ -1,11 +1,12 @@
-<?php namespace Pckg\Payment\Provider;
+<?php
 
-use Derive\Platform\Resolver\Company;
+namespace Pckg\Payment\Provider;
+
 use Pckg\Framework\Provider;
+use Pckg\Payment\Resolver\Company;
 
 class Payment extends Provider
 {
-
     public function routes()
     {
         return [
@@ -25,12 +26,13 @@ class Payment extends Provider
                            'namePrefix' => 'api.paymentMethods',
                            'tags'       => ['group:admin'],
                        ], [
-                           '.company' => route('/[paymentMethod]/companies/[company]/settings',
-                                              'companySettings')->resolvers([
+                           '.company' => route(
+                               '/[paymentMethod]/companies/[company]/settings',
+                               'companySettings'
+                           )->resolvers([
                                                                                 'company' => Company::class,
                                                                             ]),
                        ]),
         ];
     }
-
 }

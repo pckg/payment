@@ -1,4 +1,6 @@
-<?php namespace Pckg\Payment\Handler;
+<?php
+
+namespace Pckg\Payment\Handler;
 
 use Carbon\Carbon;
 use Derive\Basket\Service\Summary\Item\Item;
@@ -12,7 +14,6 @@ use Throwable;
  */
 class Leanpay extends AbstractHandler implements Handler
 {
-
     /**
      * @var string
      */

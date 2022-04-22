@@ -1,13 +1,13 @@
-<?php namespace Pckg\Payment\Handler\Valu;
+<?php
+
+namespace Pckg\Payment\Handler\Valu;
 
 class ValuHelper
 {
-
-
     // Functions_ResponseExpires()
     // Functions_UploadFile_GetContent($sFileName)
     // Functions_DownloadFile_PutFile($sFileName, $sFileExtension, $sFileData)
-    // Functions_Request($sParameterName) 
+    // Functions_Request($sParameterName)
     // Functions_RequestNumber($sParameterName, $nMin, $nMax, $nDefault)
     // Functions_RequestFloat($sParameterName, $fltMin, $fltMax, $fltDefault)
     // Functions_RequestString($sParameterName, $nMaxLen)
@@ -19,7 +19,7 @@ class ValuHelper
 
     //#######################################################################
     //##  Functions_ResponseExpires()
-    //####################################################################### 
+    //#######################################################################
     public static function Functions_ResponseExpires()
     {
         header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
@@ -134,7 +134,7 @@ class ValuHelper
 
     //#######################################################################
     //##  Functions_Validate_String($sData)
-    //#######################################################################  
+    //#######################################################################
     public static function Functions_Validate_String($sData)
     {
         $sValidChars = array(0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 1, 0, 0,
@@ -168,7 +168,7 @@ class ValuHelper
 
     //#######################################################################
     //##  Functions_CInt($sNum)
-    //#######################################################################   
+    //#######################################################################
     public static function Functions_CInt($sNum)
     {
         return intval($sNum);
@@ -176,7 +176,7 @@ class ValuHelper
 
     //#######################################################################
     //##  Functions_CDbl($sNum)
-    //#######################################################################  
+    //#######################################################################
     public static function Functions_CDbl($sNum)
     {
         return floatval(str_replace(",", ".", "" . $sNum));
@@ -184,7 +184,7 @@ class ValuHelper
 
     //#######################################################################
     //##  Functions_ParseCityHouse($sAddress, &$sCity, &$sHouse)
-    //#######################################################################  
+    //#######################################################################
     public static function Functions_ParseCityHouse($sAddress, &$sCity, &$sHouse)
     {
         $sData = "" . $sAddress;
@@ -211,7 +211,7 @@ class ValuHelper
 
     //#######################################################################
     //##  Functions_GetParameterValue($sData, $sParameterName)
-    //#######################################################################  
+    //#######################################################################
     public static function Functions_GetParameterValue($sData, $sParameterName)
     {
         $sReturn = "";
@@ -325,5 +325,4 @@ class ValuHelper
         $sXML = "  </ORDER_LINE>" . $EOL . "</ORDER>\">";
         return $sXML;
     }
-
 }

@@ -1,10 +1,11 @@
-<?php namespace Pckg\Payment\Handler\Paymill;
+<?php
+
+namespace Pckg\Payment\Handler\Paymill;
 
 use Pckg\Payment\Handler\Paymill;
 
 class Sepa extends Paymill
 {
-
     public function validate($request)
     {
         $rules = [
@@ -12,7 +13,6 @@ class Sepa extends Paymill
             'iban'          => 'required',
             'bic'           => 'required',
         ];
-
         if (!$this->environment->validates($request, $rules)) {
             return $this->environment->errorJsonResponse();
         }
@@ -24,18 +24,11 @@ class Sepa extends Paymill
 
     public function getValidateUrl()
     {
-        return $this->environment->url(
-            'payment.validate',
-            ['handler' => 'paymill-sepa', 'order' => $this->order->getOrder()]
-        );
+        return $this->environment->url('payment.validate', ['handler' => 'paymill-sepa', 'order' => $this->order->getOrder()]);
     }
 
     public function getStartUrl()
     {
-        return $this->environment->url(
-            'payment.start',
-            ['handler' => 'paymill-sepa', 'order' => $this->order->getOrder()]
-        );
+        return $this->environment->url('payment.start', ['handler' => 'paymill-sepa', 'order' => $this->order->getOrder()]);
     }
-
 }

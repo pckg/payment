@@ -1,10 +1,11 @@
-<?php namespace Pckg\Payment\Handler\Omnipay;
+<?php
+
+namespace Pckg\Payment\Handler\Omnipay;
 
 use Omnipay\CorvusPay\Gateway;
 
 class CorvusPay extends AbstractOmnipay
 {
-
     /**
      * @var string
      */
@@ -51,5 +52,4 @@ class CorvusPay extends AbstractOmnipay
     {
         return $this->completePurchase();
     }
-
 }

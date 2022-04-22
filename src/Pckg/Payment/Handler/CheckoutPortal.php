@@ -1,4 +1,6 @@
-<?php namespace Pckg\Payment\Handler;
+<?php
+
+namespace Pckg\Payment\Handler;
 
 use Braintree\ClientToken;
 use Braintree\Configuration;
@@ -16,32 +18,28 @@ use Exception;
  */
 class CheckoutPortal extends AbstractHandler implements Handler
 {
-
     /**
      * @var string
      */
     protected $handler = 'checkoutPortal';
-
-    /**
+/**
      * @return array|AbstractHandler
      */
     public function initPayment()
     {
         $client = new Client();
-
         $mode = $this->environment->config('checkout-portal.mode', null);
         $username = $this->environment->config('checkout-portal.username', null);
         $password = $this->environment->config('checkout-portal.password', null);
         $merchantAccount = $this->environment->config('checkout-portal.maid', null);
         $endpoint = $this->environment->config('checkout-portal.endpoint', null);
-
         $value = number_format($this->paymentRecord->price, 2);
         $currency = config('pckg.payment.currency', null);
         $firstName = auth()->user('name');
         $lastName = auth()->user('surname');
         $ancestor = 'https://' . server('HTTP_HOST', null);
-
-        $transactionType = 'purchase'; // authorization
+        $transactionType = 'purchase';
+// authorization
 
         $successUrl = $this->getSuccessUrl();
         $errorUrl = $this->getErrorUrl();
@@ -49,7 +47,6 @@ class CheckoutPortal extends AbstractHandler implements Handler
         $defaultUrl = $this->getCheckUrl();
         $pendingUrl = $this->getCheckUrl();
         $notificationUrl = $this->getNotificationUrl();
-
         $data = [
             'payment' => [
                 'merchant-account-id'  => [
@@ -87,7 +84,6 @@ class CheckoutPortal extends AbstractHandler implements Handler
                 'frame-ancestor' => $ancestor,
             ],
         ];
-
         if ($mode === 'seamless') {
             $data['payment']['payment-methods'] = [
                 'payment-method' => [
@@ -99,7 +95,6 @@ class CheckoutPortal extends AbstractHandler implements Handler
         }
 
         $this->paymentRecord->addLog('requesting', $data);
-
         $request = $client->post($endpoint, [
             'json'    => $data,
             'headers' => [
@@ -107,11 +102,8 @@ class CheckoutPortal extends AbstractHandler implements Handler
                 'Authorization' => 'Basic ' . base64_encode($username . ':' . $password),
             ],
         ]);
-
         $response = json_decode($request->getBody()->getContents(), true);
-
         $this->paymentRecord->addLog('created', $response);
-
         return [
             'mode'   => $mode,
             'iframe' => $response['payment-redirect-url'],
@@ -123,7 +115,6 @@ class CheckoutPortal extends AbstractHandler implements Handler
         $response = $this->getIPNResponse();
         $state = $response['payment']['transaction-state'] ?? null;
         $type = $response['payment']['transaction-type'] ?? null;
-
         if ($type !== 'purchase') {
             parent::postNotification();
         }
@@ -138,7 +129,6 @@ class CheckoutPortal extends AbstractHandler implements Handler
 
             $description = "CheckoutPortal " . $response['payment']['transaction-id'];
             $this->approvePayment($description, $response, $response['payment']['transaction-id']);
-
             return [
                 'success' => true,
             ];
@@ -146,7 +136,6 @@ class CheckoutPortal extends AbstractHandler implements Handler
 
         if ($state === 'canceled') {
             $this->getPaymentRecord()->addLog('canceled', $response);
-
             return [
                 'success' => false,
                 'message' => 'Canceled',
@@ -163,7 +152,6 @@ class CheckoutPortal extends AbstractHandler implements Handler
 
         if ($state === 'failed') {
             $this->getPaymentRecord()->addLog('failed', $response);
-
             return[
                 'success' => false,
                 'message' => 'Payment failed',
@@ -177,26 +165,25 @@ class CheckoutPortal extends AbstractHandler implements Handler
     {
         $data = post()->all();
 
-        if (!isset($data['response-signature-base64']) || !isset($data['response-signature-algorithm']) ||
-            !isset($data['response-base64'])) {
+        if (
+            !isset($data['response-signature-base64']) || !isset($data['response-signature-algorithm']) ||
+            !isset($data['response-base64'])
+        ) {
             throw new Exception('Missing request data');
         }
 
         $secretKey = $this->environment->config('checkout-portal.secret');
         $sig = hash_hmac('sha256', $data['response-base64'], $secretKey, true);
-
         if (!hash_equals($sig, base64_decode($data['response-signature-base64']))) {
             $this->getPaymentRecord()->addLog('missmatch', $data);
-
             throw new Exception('Signature missmatch');
         }
 
         $response = json_decode(base64_decode($data['response-base64']), true);
         $requestId = $response['payment']['request-id'] ?? null;
-
         $this->getPaymentRecord()->addLog('notification', $response);
-
-        if (strpos($requestId, $this->getPaymentRecord()->hash) === false) { // $hash, $hash-check-enrollment
+        if (strpos($requestId, $this->getPaymentRecord()->hash) === false) {
+        // $hash, $hash-check-enrollment
             throw new Exception('Payment id missmatch: ' . $requestId);
         }
 
@@ -206,17 +193,15 @@ class CheckoutPortal extends AbstractHandler implements Handler
     public function postSuccess()
     {
         $response = $this->getIPNResponse();
-
         $state = $response['payment']['transaction-state'] ?? null;
-
         if ($state != 'success') {
             throw new Exception('Not successful state');
         }
 
-        $ok = collect($response['payment']['statuses']['status'] ?? [])->has(function($status) {
+        $ok = collect($response['payment']['statuses']['status'] ?? [])->has(function ($status) {
+
             return $status['code'] == '201.0000';
         });
-
         if (!$ok) {
             throw new Exception('No successful code');
         }
@@ -231,5 +216,4 @@ class CheckoutPortal extends AbstractHandler implements Handler
     {
         $response = $this->getIPNResponse();
     }
-
 }

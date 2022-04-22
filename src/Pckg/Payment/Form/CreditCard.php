@@ -1,11 +1,12 @@
-<?php namespace Pckg\Payment\Form;
+<?php
+
+namespace Pckg\Payment\Form;
 
 use Pckg\Htmlbuilder\Element\Form\Bootstrap;
 use Pckg\Htmlbuilder\Element\Form\ResolvesOnRequest;
 
 class CreditCard extends Bootstrap implements ResolvesOnRequest
 {
-
     public function initFields()
     {
         $this->setDecoratorClasses([
@@ -46,5 +47,4 @@ class CreditCard extends Bootstrap implements ResolvesOnRequest
 
         return $this;
     }
-
 }

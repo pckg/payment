@@ -1,4 +1,6 @@
-<?php namespace Pckg\Payment\Handler;
+<?php
+
+namespace Pckg\Payment\Handler;
 
 use Ampeco\OmnipayBankart\Gateway;
 use Braintree\Configuration;
@@ -15,7 +17,6 @@ use Throwable;
 
 class Bankart extends AbstractOmnipay implements Handler
 {
-
     /**
      * @var string
      */
@@ -77,5 +78,4 @@ class Bankart extends AbstractOmnipay implements Handler
     {
         return $this->environment->config($this->handler . '.url') === 'https://bankart.paymentsandbox.cloud/';
     }
-
 }

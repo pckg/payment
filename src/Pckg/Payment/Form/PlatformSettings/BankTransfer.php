@@ -1,4 +1,6 @@
-<?php namespace Pckg\Payment\Form\PlatformSettings;
+<?php
+
+namespace Pckg\Payment\Form\PlatformSettings;
 
 /**
  * Class BankTransfer
@@ -7,7 +9,6 @@
  */
 class BankTransfer extends Upn
 {
-
     /**
      * @return $this|\Pckg\Htmlbuilder\Element\Form|Upn
      */
@@ -23,5 +24,4 @@ class BankTransfer extends Upn
 
         return $this;
     }
-
 }

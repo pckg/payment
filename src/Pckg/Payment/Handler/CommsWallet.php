@@ -1,11 +1,12 @@
-<?php namespace Pckg\Payment\Handler;
+<?php
+
+namespace Pckg\Payment\Handler;
 
 use Derive\Internal\Konto\Service\Konto;
 use Derive\Orders\Record\User;
 
 class CommsWallet extends AbstractHandler implements Handler
 {
-
     public function postStart()
     {
         /**
@@ -37,7 +38,7 @@ class CommsWallet extends AbstractHandler implements Handler
              * We need to split the instalment?
              */
             $this->errorPayment('Insufficient balance');
-            
+
             return [
                 'success' => true,
                 'modal' => 'error',
@@ -66,5 +67,4 @@ class CommsWallet extends AbstractHandler implements Handler
             'message' => 'Error making payment',
         ];
     }
-
 }

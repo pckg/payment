@@ -1,4 +1,6 @@
-<?php namespace Pckg\Payment\Service;
+<?php
+
+namespace Pckg\Payment\Service;
 
 use Pckg\Payment\Adapter\Environment;
 use Pckg\Payment\Adapter\Log;
@@ -6,24 +8,20 @@ use Pckg\Payment\Adapter\Order;
 
 class Payment
 {
-
     use Handlers;
 
+
     protected $order;
-
     protected $environment;
-
     public function setOrder(Order $order = null)
     {
         $this->order = $order;
-
         return $this;
     }
 
     public function setEnvironment(Environment $environment)
     {
         $this->environment = $environment;
-
         return $this;
     }
 
@@ -68,7 +66,6 @@ class Payment
         $this->useHandler($handler);
         $handler = $this->getHandler();
         $handler->setLogger($logger)->setEnvironment($this->environment);
-
         return $this;
     }
 
@@ -76,10 +73,10 @@ class Payment
     {
         $methods = [];
         foreach (config('pckg.payment.provider') as $method => $config) {
-            /**
-             * Skip disabled methods.
-             * @T00D00 - show sandbox to admin only?
-             */
+        /**
+                     * Skip disabled methods.
+                     * @T00D00 - show sandbox to admin only?
+                     */
             if (!config('pckg.payment.provider.' . $method . '.enabled')) {
                 continue;
             }
@@ -104,5 +101,4 @@ class Payment
 
         return $methods;
     }
-
 }

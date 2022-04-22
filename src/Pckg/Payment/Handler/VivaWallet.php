@@ -1,21 +1,20 @@
-<?php namespace Pckg\Payment\Handler;
+<?php
+
+namespace Pckg\Payment\Handler;
 
 use GuzzleHttp\Client;
 use Pckg\Framework\Exception;
 
 class VivaWallet extends AbstractHandler implements Handler
 {
-
     /**
      * @var string
      */
     protected $handler = 'vivawallet';
-
-    /**
+/**
      * @var Client
      */
     protected $client;
-
     public function initHandler()
     {
         $url = $this->environment->config('viva-wallet.url');
@@ -30,13 +29,11 @@ class VivaWallet extends AbstractHandler implements Handler
                 ? 'https://demo-accounts.vivapayments.com/'
                 : 'https://accounts.vivapayments.com/',
         ];
-
         $this->client = new Client([
             'headers' => [
                 'Accept' => 'application/json'
             ],
         ]);
-
         return $this;
     }
 
@@ -64,20 +61,23 @@ class VivaWallet extends AbstractHandler implements Handler
     public function postStart()
     {
         $currency = $this->getCurrency();
-
         $currencyCode = null;
-        switch ($currency_code) {
+        switch ($currency) {
             case 'EUR':
-                $currencyCode = 978;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               $currencyCode = 978;
+
                 break;
             case 'GBP':
-                $currencyCode = 826;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           $currencyCode = 826;
+
                 break;
             case 'BGN':
-                $currencyCode = 975;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           $currencyCode = 975;
+
                 break;
             case 'RON':
-                $currencyCode = 946;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           $currencyCode = 946;
+
                 break;
         }
 
@@ -89,7 +89,6 @@ class VivaWallet extends AbstractHandler implements Handler
         }
 
         $customer = $this->order->getCustomer();
-
         $data = [
             'email' => $customer->getEmail(),
             'phone' => '070443244',
@@ -104,7 +103,6 @@ class VivaWallet extends AbstractHandler implements Handler
             'disableCash' => true,
             'sourceCode' => $this->config['apiCode'],
         ];
-
         $url = $this->config['url'] . 'api/orders';
         $bearer = $this->getToken();
         $response = $this->client->post($url, [
@@ -128,7 +126,6 @@ class VivaWallet extends AbstractHandler implements Handler
         if ($decoded['ErrorCode'] === 0) {
             $this->paymentRecord->addLog('started', $decoded);
             $this->paymentRecord->setAndSave(['payment_id' => $decoded['OrderCode']]);
-
             return [
                 'redirect' => $this->config['url'] . 'web/checkout?ref=' . $decoded['OrderCode'],
                 'success' => true,
@@ -153,26 +150,23 @@ class VivaWallet extends AbstractHandler implements Handler
                 'Authorization' => 'Basic ' . $bearer
             ]
         ]);
-
         return json_decode($response->getBody()->getContents(), true);
     }
 
     public function postCompanyNotification()
     {
         $this->paymentRecord->addLog('postCompanyNotification', post()->all());
-
         $eventTypeId = post('EventTypeId', null);
         if ($eventTypeId === 1796) {
             $transactionId = post('EventData.TransactionId', null);
             $this->approvePayment('VivaWallet #' . $transactionId, post()->all(), $transactionId);
-
             return [
                 'success' => true
             ];
         } elseif ($eventTypeId === 1797) {
-            /**
-             * Refund a transaction?
-             */
+        /**
+                     * Refund a transaction?
+                     */
 
             return [
                 'success' => true,
@@ -181,5 +175,4 @@ class VivaWallet extends AbstractHandler implements Handler
 
         throw new Exception('Notification method event not supported.');
     }
-
 }

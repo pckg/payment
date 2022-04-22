@@ -1,4 +1,6 @@
-<?php namespace Pckg\Payment\Handler;
+<?php
+
+namespace Pckg\Payment\Handler;
 
 use Derive\Orders\Record\OrdersBill;
 use Pckg\Payment\Adapter\Environment;
@@ -8,23 +10,17 @@ use Pckg\Payment\Record\Payment;
 
 abstract class AbstractHandler implements Handler
 {
-
     protected $config = [];
-
     protected $order;
-
     protected $log;
-
-    /**
+/**
      * @var Payment
      */
     protected $paymentRecord;
-
-    /**
+/**
      * @var Environment
      */
     protected $environment;
-
     public function __construct(Order $order = null)
     {
         $this->order = $order;
@@ -33,7 +29,6 @@ abstract class AbstractHandler implements Handler
     public function setPaymentRecord($record)
     {
         $this->paymentRecord = $record;
-
         return $this;
     }
 
@@ -50,14 +45,12 @@ abstract class AbstractHandler implements Handler
     public function setLogger(Log $log)
     {
         $this->log = $log;
-
         return $this;
     }
 
     public function setEnvironment(Environment $environment)
     {
         $this->environment = $environment;
-
         return $this;
     }
 
@@ -115,17 +108,14 @@ abstract class AbstractHandler implements Handler
 
     public function getDownload()
     {
-
     }
 
     public function postDownload()
     {
-
     }
 
     public function postUploadFile()
     {
-
     }
 
     public function getCompanySettings()
@@ -161,19 +151,18 @@ abstract class AbstractHandler implements Handler
     public function waitPayment($description, $log, $transactionId, $status = 'waiting')
     {
         $this->paymentRecord->addLog($status, $log);
+        $this->order->getBills()->keyBy('order_id')->each(function (OrdersBill $ordersBill) {
 
-        $this->order->getBills()->keyBy('order_id')->each(function(OrdersBill $ordersBill) use ($description) {
             $order = $ordersBill->order;
-            /**
-             * Payment confirms order so stock is okay.
-             */
+        /**
+                     * Payment confirms order so stock is okay.
+                     */
             $order->confirm();
-            /**
-             * Payment status is set as waiting.
-             */
+        /**
+                     * Payment status is set as waiting.
+                     */
             $order->waitingForPayment();
         });
-
         $this->paymentRecord->setAndSave([
                                              'status'         => $status,
                                              'transaction_id' => $transactionId,
@@ -183,11 +172,10 @@ abstract class AbstractHandler implements Handler
     public function approvePayment($description, $log, $transactionId, $status = 'approved')
     {
         $this->paymentRecord->addLog($status, $log);
+        $this->order->getBills()->each(function (OrdersBill $ordersBill) use ($description) {
 
-        $this->order->getBills()->each(function(OrdersBill $ordersBill) use ($description) {
             $ordersBill->confirm($description);
         });
-
         $this->paymentRecord->setAndSave([
                                              'status'         => $status,
                                              'transaction_id' => $transactionId,
@@ -197,20 +185,17 @@ abstract class AbstractHandler implements Handler
     public function approveRefund($description, $log, $transactionId)
     {
         $this->paymentRecord->addLog('completed', $log);
-
-        $this->paymentRecord->setAndSave(['status' => 'refund', 'transaction_id' => $json->id]);
-
+        $this->paymentRecord->setAndSave(['status' => 'refund', 'transaction_id' => $transactionId]);
         $instalments = $this->paymentRecord->getBills();
         $order = $instalments->first()->order();
-
         OrdersBill::create([
             'order_id'     => $order->id,
             'dt_added'     => date('Y-m-d H:i:s'),
             'dt_confirmed' => date('Y-m-d H:i:s'),
             'dt_valid'     => date('Y-m-d H:i:s'),
             'type'         => 'refund',
-            'price'        => $amount,
-            'payed'        => $amount,
+            'price'        => $this->paymentRecord->price,
+            'payed'        => $this->paymentRecord->price,
             'notes'        => $description,
         ]);
     }
@@ -293,5 +278,4 @@ abstract class AbstractHandler implements Handler
             'payment' => $this->paymentRecord,
         ]);
     }
-
 }

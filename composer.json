@@ -18,23 +18,39 @@
     }
   ],
   "require": {
+    "ext-json": "*",
     "paymill/paymill": "4.*",
     "paypal/rest-api-sdk-php": "1.*",
     "braintree/braintree_php": "3.*",
     "mollie/mollie-api-php": "^2.0",
     "stripe/stripe-php": "7.*",
-    "wirecard/payment-sdk-php": "dev-master",
+    "wirecard/payment-sdk-php":  "dev-patch-php-8 as dev-master",
     "icepay/api": "^0.0.1",
     "ampeco/omnipay-bankart": "dev-master",
     "eoler/omnipay-corvuspay": "*"
   },
   "require-dev": {
-    "pckg-app/frontend-dev": "dev-master"
+    "pckg-app/frontend-dev": "dev-next-8.0 as dev-master",
+    "pckg/database": "dev-next-8.0 as dev-master",
+    "pckg/framework": "dev-next-8.0 as dev-master",
+    "pckg/auth": "dev-next-8.0 as dev-master",
+    "pckg/htmlbuilder": "dev-next-8.0 as dev-master",
+    "pckg/collection": "dev-next-8.0 as dev-master",
+    "pckg/generic": "dev-next-8.0 as dev-master",
+    "nesbot/carbon": "2.*"
   },
   "repositories": [
     {
       "type": "vcs",
       "url": "https://github.com/Eoler/omnipay-corvuspay.git"
+    },
+    {
+      "type": "vcs",
+      "url": "https://github.com/schtr4jh/omnipay-revolut.git"
+    },
+    {
+      "type": "vcs",
+      "url": "https://github.com/schtr4jh/paymentSDK-php.git"
     }
   ],
   "autoload": {
@@ -44,11 +60,17 @@
   },
   "scripts": {
     "test": [
-      "vendor/bin/phpunit --help --stop-on-defect",
-      "vendor/bin/phpcloc cloc src/",
+      "true || vendor/bin/phpunit --help --stop-on-defect",
+      "true || vendor/bin/phpcloc cloc src/",
       "vendor/bin/phpstan analyse src/ --level=1 || true",
-      "vendor/bin/phpcs -p src/ || true",
-      "vendor/bin/codecept run"
+      "true || vendor/bin/phpcs --extensions=php --warning-severity=8 --error-severity=1 --standard=PSR12 --parallel=2 -p src/",
+      "true || vendor/bin/codecept run"
+    ],
+    "autofix": [
+      "vendor/bin/phpcs --extensions=php --report-diff=phpcs.diff --warning-severity=8 --error-severity=1 --standard=PSR12 --parallel=2 -p src/"
+    ],
+    "autopatch": [
+      "patch -p0 -ui phpcs.diff && rm phpcs.diff"
     ]
   },
   "scripts-descriptions": {

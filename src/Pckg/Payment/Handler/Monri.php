@@ -1,4 +1,6 @@
-<?php namespace Pckg\Payment\Handler;
+<?php
+
+namespace Pckg\Payment\Handler;
 
 use Carbon\Carbon;
 use Throwable;
@@ -9,7 +11,6 @@ use Throwable;
  */
 class Monri extends AbstractHandler implements Handler
 {
-
     /**
      * @var string
      */
@@ -154,8 +155,7 @@ class Monri extends AbstractHandler implements Handler
                 'Content-Type: application/json',
                 'Content-Length: ' . strlen($data_string),
                 'Authorization: ' . $authorization,
-            ]
-        );
+            ]);
         $transaction = curl_exec($ch);
 
         return json_decode($transaction, true);

@@ -1,10 +1,12 @@
-<?php namespace Pckg\Payment\Handler;
+<?php
+
+namespace Pckg\Payment\Handler;
 
 use Braintree\ClientToken;
 use Braintree\Configuration;
 use Braintree\Gateway;
 use Braintree\Transaction;
-use Derive\User\Record\Address;
+use Pckg\Payment\Record\Address;
 use Pckg\Payment\Record\Payment;
 use Throwable;
 
@@ -15,13 +17,11 @@ use Throwable;
  */
 class Braintree extends AbstractHandler implements Handler
 {
-
     /**
      * @var string
      */
     protected $handler = 'braintree';
-
-    /**
+/**
      * @return $this|AbstractHandler
      */
     public function initHandler()
@@ -30,7 +30,6 @@ class Braintree extends AbstractHandler implements Handler
         Configuration::merchantId($this->environment->config('braintree.merchant'));
         Configuration::publicKey($this->environment->config('braintree.public'));
         Configuration::privateKey($this->environment->config('braintree.private'));
-
         return $this;
     }
 
@@ -47,7 +46,6 @@ class Braintree extends AbstractHandler implements Handler
         }
 
         $this->paymentRecord->addLog('created', $token);
-
         return [
             'token' => $token,
             'threeDSecure' => $this->transform3DS(),
@@ -89,15 +87,14 @@ class Braintree extends AbstractHandler implements Handler
 
     public function transformAdditionalInformation()
     {
+        $deliveryAddress = $this->order->getDeliveryAddress();
         if (!$deliveryAddress) {
             return [];
         }
 
-        $deliveryAddress = $this->order->getDeliveryAddress();
-
         return [
             'workPhoneNumber' => '',
-            'shippingGivenName' => $this->cleanASCII($address->name),
+            'shippingGivenName' => $this->cleanASCII($deliveryAddress->name),
             'shippingSurname' => '',
             'shippingPhone' => $deliveryAddress->phone,
             'shippingAddress' => $deliveryAddress ? $this->transformAddress($deliveryAddress) : [],
@@ -122,7 +119,6 @@ class Braintree extends AbstractHandler implements Handler
     public function postStart()
     {
         $braintreeNonce = request()->post('payment_method_nonce');
-
         if (!$braintreeNonce) {
             return [
                 'success' => false,
@@ -131,7 +127,6 @@ class Braintree extends AbstractHandler implements Handler
         }
 
         $this->getPaymentRecord()->addLog('submitted');
-
         $result = $braintreeNonce == $this->paymentRecord->getJsonData('braintree_payment_method_nonce') ? Transaction::find($this->paymentRecord->transaction_id) : Transaction::sale([
             'amount' => $this->getTotal(),
             'paymentMethodNonce' => $braintreeNonce,
@@ -139,15 +134,12 @@ class Braintree extends AbstractHandler implements Handler
                 'submitForSettlement' => true,
             ],
         ]);
-
         $this->paymentRecord->setJsonData('braintree_payment_method_nonce', $braintreeNonce)->save();
-
-        /**
+/**
          * No success.
          */
         if (!$result->success) {
             $this->errorPayment($result);
-
             return [
                 'success' => false,
                 'message' => $result->message,
@@ -162,7 +154,6 @@ class Braintree extends AbstractHandler implements Handler
         $transaction = $result->transaction;
         if ($transaction->status == Transaction::SUBMITTED_FOR_SETTLEMENT) {
             $this->approvePayment("Braintree #" . $transaction->id, $result, $transaction->id);
-
             return [
                 'success' => true,
                 'modal' => 'success',
@@ -170,7 +161,6 @@ class Braintree extends AbstractHandler implements Handler
         }
 
         $this->errorPayment($transaction, $transaction->status);
-
         $message = 'Unknown payment error';
         if ($transaction->status == Transaction::PROCESSOR_DECLINED) {
             $message = $transaction->processorResponseText;
@@ -188,15 +178,11 @@ class Braintree extends AbstractHandler implements Handler
     public function refund(Payment $payment, $amount = null)
     {
         $refundPaymentRecord = Payment::createForRefund($payment, $amount);
-
         try {
-
             $result = Configuration::gateway()->transaction()->refund($payment->transaction_id, $amount);
-
             if ($result->success) {
                 $this->paymentRecord = $refundPaymentRecord;
-                $this->approveRefund('Refund Braintree #' . $result->transaction->id, $result, $refund->transaction->id);
-
+                $this->approveRefund('Refund Braintree #' . $result->transaction->id, $result, $result->transaction->id);
                 return [
                     'success' => true,
                 ];
@@ -205,7 +191,6 @@ class Braintree extends AbstractHandler implements Handler
             $refundPaymentRecord->addLog('response:failed', $result);
         } catch (Throwable $e) {
             $refundPaymentRecord->addLog('response:exception');
-
             return [
                 'success' => false,
                 'message' => 'Refunds are not available at the moment.' . exception($e),
@@ -217,5 +202,4 @@ class Braintree extends AbstractHandler implements Handler
             'message' => 'Refunds are not available at the moment',
         ];
     }
-
 }

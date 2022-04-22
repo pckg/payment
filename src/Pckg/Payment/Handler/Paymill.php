@@ -1,4 +1,6 @@
-<?php namespace Pckg\Payment\Handler;
+<?php
+
+namespace Pckg\Payment\Handler;
 
 use Paymill\Models\Request\Payment;
 use Paymill\Models\Request\Transaction;
@@ -7,9 +9,7 @@ use Throwable;
 
 class Paymill extends AbstractHandler implements Handler
 {
-
     protected $paymill;
-
     public function validate($request)
     {
         $rules = [
@@ -20,7 +20,6 @@ class Paymill extends AbstractHandler implements Handler
             'cvc'        => 'required',
             'amount_int' => 'required',
         ];
-
         if (!$this->environment->validates($request, $rules)) {
             return $this->environment->errorJsonResponse();
         }
@@ -36,9 +35,7 @@ class Paymill extends AbstractHandler implements Handler
             'private_key' => $this->environment->config('paymill.private_key'),
             'public_key'  => $this->environment->config('paymill.public_key'),
         ];
-
         $this->paymill = new Request($this->config['private_key']);
-
         return $this;
     }
 
@@ -62,17 +59,14 @@ class Paymill extends AbstractHandler implements Handler
         $payment = new Payment();
         $payment->setToken($this->environment->request('token'));
         $payment->setClient($this->order->getCustomer());
-
         $response = null;
         try {
             $this->log($payment);
             $response = $this->paymill->create($payment);
             $this->log($response);
-
         } catch (Throwable $e) {
             $this->log($e);
             throw $e;
-
         } finally {
             if ($paymentId = $response->getId()) {
                 return $this->makeTransaction($paymentId);
@@ -87,7 +81,6 @@ class Paymill extends AbstractHandler implements Handler
                     ->setCurrency($this->order->getCurrency())
                     ->setPayment($paymentId)
                     ->setDescription($this->order->getDescription());
-
         $response = null;
         try {
             $this->log($transaction);
@@ -96,14 +89,11 @@ class Paymill extends AbstractHandler implements Handler
         } catch (Throwable $e) {
             $this->log($e);
             throw $e;
-
         } finally {
             if ($response->getStatus() == 'closed') {
                 $this->order->setPaid();
-
                 return true;
             }
-
         }
     }
 
@@ -113,5 +103,4 @@ class Paymill extends AbstractHandler implements Handler
             $this->order->setPaid();
         }
     }
-
 }

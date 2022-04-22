@@ -1,4 +1,6 @@
-<?php namespace Pckg\Payment\Record;
+<?php
+
+namespace Pckg\Payment\Record;
 
 use Carbon\Carbon;
 use Derive\Orders\Entity\OrdersBills;
@@ -11,9 +13,15 @@ use Pckg\Payment\Entity\Payments;
 use Pckg\Payment\Handler\AbstractHandler;
 use Pckg\Payment\Handler\Omnipay\CorvusPay;
 
+/**
+ * @property string $hash
+ * @property string $payment_id
+ * @property string $transaction_id
+ * @property Collection $logs
+ * @property string $handler
+ */
 class Payment extends Record
 {
-
     protected $entity = Payments::class;
 
     public static function createForRefund(Payment $payment, $amount = null)
@@ -65,7 +73,7 @@ class Payment extends Record
          * Let's generate payment ids unique between platforms.
          */
         $id = config('identifier');
-        $string = $id  . ':' .json_encode($data) . ':' . config('hash') . ':' . uniqid();
+        $string = $id  . ':' . json_encode($data) . ':' . config('hash') . ':' . uniqid();
 
         /**
          * For some reason, some handlers support max 30 chars. :/
@@ -175,27 +183,23 @@ class Payment extends Record
 
     public function redirectToSummaryIfNotPayable()
     {
-
     }
 
     public function redirectToSummaryIfOverbooked()
     {
-
     }
 
     public function getDescription()
     {
         $instalments = $this->getBills();
 
-        return __('order_payment') . '#' . $instalments->map('order')->map(function(\Derive\Orders\Record\Order $order
-            ) {
+        return __('order_payment') . '#' . $instalments->map('order')->map(function (\Derive\Orders\Record\Order $order) {
                 return '#' . $order->id . '(' . $order->num . ')';
-            })->implode(',') . ' - ' . $instalments->map('id')->implode(',') . ')';
+        })->implode(',') . ' - ' . $instalments->map('id')->implode(',') . ')';
     }
 
     public function addGtm()
     {
-        
     }
 
     public function getFinalTransactionIdAttribute()
@@ -204,12 +208,12 @@ class Payment extends Record
             return $this->transaction_id;
         }
 
-        $log = $this->logs->first(function(PaymentLog $paymentLog){
+        $log = $this->logs->first(function (PaymentLog $paymentLog) {
             return in_array($paymentLog->status, ['approved', 'payed']);
         });
 
         if (!$log) {
-            $instalments = $this->getBills()->filter(function(OrdersBill $ordersBill) {
+            $instalments = $this->getBills()->filter(function (OrdersBill $ordersBill) {
                 return strpos($ordersBill->notes, 'Paypal ') !== false;
             });
 
@@ -222,13 +226,13 @@ class Payment extends Record
                 if (!$transactionEndSpace && !$transactionEndLine) {
                     return substr($notes, $transactionStart);
                 }
-                
+
                 $length = ($transactionEndSpace && $transactionEndLine
                     ? ($transactionEndSpace < $transactionEndSpace ? $transactionEndSpace : $transactionEndLine)
                     : ($transactionEndSpace ? $transactionEndSpace : $transactionEndLine)) - $transactionStart;
 
                 $transactionId = substr($notes, $transactionStart, $length);
-                
+
                 return $transactionId;
             }
 
@@ -253,5 +257,4 @@ class Payment extends Record
 
         return Reflect::create($handlerClass);
     }
-
 }

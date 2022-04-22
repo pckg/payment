@@ -1,4 +1,6 @@
-<?php namespace Pckg\Payment\Handler;
+<?php
+
+namespace Pckg\Payment\Handler;
 
 use PayPal\Api\Amount;
 use PayPal\Api\Details;
@@ -15,15 +17,10 @@ use Throwable;
 
 class PaypalRest extends AbstractHandler implements Handler
 {
-
     const ACK_SUCCESS = 'Success';
-
     const CHECKOUTSTATUS_PAYMENT_ACTION_NOT_INITIATED = 'PaymentActionNotInitiated';
-
     const PAYMENTACTION = 'Sale';
-
     protected $paypal;
-
     public function initHandler()
     {
         $this->config = [
@@ -35,23 +32,13 @@ class PaypalRest extends AbstractHandler implements Handler
             'url_return'  => config('payment.paypalRest.url_return'),
             'url_cancel'  => config('payment.paypalRest.url_cancel'),
         ];
-
-        $this->paypal = new ApiContext(
-            new OAuthTokenCredential(
-                $this->config['id'],
-                $this->config['secret']
-            )
-        );
-
-        $this->paypal->setConfig(
-            [
+        $this->paypal = new ApiContext(new OAuthTokenCredential($this->config['id'], $this->config['secret']));
+        $this->paypal->setConfig([
                 'mode'           => $this->config['mode'],
                 'log.LogEnabled' => $this->config['log_enabled'],
                 'log.LogLevel'   => $this->config['log_level'],
                 'cache.enabled'  => true,
-            ]
-        );
-
+            ]);
         return $this;
     }
 
@@ -59,7 +46,6 @@ class PaypalRest extends AbstractHandler implements Handler
     {
         $payer = new Payer();
         $payer->setPaymentMethod('paypal');
-
         $itemList = new ItemList();
         $productsSum = 0.0;
         foreach ($this->order->getProducts() as $product) {
@@ -90,30 +76,19 @@ class PaypalRest extends AbstractHandler implements Handler
         $amount->setCurrency($this->order->getCurrency())
                ->setTotal($total)
                ->setDetails($details);
-
         $transaction = new Transaction();
         $transaction->setAmount($amount)
                     ->setItemList($itemList)
                     ->setDescription($this->order->getDescription())
                     ->setInvoiceNumber(uniqid());
-
         $redirectUrls = new RedirectUrls();
-        $redirectUrls->setReturnUrl(
-            env('DOMAIN') . url(
-                $this->config['url_return'],
-                ['paypalRest', $this->order->getOrder()]
-            )
-        )
-                     ->setCancelUrl(
-                         env('DOMAIN') . url($this->config['url_cancel'], ['paypalRest', $this->order->getOrder()])
-                     );
-
+        $redirectUrls->setReturnUrl(env('DOMAIN') . url($this->config['url_return'], ['paypalRest', $this->order->getOrder()]))
+                     ->setCancelUrl(env('DOMAIN') . url($this->config['url_cancel'], ['paypalRest', $this->order->getOrder()]));
         $payment = new Payment();
         $payment->setIntent('sale')
                 ->setPayer($payer)
                 ->setRedirectUrls($redirectUrls)
                 ->setTransactions([$transaction]);
-
         try {
             $this->log($payment);
             $payment->create($this->paypal);
@@ -130,14 +105,11 @@ class PaypalRest extends AbstractHandler implements Handler
     {
         $paymentId = request('paymentId');
         $payment = Payment::get($paymentId, $this->paypal);
-
         $execution = new PaymentExecution();
         $execution->setPayerId(request('PayerID'));
-
         $transaction = new Transaction();
         $amount = new Amount();
         $details = new Details();
-
         $productsSum = 0.0;
         foreach ($this->order->getProducts() as $product) {
             $productsSum += $product->getTotal();
@@ -158,11 +130,8 @@ class PaypalRest extends AbstractHandler implements Handler
         $amount->setCurrency($this->order->getCurrency())
                ->setTotal($total)
                ->setDetails($details);
-
         $transaction->setAmount($amount);
-
         $execution->addTransaction($transaction);
-
         try {
             $payment->execute($execution, $this->paypal);
         } catch (Throwable $e) {
@@ -172,5 +141,4 @@ class PaypalRest extends AbstractHandler implements Handler
             Payment::get($paymentId, $this->paypal);
         }
     }
-
 }

@@ -1,4 +1,6 @@
-<?php namespace Pckg\Payment\Handler\Omnipay;
+<?php
+
+namespace Pckg\Payment\Handler\Omnipay;
 
 use Omnipay\Revolut\Gateway;
 use Pckg\Payment\Handler\ManagesWebhooks;
@@ -9,7 +11,6 @@ use Stripe\WebhookEndpoint;
  */
 class Revolut extends AbstractOmnipay implements ManagesWebhooks
 {
-
     /**
      * @var string
      */

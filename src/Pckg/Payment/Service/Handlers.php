@@ -1,4 +1,6 @@
-<?php namespace Pckg\Payment\Service;
+<?php
+
+namespace Pckg\Payment\Service;
 
 use Pckg\Database\Helper\Convention;
 use Pckg\Payment\Handler\AbstractHandler;
@@ -20,16 +22,19 @@ use Pckg\Payment\Handler\PaypalGnp;
 use Pckg\Payment\Handler\PaypalRest;
 use Pckg\Payment\Handler\Proforma;
 use Pckg\Payment\Handler\VivaWallet;
+use Pckg\Payment\Adapter\Environment;
+use Pckg\Payment\Handler as HandlerAlias;
 
+/**
+ * @property Environment $environment
+ * @property mixed $order
+ */
 trait Handlers
 {
-
     protected $handler;
-
     public function setHandler(Handler $handler)
     {
         $this->handler = $handler;
-
         return $this;
     }
 
@@ -46,7 +51,6 @@ trait Handlers
         $this->handler = $handler;
         $this->handler->setEnvironment($this->environment);
         $this->handler->initHandler();
-
         return $this;
     }
 
@@ -64,18 +68,17 @@ trait Handlers
         $useHandlermethod = 'use' . ucfirst(Convention::toCamel($handler)) . 'Handler';
         if (method_exists($this, $useHandlermethod)) {
             $this->{$useHandlermethod}();
-
             return $this;
         }
 
         $classes = [];
         if (strpos($handler, '-')) {
             list($mainHandler, $subhandler) = explode('-', $handler);
-            $classes[] = \Pckg\Payment\Handler::class . '\\' . ucfirst($mainHandler) . '\\' . ucfirst($subhandler);
-            $classes[] = \Pckg\Payment\Handler::class . '\\' . ucfirst($mainHandler);
-            $classes[] = \Pckg\Payment\Handler::class . '\\' . str_replace(' ', '', Convention::toPascal(str_replace('-', ' ', $handler)));
+            $classes[] = HandlerAlias::class . '\\' . ucfirst($mainHandler) . '\\' . ucfirst($subhandler);
+            $classes[] = HandlerAlias::class . '\\' . ucfirst($mainHandler);
+            $classes[] = HandlerAlias::class . '\\' . str_replace(' ', '', Convention::toPascal(str_replace('-', ' ', $handler)));
         } else {
-            $classes[] = \Pckg\Payment\Handler::class . '\\' . ucfirst($handler);
+            $classes[] = HandlerAlias::class . '\\' . ucfirst($handler);
         }
 
         foreach ($classes as $class) {

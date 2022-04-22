@@ -1,4 +1,6 @@
-<?php namespace Pckg\Payment\Handler;
+<?php
+
+namespace Pckg\Payment\Handler;
 
 use Derive\Orders\Record\OrdersBill;
 use Pckg\Payment\Record\Payment;
@@ -6,7 +8,6 @@ use Throwable;
 
 class Stripe extends AbstractHandler implements Handler
 {
-
     protected $clientSecret;
 
     protected $handler = 'stripe';
@@ -92,7 +93,13 @@ class Stripe extends AbstractHandler implements Handler
                 'message' => 'Unexpected value',
             ];
         } catch (\Stripe\Exception\SignatureVerificationException $e) {
-            throw $e;
+            response()->code(400);
+
+            return [
+                'success' => false,
+                'error'   => true,
+                'message' => 'Invalid signature',
+            ];
         } catch (Throwable $e) {
             throw $e;
         }
@@ -159,5 +166,4 @@ class Stripe extends AbstractHandler implements Handler
             'message' => 'Refunds are not available at the moment',
         ];
     }
-
 }

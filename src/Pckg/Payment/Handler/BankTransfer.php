@@ -1,10 +1,11 @@
-<?php namespace Pckg\Payment\Handler;
+<?php
+
+namespace Pckg\Payment\Handler;
 
 use Pckg\Manager\Upload;
 
 class BankTransfer extends Upn
 {
-
     protected $downloadView = 'Derive/Basket:payment/start_bank_transfer';
 
     protected $downloadFolder = 'bank-transfer';
@@ -35,5 +36,4 @@ class BankTransfer extends Upn
             'uploaded' => $finalName,
         ];
     }
-
 }

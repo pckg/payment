@@ -1,11 +1,12 @@
-<?php namespace Pckg\Payment\Form\PlatformSettings;
+<?php
+
+namespace Pckg\Payment\Form\PlatformSettings;
 
 use Pckg\Htmlbuilder\Element\Form;
 use Pckg\Htmlbuilder\Validator\AbstractValidator;
 
 class RequireWhenEnabled extends AbstractValidator
 {
-
     protected $form;
 
     protected $msg = 'Select value';
@@ -23,5 +24,4 @@ class RequireWhenEnabled extends AbstractValidator
 
         return !isset($data['enabled']) || !$data['enabled'] || $value;
     }
-
 }
