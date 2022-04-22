@@ -127,10 +127,17 @@ class Icepay extends AbstractHandler implements Handler
         if ($status == 'OK') {
             $this->approvePayment('Icepay #' . $reference, $bodyData, $this->environment->post('TransactionID'));
 
-            return;
+            return [
+                'success' => true,
+            ];
         }
 
         $this->errorPayment($bodyData, $status);
+
+        return [
+            'success' => false,
+            'message' => 'Payment error',
+        ];
     }
 
     public function initPayment()

@@ -165,6 +165,10 @@ class Mollie extends AbstractHandler implements Handler
                  * Log successful payment, change payment status, trigger events.
                  */
                 $this->approvePayment("Mollie " . $payment->method . " #" . $payment->id, $payment, $payment->id);
+                
+                return [
+                    'success' => true,
+                ];
             } elseif ($payment->isOpen()) {
             } elseif ($payment->isPending()) {
             } elseif ($payment->isFailed()) {
