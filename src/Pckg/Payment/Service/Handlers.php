@@ -13,7 +13,6 @@ use Pckg\Payment\Handler\MojCent;
 use Pckg\Payment\Handler\Mollie;
 use Pckg\Payment\Handler\Monri;
 use Pckg\Payment\Handler\Omnipay\CorvusPay;
-use Pckg\Payment\Handler\Omnipay\Revolut;
 use Pckg\Payment\Handler\Valu;
 use Pckg\Payment\Handler\Paymill;
 use Pckg\Payment\Handler\PaypalGnp;
@@ -184,8 +183,4 @@ trait Handlers
         return $this->fullInitHandler(new Mollie($this->order));
     }
 
-    public function useRevolutHandler()
-    {
-        return $this->fullInitHandler(new Revolut($this->order));
-    }
 }

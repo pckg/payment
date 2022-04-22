@@ -70,131 +70,20 @@ abstract class AbstractOmnipay extends AbstractHandler
      */
     public function initPayment()
     {
+        if (!isset($this->startOnInit)) {
+            return parent::initPayment();
+        }
+
         /**
          * This is used for methods that require a POST request with parameters.
-         * Fix this in CorvusPay?
          */
-        if (isset($this->startOnInit)) {
-            return $this->postStart();
-        }
-
-        $response = $this->makePurchaseRequest();
-
-        if (is_array($response)) {
-            // error?
-            return $response;
-        }
-
-        /**
-         * First check for a redirect.
-         * Send the redirect to the frontend.
-         */
-        if ($response->isRedirect()) {
-            $redirect = $response->getRedirectUrl();
-            $method = $response->getRedirectMethod();
-            if ($method === 'GET') {
-                return [
-                    'success' => true,
-                    'redirect' => $redirect,
-                ];
-            }
-
-            /**
-             * Submit the form with data on the frontend.
-             */
-            return [
-                'success' => true,
-                'form' => [
-                    'url' => $redirect,
-                    'data' => $response->getRedirectData()
-                ]
-            ];
-        }
-
-        /**
-         * Check for successful response.
-         */
-        if ($response->isPending()) {
-            /**
-             * Set reference.
-             */
-            $this->paymentRecord->setAndSave([
-                'payment_id' => $response->getTransactionReference(),
-            ]);
-
-            return $response->getData();
-        }
-
-        return [
-            'success' => false,
-            'message' => $response->getMessage(),
-            'code' => $response->getCode(),
-        ];
-    }
-
-    public function postStart()
-    {
-        $response = $this->makePurchaseRequest();
-
-        if (is_array($response)) {
-            return;
-        }
-
-        /**
-         * First check for a redirect.
-         * Send the redirect to the frontend.
-         */
-        if ($response->isRedirect()) {
-            $redirect = $response->getRedirectUrl();
-            $method = $response->getRedirectMethod();
-            if ($method === 'GET') {
-                return [
-                    'success' => true,
-                    'redirect' => $redirect,
-                ];
-            }
-
-            /**
-             * Submit the form with data on the frontend.
-             */
-            return [
-                'success' => true,
-                'form' => [
-                    'url' => $redirect,
-                    'data' => $response->getRedirectData()
-                ]
-            ];
-        }
-
-        /**
-         * Check for successful response.
-         */
-        if ($response->isSuccessful() || (method_exists($response, 'isPending') && $response->isPending())) {
-            /**
-             * Set reference.
-             */
-            $this->paymentRecord->setAndSave([
-                'payment_id' => $response->getTransactionReference(),
-            ]);
-
-            return [
-                'success' => true,
-                'modal' => 'success',
-                'omnipay' => $response->getData(),
-            ];
-        }
-
-        return [
-            'success' => false,
-            'message' => $response->getMessage(),
-            'code' => $response->getCode(),
-        ];
+        return $this->postStart();
     }
 
     /**
      * @throws \Exception
      */
-    public function makePurchaseRequest()
+    public function postStart()
     {
         if (!$this->client->supportsPurchase()) {
             throw new \Exception('Gateway does not support purchase()');
@@ -205,13 +94,61 @@ abstract class AbstractOmnipay extends AbstractHandler
              * Get customer and order details.
              * Make the purchase call.
              */
-            $details = $this->getOmnipayOrderDetails();
-            $request = $this->client->purchase($details);
+            $request = $this->client->purchase($this->getOmnipayOrderDetails());
 
             /**
              * Some parameters are not supported by the original gateway.
              */
-            return $request->sendData($this->enrichOmnipayOrderDetails($request->getData()));
+            $response = $request->sendData($this->enrichOmnipayOrderDetails($request->getData()));
+
+            /**
+             * Firs check for a redirect.
+             * Send the redirect to the frontend.
+             */
+            if ($response->isRedirect()) {
+                $redirect = $response->getRedirectUrl();
+                $method = $response->getRedirectMethod();
+                if ($method === 'GET') {
+                    return [
+                        'success' => true,
+                        'redirect' => $redirect,
+                    ];
+                }
+
+                /**
+                 * Submit the form with data on the frontend.
+                 */
+                return [
+                    'success' => true,
+                    'form' => [
+                        'url' => $redirect,
+                        'data' => $response->getRedirectData()
+                    ]
+                ];
+            }
+
+            /**
+             * Check for successful response.
+             */
+            if ($response->isSuccessful()) {
+                /**
+                 * Set reference.
+                 */
+                $this->paymentRecord->setAndSave([
+                    'payment_id' => $response->getTransactionReference(),
+                ]);
+
+                return [
+                    'success' => true,
+                    'modal' => 'success',
+                ];
+            }
+
+            return [
+                'success' => false,
+                'message' => $response->getMessage(),
+                'code' => $response->getCode(),
+            ];
         } catch (\Throwable $e) {
             return [
                 'success' => false,
@@ -390,11 +327,6 @@ abstract class AbstractOmnipay extends AbstractHandler
                 'billingCity' => $billingAddress->city,
                 'billingPostcode' => $billingAddress->postal,
             ]);
-
-            if (!$customer['first_name']) {
-                $customer['first_name'] = explode(' ', $billingAddress->name)[0];
-                $customer['last_name'] = substr($billingAddress->name, strlen($customer['first_name']) + 1);
-            }
         }
 
         return $customer;
