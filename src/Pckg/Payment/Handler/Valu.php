@@ -161,7 +161,7 @@ class Valu extends AbstractHandler
         $sConfirmationSignature = ValuHelper::Functions_RequestString("ConfirmationSignature", 250);
         $nTarifficationError = ValuHelper::Functions_RequestNumber("TARIFFICATIONERROR", 0, 1, 1);
         $sConfirmationIDStatus = ValuHelper::Functions_RequestString("ConfirmationIDStatus", 32);
-        $sIP = ValuHelper::Functions_GetServerVariable('REMOTE_ADDR');
+        $sIP = request()->clientIp();
         $sOutput = "<error>1</error>";
 
         $this->paymentRecord->addLog('check', ['confirmationSignature' => $sConfirmationSignature, 'tarifficationError' => $nTarifficationError, 'confirmationIdStatus' => $sConfirmationIDStatus]);
