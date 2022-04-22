@@ -1,5 +1,5 @@
 <?php
-
+// phpcs:ignoreFile
 namespace Pckg\Payment\Handler\Valu;
 
 class ValuHelper
